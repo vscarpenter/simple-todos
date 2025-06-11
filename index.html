@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo Web App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles/components.css">
+</head>
+<body class="bg-light">
+    <header class="bg-white shadow-sm py-4 text-center">
+        <h1 class="display-4">Todo List</h1>
+        <p class="text-muted">Manage your tasks efficiently</p>
+    </header>
+    <main class="container mt-5">
+        <section id="todo-app" class="card p-4">
+            <form id="todo-form" class="d-flex gap-3 mb-4">
+                <input type="text" id="todo-input" placeholder="Add a new task" aria-label="New task"
+                    class="form-control">
+                <button type="submit" class="btn btn-primary">Add</button>
+            </form>
+            <div class="d-flex gap-3 mb-4">
+                <button id="import-button" class="btn btn-success rounded-pill">Import Todos</button>
+                <input type="file" id="import-file" accept=".json" style="display: none;">
+                <button id="export-button" class="btn btn-warning rounded-pill">Export Todos</button>
+            </div>
+            <ul id="todo-list" role="list" class="list-group">
+                <!-- Placeholder for dynamically rendered todo items -->
+            </ul>
+        </section>
+    </main>
+    <footer class="bg-white shadow-sm py-3 text-center">
+        <p class="text-muted">&copy; 2025 Vinny Carpenter</p>
+    </footer>
+    <script src="scripts/storage.js"></script>
+    <script src="scripts/validation.js"></script>
+    <script src="scripts/app.js"></script>
+</body>
+</html>

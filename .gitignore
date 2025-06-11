@@ -1,0 +1,31 @@
+# Node.js dependencies (if applicable)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build and cache files
+dist/
+build/
+*.log
+*.cache
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Generated files
+todos.json
