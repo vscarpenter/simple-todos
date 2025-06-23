@@ -111,3 +111,71 @@ footer p {
     font-size: 0.9rem;
     color: #666;
 }
+
+/* Style for sortable headings */
+.sortable {
+    cursor: pointer;
+    text-decoration: underline;
+    color: #007bff;
+}
+
+.sortable:hover {
+    text-decoration: none;
+}
+
+/* Style for completed tasks */
+.completed {
+    text-decoration: line-through;
+    color: #999;
+}
+
+/* Style for todo text with date */
+.list-group-item span {
+    flex: 1;
+    font-size: 1rem;
+    color: #333;
+}
+
+/* Style for todo content container */
+.todo-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+/* Style for todo text */
+.todo-text {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Style for todo date */
+.todo-date {
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 4px;
+}
+
+/* Table styles */
+.table {
+    width: 100%;
+    margin-bottom: 1rem;
+    color: #212529;
+}
+
+.table th, .table td {
+    padding: 0.75rem;
+    vertical-align: top;
+    border-top: 1px solid #dee2e6;
+}
+
+/* Align the Action column heading to the right */
+.table th:last-child {
+    text-align: right;
+}
+
+/* Align the Action buttons to the right */
+.table td:last-child {
+    text-align: right;
+}

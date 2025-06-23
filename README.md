@@ -13,7 +13,6 @@ todo-web-app
 │   └── components.css   # Styles for individual components
 ├── scripts             # Contains JavaScript files
 │   ├── app.js          # Main application logic
-│   ├── storage.js      # Local storage management
 │   └── validation.js    # Input validation and error handling
 ├── assets              # Contains assets like icons
 │   └── icons           # Icon assets

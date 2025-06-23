@@ -20,19 +20,29 @@
                 <button type="submit" class="btn btn-primary">Add</button>
             </form>
             <div class="d-flex gap-3 mb-4">
-                <button id="import-button" class="btn btn-success rounded-pill">Import Todos</button>
+                <button id="import-button" class="btn btn-success">Import Todos</button>
                 <input type="file" id="import-file" accept=".json" style="display: none;">
-                <button id="export-button" class="btn btn-warning rounded-pill">Export Todos</button>
+                <button id="export-button" class="btn btn-warning">Export Todos</button>
             </div>
-            <ul id="todo-list" role="list" class="list-group">
-                <!-- Placeholder for dynamically rendered todo items -->
-            </ul>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th id="sort-tasks" class="sortable">Tasks</th>
+                            <th id="sort-date" class="sortable">Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="todo-list">
+                        <!-- Placeholder for dynamically rendered todo items -->
+                    </tbody>
+                </table>
+            </div>
         </section>
     </main>
     <footer class="bg-white shadow-sm py-3 text-center">
         <p class="text-muted">&copy; 2025 Vinny Carpenter</p>
     </footer>
-    <script src="scripts/storage.js"></script>
     <script src="scripts/validation.js"></script>
     <script src="scripts/app.js"></script>
 </body>
