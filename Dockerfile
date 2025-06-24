@@ -1,5 +1,5 @@
-# Use a specific version of the lightweight Nginx image
-FROM nginx:1.23-alpine
+# Use the latest stable version of the lightweight Nginx image
+FROM nginx:alpine
 
 # Set the working directory inside the container
 WORKDIR /usr/share/nginx/html
@@ -8,9 +8,6 @@ WORKDIR /usr/share/nginx/html
 COPY index.html /usr/share/nginx/html/
 COPY styles/ /usr/share/nginx/html/styles/
 COPY scripts/ /usr/share/nginx/html/scripts/
-
-# Set permissions for the files
-RUN chmod -R 755 /usr/share/nginx/html
 
 # Expose port 80 for the web server
 EXPOSE 80

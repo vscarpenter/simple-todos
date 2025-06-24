@@ -16,7 +16,17 @@ node_modules/
 # Editor and IDE files
 .vscode/
 .idea/
+*.swp
 
 # Build artifacts (if applicable)
 dist/
 build/
+
+# Docker-related files
+Dockerfile
+.dockerignore
+
+# Other unnecessary files
+*.env
+.env.*
+coverage/

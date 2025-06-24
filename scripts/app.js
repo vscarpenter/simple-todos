@@ -50,7 +50,7 @@ function renderTodos() {
     // Sort todos based on the selected criteria
     todos.sort((a, b) => {
         if (sortBy === 'date') {
-            return new Date(a.createdDate) - new Date(b.createdDate);
+            return new Date(b.createdDate) - new Date(a.createdDate); // Newer items first
         } else if (sortBy === 'text') {
             return a.text.localeCompare(b.text);
         }

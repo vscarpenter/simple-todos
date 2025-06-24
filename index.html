@@ -8,29 +8,29 @@
     <link rel="stylesheet" href="styles/components.css">
 </head>
 <body class="bg-light">
-    <header class="bg-white shadow-sm py-4 text-center">
-        <h1 class="display-4">Todo List</h1>
-        <p class="text-muted">Manage your tasks efficiently</p>
+    <header class="bg-primary text-white shadow-sm py-4 text-center">
+        <h1 class="display-4 fw-bold">Todo List</h1>
+        <p class="text-light">Manage your tasks efficiently</p>
     </header>
     <main class="container mt-5">
         <section id="todo-app" class="card p-4">
-            <form id="todo-form" class="d-flex gap-3 mb-4">
+            <form id="todo-form" class="d-flex gap-3 mb-4 p-3 shadow-sm rounded bg-white">
                 <input type="text" id="todo-input" placeholder="Add a new task" aria-label="New task"
-                    class="form-control">
-                <button type="submit" class="btn btn-primary">Add</button>
+                    class="form-control rounded-pill">
+                <button type="submit" class="btn btn-primary rounded-pill px-4">Add</button>
             </form>
             <div class="d-flex gap-3 mb-4">
-                <button id="import-button" class="btn btn-success">Import Todos</button>
+                <button id="import-button" class="btn btn-success rounded-pill px-4">Import Todos</button>
                 <input type="file" id="import-file" accept=".json" style="display: none;">
-                <button id="export-button" class="btn btn-warning">Export Todos</button>
+                <button id="export-button" class="btn btn-warning rounded-pill px-4">Export Todos</button>
             </div>
             <div class="table-responsive">
-                <table class="table">
+                <table class="table table-hover table-striped">
                     <thead>
                         <tr>
                             <th id="sort-tasks" class="sortable">Tasks</th>
                             <th id="sort-date" class="sortable">Date</th>
-                            <th>Action</th>
+                            <th class="text-end">Action</th>
                         </tr>
                     </thead>
                     <tbody id="todo-list">
@@ -40,10 +40,9 @@
             </div>
         </section>
     </main>
-    <footer class="bg-white shadow-sm py-3 text-center">
-        <p class="text-muted">&copy; 2025 Vinny Carpenter</p>
+    <footer class="bg-dark text-white py-3 text-center">
+        <p class="mb-0">&copy; 2025 Vinny Carpenter</p>
     </footer>
-    <script src="scripts/validation.js"></script>
     <script src="scripts/app.js"></script>
 </body>
 </html>
