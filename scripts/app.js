@@ -63,7 +63,7 @@ function renderTodos() {
 
         // Task column
         const taskTd = document.createElement('td');
-        taskTd.textContent = todo.text;
+        taskTd.textContent = todo.text; // Use textContent to prevent XSS
         taskTd.className = todo.completed ? 'completed todo-text' : 'todo-text';
 
         // Date column
@@ -117,14 +117,34 @@ function createButton(text, className, onClick) {
 function addTodo(event) {
     event.preventDefault();
     const text = todoInput.value.trim();
-    if (text) {
-        const todos = getTodos();
-        const createdDate = new Date().toISOString().split('T')[0]; // Default to today's date
-        todos.push({ text, completed: false, createdDate: createdDate || '2025-05-17' });
-        saveTodos(todos);
-        renderTodos();
-        todoInput.value = ''; // Clear input
+
+    // Input validation
+    if (!text) {
+        showModal('Error', 'Task cannot be empty!').then(() => {});
+        return;
     }
+    if (text.length > 100) {
+        showModal('Error', 'Task cannot exceed 100 characters!').then(() => {});
+        return;
+    }
+
+    const todos = getTodos();
+    const createdDate = new Date().toISOString().split('T')[0]; // Default to today's date
+    todos.push({ text: sanitizeInput(text), completed: false, createdDate });
+    saveTodos(todos);
+    renderTodos();
+    todoInput.value = ''; // Clear input
+}
+
+/**
+ * Sanitize user input to prevent XSS attacks
+ * @param {string} input - User input
+ * @returns {string} Sanitized input
+ */
+function sanitizeInput(input) {
+    const div = document.createElement('div');
+    div.textContent = input;
+    return div.innerHTML;
 }
 
 /**
@@ -155,12 +175,13 @@ function deleteTodo(index) {
  */
 function editTodo(index) {
     const todos = getTodos();
-    const newText = prompt('Edit your task:', todos[index].text);
-    if (newText !== null && newText.trim() !== '') {
-        todos[index].text = newText.trim();
-        saveTodos(todos);
-        renderTodos();
-    }
+    showModal('Edit Task', 'Edit your task:', true).then((newText) => {
+        if (newText !== null && newText.trim() !== '') {
+            todos[index].text = newText.trim();
+            saveTodos(todos);
+            renderTodos();
+        }
+    });
 }
 
 /**
@@ -169,25 +190,34 @@ function editTodo(index) {
  */
 function importTodos(event) {
     const file = event.target.files[0];
-    if (file) {
+    if (file && file.type === 'application/json') {
         const reader = new FileReader();
         reader.onload = function (e) {
             try {
                 const importedTodos = JSON.parse(e.target.result);
-                if (Array.isArray(importedTodos)) {
-                    const existingTodos = getTodos();
-                    const mergedTodos = [...existingTodos, ...importedTodos];
-                    saveTodos(mergedTodos);
-                    renderTodos();
-                    alert('Todos imported successfully!');
-                } else {
-                    alert('Invalid file format. Please upload a valid JSON file.');
+
+                // Validate file content
+                if (!Array.isArray(importedTodos)) {
+                    throw new Error('Invalid file format. Expected an array of todos.');
                 }
+                importedTodos.forEach(todo => {
+                    if (typeof todo.text !== 'string' || typeof todo.completed !== 'boolean' || !todo.createdDate) {
+                        throw new Error('Invalid todo structure.');
+                    }
+                });
+
+                const existingTodos = getTodos();
+                const mergedTodos = [...existingTodos, ...importedTodos];
+                saveTodos(mergedTodos);
+                renderTodos();
+                showModal('Success', 'Todos imported successfully!').then(() => {});
             } catch (error) {
-                alert('Error reading file. Please upload a valid JSON file.');
+                alert(`Error: ${error.message}`);
             }
         };
         reader.readAsText(file);
+    } else {
+        alert('Please upload a valid JSON file.');
     }
 }
 
@@ -205,6 +235,43 @@ function exportTodos() {
     a.click();
 
     URL.revokeObjectURL(url); // Clean up the URL object
+}
+
+/**
+ * Show a custom modal
+ * @param {string} title - Modal title
+ * @param {string} message - Modal message
+ * @param {boolean} showInput - Whether to show an input field
+ * @returns {Promise<string|null>} Resolves with input value or null if canceled
+ */
+function showModal(title, message, showInput = false) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('custom-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const modalInput = document.getElementById('modal-input');
+        const modalConfirm = document.getElementById('modal-confirm');
+        const modalCancel = document.getElementById('modal-cancel');
+
+        modalTitle.textContent = title;
+        modalMessage.textContent = message;
+        modalInput.style.display = showInput ? 'block' : 'none';
+        modalInput.value = '';
+        modal.style.display = 'flex';
+
+        const closeModal = (result) => {
+            modal.style.display = 'none';
+            resolve(result);
+        };
+
+        modalConfirm.onclick = () => {
+            closeModal(showInput ? modalInput.value.trim() : true);
+        };
+
+        modalCancel.onclick = () => {
+            closeModal(null);
+        };
+    });
 }
 
 // Event listeners for sorting
