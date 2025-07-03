@@ -29,3 +29,6 @@ Thumbs.db
 
 # Generated files
 todos.json
+
+# Claude Code documentation
+CLAUDE.md

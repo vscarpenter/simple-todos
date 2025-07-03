@@ -19,31 +19,48 @@ This project is a simple web application that allows users to manage their to-do
 ## Project Structure
 
 ```
-todo-web-app
+simple-todos
 ├── index.html          # Main entry point of the application
 ├── styles              # Contains CSS stylesheets
-│   ├── layout.css      # Styles for overall layout
-│   ├── typography.css   # Typography styles
-│   └── components.css   # Styles for individual components
+│   └── components.css  # Styles for components and layout
 ├── scripts             # Contains JavaScript files
 │   ├── app.js          # Main application logic
-│   └── validation.js    # Input validation and error handling
-├── assets              # Contains assets like icons
-│   └── icons           # Icon assets
+│   └── validation.js   # Input validation and error handling
+├── Dockerfile          # Docker container configuration with security best practices
+├── nginx.conf          # Custom nginx configuration with security headers
+├── CLAUDE.md           # Project guidance for Claude Code
 ├── README.md           # Project documentation
 └── .gitignore          # Files to be ignored by version control
 ```
 
 ## Setup Instructions
 
+### Local Development
+
 1. **Clone the repository:**
-   ```
+   ```bash
    git clone <repository-url>
-   cd todo-web-app
+   cd simple-todos
    ```
 
-2. **Open `index.html` in your web browser:**
-   You can simply double-click the `index.html` file or open it using your preferred web browser.
+2. **Run locally:**
+   - **Direct browser access:** Open `index.html` directly in your web browser
+   - **Local server:** `python -m http.server 8000` then visit `http://localhost:8000`
+
+### Docker Deployment
+
+1. **Build the Docker image:**
+   ```bash
+   docker build -t simple-todos .
+   ```
+
+2. **Run the container:**
+   ```bash
+   docker run -p 8080:8080 simple-todos
+   ```
+
+3. **Access the application:**
+   Visit `http://localhost:8080`
 
 ## Usage
 
@@ -56,20 +73,39 @@ todo-web-app
 
 ## Technologies Used
 
-- HTML5
-- CSS3
-- JavaScript (ES6+)
+- **Frontend:** HTML5, CSS3 (Bootstrap 5.3.0), JavaScript (ES6+)
+- **Containerization:** Docker with nginx:1.27.0-alpine
+- **Security:** Custom nginx configuration with security headers
 
 ## Best Practices
 
-- The application follows semantic HTML for better accessibility and SEO.
-- CSS is organized into separate files for layout, typography, and components.
-- JavaScript code is modular and reusable, adhering to clean coding principles.
+### Frontend
+- Semantic HTML for better accessibility and SEO
+- XSS prevention via `textContent` usage and input sanitization
+- JSON validation for imported files
+- Input length limits and trimming
+- JavaScript code is modular and reusable
+
+### Docker Security
+- Non-root user (appuser:1001) for container security
+- Pinned base image version for reproducibility
+- Security headers (CSP, XSS Protection, Frame Options, etc.)
+- Non-privileged port (8080) instead of root port 80
+- Health checks for container monitoring
+- Optimized layer caching for faster builds
 
 ## Testing
 
-- Ensure the application works across modern browsers.
-- Validate HTML and CSS using online validators.
+### Manual Testing
+- Test across modern browsers (Chrome, Firefox, Safari, Edge)
+- Validate HTML/CSS using online validators
+- Test import/export functionality with JSON files
+- Verify localStorage persistence across browser sessions
+
+### Docker Testing
+- Verify container builds successfully
+- Test application accessibility on exposed port
+- Validate security headers are properly set
 
 ## Contribution
 
