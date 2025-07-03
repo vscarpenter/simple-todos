@@ -1,6 +1,20 @@
-# To-Do Web App
+# Simple Todos Web App
 
-This project is a simple web application that allows users to manage their to-do items. Users can create, edit, mark as completed, and delete tasks. The application leverages browser local storage to keep data persistent between sessions.
+This project is a simple web application that allows users to manage their to-do items. Users can create, edit, mark as completed, delete tasks, and sort them by text or date. The application leverages browser local storage to keep data persistent between sessions.
+
+---
+
+## Features
+
+- Add new tasks.
+- Edit existing tasks.
+- Mark tasks as completed.
+- Delete tasks.
+- Sort tasks by text or date.
+- Import and export tasks as JSON files.
+- Persistent storage using browser local storage.
+
+---
 
 ## Project Structure
 
@@ -37,6 +51,8 @@ todo-web-app
 - **Editing a To-Do:** Click on the task you want to edit, make your changes, and save.
 - **Marking as Completed:** Click the checkbox next to a task to mark it as completed.
 - **Deleting a To-Do:** Click the "Delete" button next to the task to remove it.
+- **Sorting To-Dos:** Use the sort options to arrange tasks by text or date.
+- **Importing/Exporting Tasks:** Use the import/export feature to manage your tasks as JSON files.
 
 ## Technologies Used
 
