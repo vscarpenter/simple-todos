@@ -1,41 +1,80 @@
-# Simple Todos Web App
+# Professional Task Management Board
 
-This project is a simple web application that allows users to manage their to-do items. Users can create, edit, mark as completed, delete tasks, and sort them by text or date. The application leverages browser local storage to keep data persistent between sessions.
-
----
-
-## Features
-
-- Add new tasks.
-- Edit existing tasks.
-- Mark tasks as completed.
-- Delete tasks.
-- Sort tasks by text or date.
-- Import and export tasks as JSON files.
-- Persistent storage using browser local storage.
+A professional, enterprise-grade task management web application with a clean, modern design system. The application allows users to organize their tasks across three columns: To-Do, In Progress, and Completed. Built with professional typography, intuitive interactions, and a polished user interface.
 
 ---
 
-## Project Structure
+## ✨ Features
+
+### **Core Functionality**
+- **Professional Kanban Board**: Three-column layout (To-Do, In Progress, Completed) for visual task management
+- **Drag & Drop**: Smooth drag-and-drop functionality to move tasks between columns
+- **Task Management**: Create, edit, move, and delete tasks with intuitive controls
+- **Status Transitions**: Move tasks using drag-and-drop or dedicated action buttons
+- **Real-time Counters**: Live task count display in each column header
+
+### **Professional Design**
+- **Modern Design System**: Colors, typography, and design patterns following professional standards
+- **Clean Interface**: Modern, uncluttered design with professional aesthetics
+- **Responsive Design**: Optimized for desktop, tablet, and mobile devices
+- **Visual Status Indicators**: Color-coded task cards and column headers
+- **Professional Typography**: Guardian Sans font family with proper weights and hierarchy
+
+### **Enterprise Features**
+- **Enhanced Export**: Export with metadata, status counts, and date information
+- **Flexible Import**: Support for multiple file formats with automatic migration
+- **Data Validation**: Comprehensive validation for imported data
+- **Status Preservation**: Maintains all task statuses during import/export
+- **Persistent Storage**: Browser local storage with automatic data migration
+
+---
+
+## 🎨 Design System
+
+### **Color Palette**
+- **Primary Blue**: `#002B49` - Primary brand blue
+- **Digital Blue**: `#0E497B` - Secondary blue for backgrounds and CTAs
+- **Brand Gold**: `#FFB81C` - Primary action color and accents
+- **Gun Grey**: `#2A2A2A` - Primary text color
+- **Storm**: `#EDF0F3` - Background color for modules
+- **Cloud**: `#F8FAFC` - Light background color
+
+### **Typography**
+- **Primary Font**: Guardian Sans (Light, Regular, Medium weights)
+- **Secondary Font**: Arial (fallback)
+- **Font Weights**: Light (300), Regular (400), Medium (500)
+- **Hierarchy**: Professional digital typography standards
+
+### **Visual Elements**
+- **Professional Buttons**: Gold CTAs with proper hover states
+- **Clean Cards**: White backgrounds with subtle shadows and brand-colored borders
+- **Consistent Spacing**: Professional spacing following the style guide
+- **Accessibility**: Proper focus states and color contrast ratios
+
+---
+
+## 🏗️ Project Structure
 
 ```
-simple-todos
-├── index.html          # Main entry point of the application
-├── styles              # Contains CSS stylesheets
-│   └── components.css  # Styles for components and layout
-├── scripts             # Contains JavaScript files
-│   ├── app.js          # Main application logic
-│   └── validation.js   # Input validation and error handling
-├── Dockerfile          # Docker container configuration with security best practices
-├── nginx.conf          # Custom nginx configuration with security headers
-├── CLAUDE.md           # Project guidance for Claude Code
-├── README.md           # Project documentation
-└── .gitignore          # Files to be ignored by version control
+simple-todos/
+├── index.html              # Main application entry point
+├── styles/
+│   └── components.css      # Professional design system CSS
+├── scripts/
+│   ├── app.js             # Core application logic with drag-and-drop
+│   └── validation.js      # Input validation and error handling
+├── Digital Style Guide.pdf # Design system style guide
+├── Dockerfile             # Docker configuration with security best practices
+├── nginx.conf            # Custom nginx configuration with security headers
+├── README.md             # Comprehensive project documentation
+└── .gitignore           # Version control exclusions
 ```
 
-## Setup Instructions
+---
 
-### Local Development
+## 🚀 Setup Instructions
+
+### **Local Development**
 
 1. **Clone the repository:**
    ```bash
@@ -44,73 +83,193 @@ simple-todos
    ```
 
 2. **Run locally:**
-   - **Direct browser access:** Open `index.html` directly in your web browser
-   - **Local server:** `python -m http.server 8000` then visit `http://localhost:8000`
-
-### Docker Deployment
-
-1. **Build the Docker image:**
    ```bash
-   docker build -t simple-todos .
+   # Option 1: Direct browser access
+   open index.html
+   
+   # Option 2: Local HTTP server (recommended)
+   python3 -m http.server 8000
+   # Then visit http://localhost:8000
+   
+   # Option 3: Node.js server
+   npx http-server -p 8000
    ```
 
-2. **Run the container:**
+### **Docker Deployment**
+
+1. **Build and run:**
    ```bash
-   docker run -p 8080:8080 simple-todos
+   docker build -t task-board .
+   docker run -p 8080:8080 task-board
    ```
 
-3. **Access the application:**
+2. **Access the application:**
    Visit `http://localhost:8080`
 
-## Usage
+---
 
-- **Creating a To-Do:** Enter a task in the input field and click the "Add" button.
-- **Editing a To-Do:** Click on the task you want to edit, make your changes, and save.
-- **Marking as Completed:** Click the checkbox next to a task to mark it as completed.
-- **Deleting a To-Do:** Click the "Delete" button next to the task to remove it.
-- **Sorting To-Dos:** Use the sort options to arrange tasks by text or date.
-- **Importing/Exporting Tasks:** Use the import/export feature to manage your tasks as JSON files.
+## 📋 Usage Guide
 
-## Technologies Used
+### **Task Management**
+- **Creating Tasks**: Enter task text and click "Add Task" - new tasks appear in To-Do column
+- **Moving Tasks**: 
+  - **Drag & Drop**: Click and drag task cards between columns
+  - **Action Buttons**: Use "→ To-Do", "→ In Progress", "→ Completed" buttons on task cards
+- **Editing Tasks**: Click "Edit" button on any task card to modify text
+- **Deleting Tasks**: Click "Delete" button with confirmation dialog
 
-- **Frontend:** HTML5, CSS3 (Bootstrap 5.3.0), JavaScript (ES6+)
-- **Containerization:** Docker with nginx:1.27.0-alpine
-- **Security:** Custom nginx configuration with security headers
+### **Board Features**
+- **Task Counters**: Each column header shows real-time task count
+- **Visual Status**: Task cards have colored left borders indicating status
+- **Responsive Layout**: Columns stack vertically on mobile devices
+- **Professional Animations**: Smooth transitions following brand guidelines
 
-## Best Practices
+### **Data Management**
 
-### Frontend
-- Semantic HTML for better accessibility and SEO
-- XSS prevention via `textContent` usage and input sanitization
-- JSON validation for imported files
-- Input length limits and trimming
-- JavaScript code is modular and reusable
+#### **Exporting Tasks**
+1. Click "Export Tasks" button
+2. Review task distribution preview with professional formatting
+3. Confirm to download JSON file with format: `task-board-YYYY-MM-DD.json`
+4. Export includes metadata, status counts, and all task data
 
-### Docker Security
-- Non-root user (appuser:1001) for container security
-- Pinned base image version for reproducibility
-- Security headers (CSP, XSS Protection, Frame Options, etc.)
-- Non-privileged port (8080) instead of root port 80
-- Health checks for container monitoring
-- Optimized layer caching for faster builds
+#### **Importing Tasks**
+1. Click "Import Tasks" button
+2. Select JSON file from your device
+3. Application validates and processes data with comprehensive error handling
+4. View detailed import summary with status breakdown
 
-## Testing
+---
 
-### Manual Testing
-- Test across modern browsers (Chrome, Firefox, Safari, Edge)
-- Validate HTML/CSS using online validators
-- Test import/export functionality with JSON files
-- Verify localStorage persistence across browser sessions
+## 🛠️ Technologies Used
 
-### Docker Testing
-- Verify container builds successfully
-- Test application accessibility on exposed port
-- Validate security headers are properly set
+- **Frontend**: HTML5, CSS3, JavaScript (ES6+)
+- **Styling**: Professional design system compliant CSS
+- **Typography**: Guardian Sans font family (with Arial fallback)
+- **Drag & Drop**: Native HTML5 Drag and Drop API
+- **Storage**: Browser localStorage with JSON serialization
+- **Containerization**: Docker with nginx:1.27.0-alpine
+- **Security**: CSP headers, XSS prevention, input sanitization
 
-## Contribution
+---
 
-Feel free to fork the repository and submit pull requests for any improvements or features.
+## 📊 Data Formats
 
-## License
+### **Enhanced Export Format (v2.0)**
+```json
+{
+  "exportDate": "2025-01-06T23:00:00.000Z",
+  "version": "2.0",
+  "totalTasks": 5,
+  "statusCounts": {
+    "todo": 2,
+    "doing": 2,
+    "done": 1
+  },
+  "tasks": [
+    {
+      "id": "unique-identifier",
+      "text": "Task description",
+      "status": "todo|doing|done",
+      "createdDate": "YYYY-MM-DD"
+    }
+  ]
+}
+```
 
-This project is open-source and available under the MIT License.
+---
+
+## 🏛️ Board Columns
+
+### **📋 To-Do (Digital Blue)**
+- New tasks start here automatically
+- Planning and backlog items
+- Tasks awaiting action
+
+### **⚡ In Progress (Brand Gold)**
+- Tasks currently in progress
+- Active work items
+- Items being worked on
+
+### **✅ Completed (Success Green)**
+- Completed tasks
+- Finished work items
+- Accomplished goals
+
+---
+
+## 🔒 Security & Best Practices
+
+### **Frontend Security**
+- **XSS Prevention**: Input sanitization and output encoding
+- **Input Validation**: Length limits (200 characters) and data type checking
+- **JSON Validation**: Comprehensive validation for imported files
+- **Error Handling**: Professional error messages following brand voice
+
+### **Brand Compliance**
+- **Color Usage**: All colors used at 100% opacity as specified
+- **Typography**: Proper font weights and hierarchy
+- **Voice & Tone**: Professional, straightforward, and helpful messaging
+- **Accessibility**: Proper focus states and keyboard navigation
+
+### **Code Quality**
+- **Modular JavaScript**: Clean, reusable functions with proper documentation
+- **Semantic HTML**: Accessible markup with proper ARIA labels
+- **Professional CSS**: Following modern design patterns
+- **Error Boundaries**: Comprehensive error handling throughout the application
+
+---
+
+## 📱 Responsive Design
+
+- **Desktop**: Full three-column layout with professional spacing
+- **Tablet**: Optimized column spacing and touch interactions
+- **Mobile**: Stacked column layout with touch-friendly controls
+- **Accessibility**: Keyboard navigation and screen reader support
+
+---
+
+## 🧪 Testing
+
+### **Manual Testing Checklist**
+- [ ] Create, edit, and delete tasks
+- [ ] Drag tasks between all columns
+- [ ] Use status buttons to move tasks
+- [ ] Test export with task preview
+- [ ] Import files in different formats
+- [ ] Verify data persistence across browser sessions
+- [ ] Test responsive design on different screen sizes
+- [ ] Validate brand compliance and professional appearance
+
+### **Browser Compatibility**
+- ✅ Chrome 90+
+- ✅ Firefox 88+
+- ✅ Safari 14+
+- ✅ Edge 90+
+
+---
+
+## 🎯 Professional Standards
+
+This application follows modern web development best practices:
+- **Colors**: Professional color palette with proper contrast ratios
+- **Typography**: Guardian Sans font family with proper weights and hierarchy
+- **Voice**: Professional, straightforward, and helpful tone
+- **Design**: Clean, modern, and uncluttered interface
+- **CTAs**: Proper button styling and hierarchy
+- **Accessibility**: Focus states and proper contrast ratios
+
+---
+
+## 📄 License
+
+This project is open-source and available under the **MIT License**.
+
+---
+
+## 👨‍💻 Author
+
+**Vinny Carpenter** - Full-stack developer specializing in enterprise-grade web applications with professional design systems.
+
+---
+
+*Built with professional standards and modern design system compliance.*
