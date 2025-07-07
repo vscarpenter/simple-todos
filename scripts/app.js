@@ -568,6 +568,28 @@ function performExport() {
 }
 
 /**
+ * Export todos to a JSON file
+ */
+function exportTodos() {
+    const todos = getTodos();
+    const blob = new Blob([JSON.stringify(todos, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'todos.json';
+    a.click();
+
+    URL.revokeObjectURL(url); // Clean up the URL object
+
+    // Close the modal if it's open
+    const modal = document.getElementById('custom-modal');
+    if (modal.style.display === 'flex') {
+        modal.style.display = 'none';
+    }
+}
+
+/**
  * Export tasks to a JSON file (updated to use preview)
  */
 function exportTasks() {

@@ -1,5 +1,8 @@
 # Use a specific version of nginx for reproducibility and security
-FROM nginx:1.27.0-alpine
+FROM nginx:alpine
+
+# Update all packages to the latest versions to reduce vulnerabilities
+RUN apk update && apk upgrade --no-cache
 
 # Add metadata labels for better maintenance
 LABEL maintainer="simple-todos" \
