@@ -510,7 +510,7 @@ function showExportPreview() {
     const tasks = getTasks();
     
     if (tasks.length === 0) {
-        showModal('No Tasks', 'You have no tasks to export. Add some tasks first!');
+        showModal('No Tasks', 'You have no tasks to export. Add some tasks first!', false, '', false);
         return;
     }
     
@@ -564,30 +564,11 @@ function performExport() {
     
     // Show detailed export confirmation
     const statusSummary = `📋 Todo: ${exportData.statusCounts.todo}, ⚡ Doing: ${exportData.statusCounts.doing}, ✅ Done: ${exportData.statusCounts.done}`;
-    showModal('Export Complete', `${exportData.totalTasks} tasks exported successfully!\n\n${statusSummary}\n\nFile saved with all task statuses preserved.`);
+    showModal('Export Complete', `${exportData.totalTasks} tasks exported successfully!\n\n${statusSummary}\n\nFile saved with all task statuses preserved.`, false, '', false).then(() => {
+        // Modal will be closed automatically when user clicks OK
+    });
 }
 
-/**
- * Export todos to a JSON file
- */
-function exportTodos() {
-    const todos = getTodos();
-    const blob = new Blob([JSON.stringify(todos, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'todos.json';
-    a.click();
-
-    URL.revokeObjectURL(url); // Clean up the URL object
-
-    // Close the modal if it's open
-    const modal = document.getElementById('custom-modal');
-    if (modal.style.display === 'flex') {
-        modal.style.display = 'none';
-    }
-}
 
 /**
  * Export tasks to a JSON file (updated to use preview)
@@ -602,9 +583,10 @@ function exportTasks() {
  * @param {string} message - Modal message
  * @param {boolean} showInput - Whether to show an input field
  * @param {string} defaultValue - Default input value
+ * @param {boolean} showCancelButton - Whether to show the cancel button (defaults to true)
  * @returns {Promise<string|boolean|null>} Resolves with input value, true, or null if canceled
  */
-function showModal(title, message, showInput = false, defaultValue = '') {
+function showModal(title, message, showInput = false, defaultValue = '', showCancelButton = true) {
     return new Promise((resolve) => {
         const modal = document.getElementById('custom-modal');
         const modalTitle = document.getElementById('modal-title');
@@ -617,6 +599,7 @@ function showModal(title, message, showInput = false, defaultValue = '') {
         modalMessage.textContent = message;
         modalInput.style.display = showInput ? 'block' : 'none';
         modalInput.value = defaultValue;
+        modalCancel.style.display = showCancelButton ? 'block' : 'none';
         modal.style.display = 'flex';
 
         // Focus input if shown
@@ -631,6 +614,9 @@ function showModal(title, message, showInput = false, defaultValue = '') {
             resolve(result);
         };
 
+        // Update button text based on context
+        modalConfirm.textContent = showCancelButton ? 'Confirm' : 'OK';
+        
         modalConfirm.onclick = () => {
             closeModal(showInput ? modalInput.value.trim() : true);
         };
@@ -662,6 +648,15 @@ todoForm.addEventListener('submit', addTask);
 importButton.addEventListener('click', () => importFileInput.click());
 importFileInput.addEventListener('change', importTasks);
 exportButton.addEventListener('click', exportTasks);
+
+// New Task button functionality
+const newTaskBtn = document.getElementById('new-task-btn');
+if (newTaskBtn) {
+    newTaskBtn.addEventListener('click', () => {
+        todoInput.focus();
+        todoInput.scrollIntoView({ behavior: 'smooth' });
+    });
+}
 
 // Make functions globally available for onclick handlers
 window.moveTask = moveTask;
