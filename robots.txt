@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+
+# Allow all search engines to crawl the entire site
+# This is a task management web application
+
+# Specific pages
+Allow: /index.html
+Allow: /privacy.html
+Allow: /terms.html
+
+# Static assets
+Allow: /styles/
+Allow: /scripts/
+Allow: /assets/
+
+# Sitemap (if you add one in the future)
+# Sitemap: https://cascade.vinny.dev/sitemap.xml

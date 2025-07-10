@@ -570,6 +570,13 @@ button:focus {
     border: 1px solid var(--md-outline-variant);
     position: relative;
     overflow: hidden;
+    /* iOS Touch Support */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .task-card::before {
@@ -728,6 +735,93 @@ button:focus {
     background: var(--md-primary-container);
     color: var(--md-on-primary-container);
     box-shadow: var(--md-elevation-1);
+}
+
+.btn-archive {
+    background: var(--md-secondary-container);
+    color: var(--md-on-secondary-container);
+    border-color: var(--md-secondary);
+    padding: 0.375rem !important;
+    min-width: 32px;
+    font-size: 1rem;
+}
+
+.btn-archive:hover {
+    background: var(--md-secondary-container);
+    color: var(--md-on-secondary-container);
+    box-shadow: var(--md-elevation-1);
+    transform: scale(1.05);
+}
+
+/* Settings Form Styling */
+.settings-form {
+    padding: 1rem 0;
+    max-width: 100%;
+}
+
+.settings-form .form-label {
+    font-weight: 500;
+    color: var(--md-on-surface);
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.settings-form .form-control {
+    border: 1px solid var(--md-outline);
+    border-radius: var(--md-shape-small);
+    padding: 0.5rem;
+    font-size: 0.9rem;
+    background: var(--md-surface);
+    color: var(--md-on-surface);
+}
+
+.settings-form .form-control:focus {
+    border-color: var(--md-primary);
+    box-shadow: 0 0 0 2px rgba(103, 80, 164, 0.2);
+    outline: none;
+}
+
+.settings-form .form-check {
+    padding-left: 1.5rem;
+}
+
+.settings-form .form-check-input {
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-top: 0.1rem;
+    border: 2px solid var(--md-outline);
+    border-radius: 0.25rem;
+}
+
+.settings-form .form-check-input:checked {
+    background-color: var(--md-primary);
+    border-color: var(--md-primary);
+}
+
+.settings-form .form-check-label {
+    font-size: 0.95rem;
+    color: var(--md-on-surface);
+    line-height: 1.4;
+    cursor: pointer;
+}
+
+.settings-form .input-group-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    max-width: 180px;
+}
+
+.settings-form .days-label {
+    color: var(--md-on-surface-variant);
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+/* Modal improvements */
+.modal-box {
+    min-width: 320px;
+    max-width: 480px;
 }
 
 /* Material Design 3 Drag and Drop States */

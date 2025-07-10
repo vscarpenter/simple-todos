@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Guide - Cascade Task Management</title>
+    <meta name="description" content="User Guide for Cascade Task Management web application.">
+    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet"
+    />
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles/components.css">
+    <link rel="icon" type="image/svg+xml" href="assets/cascade-icon.svg">
+</head>
+<body>
+    <!-- Header -->
+    <header class="bg-white text-dark shadow-sm py-3">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="header-content">
+                    <div class="app-brand">
+                        <div class="brand-icon">
+                            <img src="assets/cascade-icon.svg" alt="Cascade App Icon" width="32" height="32">
+                        </div>
+                        <div class="brand-text">
+                            <h1 class="app-title mb-0">Cascade</h1>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <a href="index.html" class="btn btn-primary rounded-pill px-4 py-2">
+                        ← Back to App
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- User Guide Content -->
+    <main class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <!-- Hero Section -->
+                <div class="bg-white rounded shadow-sm p-4 mb-4 text-center">
+                    <h1 class="mb-3">📋 User Guide</h1>
+                    <p class="lead text-muted">Get the most out of Cascade with this comprehensive guide</p>
+                </div>
+
+                <!-- Quick Start -->
+                <div class="bg-white rounded shadow-sm p-4 mb-4">
+                    <h2 class="d-flex align-items-center mb-3">
+                        <span class="me-2">🚀</span> Quick Start
+                    </h2>
+                    <div class="alert alert-info">
+                        <strong>Privacy First:</strong> Cascade runs entirely in your browser. Your data stays on your device - nothing is sent to any server.
+                    </div>
+                </div>
+
+                <!-- Getting Started -->
+                <div class="bg-white rounded shadow-sm p-4 mb-4">
+                    <h2 class="d-flex align-items-center mb-4">
+                        <span class="me-2">🎯</span> Getting Started
+                    </h2>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 mb-3">
+                                <h4 class="h5 text-primary">📝 Adding Tasks</h4>
+                                <ol class="mb-0">
+                                    <li>Type your task in the input field at the top</li>
+                                    <li>Click "Add Task" or press <kbd>Enter</kbd></li>
+                                    <li>Tasks appear in the "To Do" column</li>
+                                </ol>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 mb-3">
+                                <h4 class="h5 text-success">⚡ Managing Tasks</h4>
+                                <ul class="mb-0">
+                                    <li><strong>Drag & drop</strong> between columns</li>
+                                    <li><strong>Edit</strong> by clicking the Edit button</li>
+                                    <li><strong>Delete</strong> unwanted tasks</li>
+                                    <li><strong>Move</strong> with arrow buttons</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Three Columns -->
+                <div class="bg-white rounded shadow-sm p-4 mb-4">
+                    <h2 class="d-flex align-items-center mb-4">
+                        <span class="me-2">📊</span> Workflow Columns
+                    </h2>
+                    
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="border rounded p-3 h-100">
+                                <div class="display-6 mb-2">📋</div>
+                                <h4 class="h5">To Do</h4>
+                                <p class="text-muted mb-0">Tasks you haven't started yet</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="border rounded p-3 h-100">
+                                <div class="display-6 mb-2">⚡</div>
+                                <h4 class="h5">In Progress</h4>
+                                <p class="text-muted mb-0">Tasks you're currently working on</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="border rounded p-3 h-100">
+                                <div class="display-6 mb-2">✅</div>
+                                <h4 class="h5">Done</h4>
+                                <p class="text-muted mb-0">Completed tasks ready for archive</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Header Buttons -->
+                <div class="bg-white rounded shadow-sm p-4 mb-4">
+                    <h2 class="d-flex align-items-center mb-4">
+                        <span class="me-2">🎛️</span> Header Controls
+                    </h2>
+                    
+                    <div class="row">
+                        <div class="col-sm-6 col-lg-4 mb-3">
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-info rounded-pill me-2">📦</span>
+                                <div>
+                                    <strong>Archive</strong><br>
+                                    <small class="text-muted">Move completed tasks to storage</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-4 mb-3">
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-secondary rounded-pill me-2">⚙️</span>
+                                <div>
+                                    <strong>Settings</strong><br>
+                                    <small class="text-muted">Configure auto-archive preferences</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-4 mb-3">
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-success rounded-pill me-2">↓</span>
+                                <div>
+                                    <strong>Import</strong><br>
+                                    <small class="text-muted">Upload JSON backup file</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-4 mb-3">
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-warning rounded-pill me-2">↑</span>
+                                <div>
+                                    <strong>Export</strong><br>
+                                    <small class="text-muted">Download tasks as JSON backup</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-4 mb-3">
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-primary rounded-pill me-2">+</span>
+                                <div>
+                                    <strong>New Task</strong><br>
+                                    <small class="text-muted">Focus the input field</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Archive Features -->
+                <div class="bg-white rounded shadow-sm p-4 mb-4">
+                    <h2 class="d-flex align-items-center mb-3">
+                        <span class="me-2">📦</span> Archive Features
+                    </h2>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li class="mb-2">✓ Keep your board clean and organized</li>
+                                <li class="mb-2">✓ View archived tasks anytime</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li class="mb-2">✓ Restore tasks back to active status</li>
+                                <li class="mb-2">✓ Configure automatic archiving</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data & Privacy -->
+                <div class="bg-white rounded shadow-sm p-4 mb-4">
+                    <h2 class="d-flex align-items-center mb-3">
+                        <span class="me-2">🔒</span> Data & Privacy
+                    </h2>
+                    <div class="row">
+                        <div class="col-sm-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <span class="badge bg-success rounded-pill me-2 mt-1">🏠</span>
+                                <div>
+                                    <strong>Local Storage</strong><br>
+                                    <small class="text-muted">Data stored in your browser only</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <span class="badge bg-success rounded-pill me-2 mt-1">🚫</span>
+                                <div>
+                                    <strong>No Account</strong><br>
+                                    <small class="text-muted">No sign-up or login required</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <span class="badge bg-success rounded-pill me-2 mt-1">📴</span>
+                                <div>
+                                    <strong>Offline Ready</strong><br>
+                                    <small class="text-muted">Works without internet</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <span class="badge bg-success rounded-pill me-2 mt-1">💾</span>
+                                <div>
+                                    <strong>Export/Import</strong><br>
+                                    <small class="text-muted">Back up data with JSON files</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tips & Browser Info -->
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="bg-white rounded shadow-sm p-4 mb-4">
+                            <h2 class="d-flex align-items-center mb-3">
+                                <span class="me-2">💡</span> Pro Tips
+                            </h2>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">🎯 Use drag & drop for quick status changes</li>
+                                <li class="mb-2">💾 Export tasks regularly as backup</li>
+                                <li class="mb-2">📅 Tasks show creation date for reference</li>
+                                <li class="mb-2">🗂️ Archive old tasks to stay organized</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="bg-white rounded shadow-sm p-4 mb-4">
+                            <h2 class="d-flex align-items-center mb-3">
+                                <span class="me-2">🌐</span> Browser Support
+                            </h2>
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="badge bg-light text-dark">Chrome</span>
+                                <span class="badge bg-light text-dark">Firefox</span>
+                                <span class="badge bg-light text-dark">Safari</span>
+                                <span class="badge bg-light text-dark">Edge</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Back Button -->
+                <div class="text-center mb-4">
+                    <a href="index.html" class="btn btn-primary rounded-pill px-4 py-3">
+                        ← Back to Cascade
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white text-muted py-3 text-center border-top mt-5">
+        <p class="mb-0">&copy; 2025 <a href="https://vinny.dev/" target="_blank" class="text-decoration-none">Vinny Carpenter</a></p>
+    </footer>
+</body>
+</html>

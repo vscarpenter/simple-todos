@@ -32,4 +32,6 @@ todos.json
 
 # Claude Code documentation
 CLAUDE.md
-POCKETBASE_SETUP.md
+
+# Deployment scripts (local use only)
+deploy.sh

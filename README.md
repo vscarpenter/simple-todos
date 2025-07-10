@@ -10,10 +10,11 @@ A modern, Material Design 3 compliant task management web application with a cle
 
 ### **Core Functionality**
 - **Material Design 3 Kanban Board**: Three-column layout (To-Do, In Progress, Completed) for visual task management
-- **Drag & Drop**: Smooth drag-and-drop functionality with Material Design 3 animations
+- **Drag & Drop**: Smooth drag-and-drop functionality with Material Design 3 animations and iOS Safari compatibility
 - **Task Management**: Create, edit, move, and delete tasks with intuitive controls
 - **Status Transitions**: Move tasks using drag-and-drop or dedicated action buttons
 - **Real-time Counters**: Live task count display in each column header
+- **Smart Archive System**: Automatic and manual archiving to keep your workspace clean
 
 ### **Material Design 3 Design System**
 - **Modern Design System**: Colors, typography, and design patterns following Material Design 3 standards
@@ -23,11 +24,12 @@ A modern, Material Design 3 compliant task management web application with a cle
 - **Professional Typography**: Inter font family with proper Material Design 3 type scale
 
 ### **Enterprise Features**
-- **Enhanced Export**: Export with metadata, status counts, and date information
-- **Flexible Import**: Support for multiple file formats with automatic migration
+- **Enhanced Export**: Export with metadata, status counts, archived tasks, and settings
+- **Flexible Import**: Support for multiple file formats with automatic migration and archive restoration
 - **Data Validation**: Comprehensive validation for imported data
 - **Status Preservation**: Maintains all task statuses during import/export
 - **Persistent Storage**: Browser local storage with automatic data migration
+- **Archive Management**: Automated cleanup with customizable retention policies
 
 ---
 
@@ -130,19 +132,39 @@ cascade-todos/
 - **Responsive Layout**: Columns stack vertically on mobile devices
 - **Material Animations**: Smooth transitions following Material Design 3 motion guidelines
 
+### **Archive Management**
+
+#### **Automatic Archiving**
+- **Smart Cleanup**: Completed tasks are automatically archived after a customizable number of days (default: 30)
+- **Startup Trigger**: Auto-archive runs every time you open the app to keep your workspace clean
+- **Configurable Settings**: Adjust retention period (1-365 days) or disable auto-archiving entirely
+- **Completion Tracking**: System automatically records when tasks are moved to "Done" status
+
+#### **Manual Archive Controls**
+- **Individual Tasks**: Click the 📦 button on completed tasks for immediate archiving
+- **Bulk Archive**: Use the "📦 Archive" header button to archive all completed tasks at once
+- **Archive View**: Click the 📦 button in the Done column header to browse archived tasks
+- **Restore Tasks**: View archived tasks and restore any back to active status
+
+#### **Archive Settings**
+1. Click "⚙️ Settings" button in the header
+2. Adjust auto-archive days (1-365 days)
+3. Enable/disable automatic archiving
+4. Settings are saved automatically and included in exports
+
 ### **Data Management**
 
 #### **Exporting Tasks**
 1. Click "Export Tasks" button
 2. Review task distribution preview with Material Design 3 formatting
 3. Confirm to download JSON file with format: `cascade-tasks-YYYY-MM-DD.json`
-4. Export includes metadata, status counts, and all task data
+4. Export includes metadata, status counts, archived tasks, and settings
 
 #### **Importing Tasks**
 1. Click "Import Tasks" button
 2. Select JSON file from your device
 3. Application validates and processes data with comprehensive error handling
-4. View detailed import summary with status breakdown
+4. View detailed import summary with status breakdown and archive restoration
 
 ---
 
@@ -160,13 +182,13 @@ cascade-todos/
 
 ## 📊 Data Formats
 
-### **Enhanced Export Format (v2.0)**
+### **Enhanced Export Format (v3.0)**
 ```json
 {
-  "exportDate": "2025-01-06T23:00:00.000Z",
-  "version": "2.0",
-  "appName": "Cascade",
+  "exportDate": "2025-07-10T23:00:00.000Z",
+  "version": "3.0",
   "totalTasks": 5,
+  "totalArchivedTasks": 12,
   "statusCounts": {
     "todo": 2,
     "doing": 2,
@@ -177,9 +199,25 @@ cascade-todos/
       "id": "unique-identifier",
       "text": "Task description",
       "status": "todo|doing|done",
-      "createdDate": "YYYY-MM-DD"
+      "createdDate": "YYYY-MM-DD",
+      "completedDate": "YYYY-MM-DD"
     }
-  ]
+  ],
+  "archivedTasks": [
+    {
+      "id": "archived-task-id",
+      "text": "Completed task description",
+      "status": "done",
+      "createdDate": "YYYY-MM-DD",
+      "completedDate": "YYYY-MM-DD",
+      "archived": true,
+      "archivedDate": "YYYY-MM-DD"
+    }
+  ],
+  "settings": {
+    "autoArchiveDays": 30,
+    "enableAutoArchive": true
+  }
 }
 ```
 
@@ -198,9 +236,10 @@ cascade-todos/
 - Items being worked on
 
 ### **✅ Completed (Success Color)**
-- Completed tasks
-- Finished work items
-- Accomplished goals
+- Completed tasks with automatic cleanup
+- Recent accomplishments (auto-archived after 30 days by default)
+- Individual archive controls with 📦 button
+- Archive view accessible via column header 📦 button
 
 ---
 
@@ -239,10 +278,14 @@ cascade-todos/
 
 ### **Manual Testing Checklist**
 - [ ] Create, edit, and delete tasks
-- [ ] Drag tasks between all columns
+- [ ] Drag tasks between all columns (including iOS Safari)
 - [ ] Use status buttons to move tasks
-- [ ] Test export with task preview
-- [ ] Import files in different formats
+- [ ] Test archive functionality (individual and bulk)
+- [ ] Configure archive settings (days and enable/disable)
+- [ ] View and restore archived tasks
+- [ ] Test export with task preview (including archived tasks)
+- [ ] Import files in different formats with archive restoration
+- [ ] Verify auto-archive runs on app startup
 - [ ] Verify data persistence across browser sessions
 - [ ] Test responsive design on different screen sizes
 - [ ] Validate brand compliance and professional appearance

@@ -68,6 +68,63 @@ function saveTasks(tasks) {
 }
 
 /**
+ * Retrieve archived tasks from local storage
+ * @returns {Array} List of archived tasks
+ */
+function getArchivedTasks() {
+    try {
+        return JSON.parse(localStorage.getItem('cascade-archived-tasks')) || [];
+    } catch (error) {
+        console.error('Failed to retrieve archived tasks from localStorage:', error);
+        return [];
+    }
+}
+
+/**
+ * Save archived tasks to local storage
+ * @param {Array} archivedTasks - List of archived tasks to save
+ */
+function saveArchivedTasks(archivedTasks) {
+    try {
+        localStorage.setItem('cascade-archived-tasks', JSON.stringify(archivedTasks));
+    } catch (error) {
+        console.error('Failed to save archived tasks to localStorage:', error);
+        showModal('Error', 'Failed to save archived tasks. Your browser storage might be full.');
+    }
+}
+
+/**
+ * Get user settings from localStorage
+ * @returns {Object} User settings
+ */
+function getSettings() {
+    try {
+        const defaultSettings = {
+            autoArchiveDays: 30,
+            enableAutoArchive: true
+        };
+        const settings = JSON.parse(localStorage.getItem('cascade-settings')) || defaultSettings;
+        return { ...defaultSettings, ...settings };
+    } catch (error) {
+        console.error('Failed to retrieve settings from localStorage:', error);
+        return { autoArchiveDays: 30, enableAutoArchive: true };
+    }
+}
+
+/**
+ * Save user settings to localStorage
+ * @param {Object} settings - Settings to save
+ */
+function saveSettings(settings) {
+    try {
+        localStorage.setItem('cascade-settings', JSON.stringify(settings));
+    } catch (error) {
+        console.error('Failed to save settings to localStorage:', error);
+        showModal('Error', 'Failed to save settings.');
+    }
+}
+
+/**
  * Format a date to a human-friendly format
  * @param {string} dateString - The date string to format
  * @returns {string} Formatted date
@@ -129,6 +186,11 @@ function getStatusButtons(currentStatus, taskId) {
     }
     if (currentStatus !== 'done') {
         buttons.push(`<button class="btn-move" onclick="moveTask('${taskId}', 'done')">→ Done</button>`);
+    }
+    
+    // Add archive button for completed tasks
+    if (currentStatus === 'done') {
+        buttons.push(`<button class="btn-archive" onclick="archiveTask('${taskId}')" title="Archive this task">📦</button>`);
     }
     
     return buttons.join('');
@@ -419,6 +481,20 @@ function importTasks(event) {
                         totalTasks: importedData.totalTasks,
                         statusCounts: importedData.statusCounts
                     };
+                    
+                    // Import archived tasks if present (version 3.0+)
+                    if (importedData.archivedTasks && Array.isArray(importedData.archivedTasks)) {
+                        const existingArchivedTasks = getArchivedTasks();
+                        const mergedArchivedTasks = [...existingArchivedTasks, ...importedData.archivedTasks];
+                        saveArchivedTasks(mergedArchivedTasks);
+                    }
+                    
+                    // Import settings if present (version 3.0+)
+                    if (importedData.settings && typeof importedData.settings === 'object') {
+                        const currentSettings = getSettings();
+                        const mergedSettings = { ...currentSettings, ...importedData.settings };
+                        saveSettings(mergedSettings);
+                    }
                 } else if (Array.isArray(importedData)) {
                     // Legacy formats (both old todo format and simple task array)
                     importedTasks = importedData.map(item => {
@@ -481,8 +557,18 @@ function importTasks(event) {
                 renderTasks();
 
                 // Show detailed import confirmation
-                let successMessage = `${importedTasks.length} tasks imported successfully!\n\nImported breakdown:\n`;
+                let successMessage = `${importedTasks.length} active tasks imported successfully!\n\nImported breakdown:\n`;
                 successMessage += `Todo: ${importedStatusCounts.todo}, Doing: ${importedStatusCounts.doing}, Done: ${importedStatusCounts.done}`;
+                
+                // Add archived tasks info if present
+                if (importedData.archivedTasks && importedData.archivedTasks.length > 0) {
+                    successMessage += `\n📦 Archived: ${importedData.archivedTasks.length} tasks`;
+                }
+                
+                // Add settings info if present
+                if (importedData.settings) {
+                    successMessage += `\n⚙️ Settings imported`;
+                }
                 
                 if (importMetadata && importMetadata.exportDate) {
                     successMessage += `\n\nOriginal export: ${new Date(importMetadata.exportDate).toLocaleDateString()}`;
@@ -538,18 +624,23 @@ function showExportPreview() {
  */
 function performExport() {
     const tasks = getTasks();
+    const archivedTasks = getArchivedTasks();
+    const settings = getSettings();
     
     // Create export data with metadata
     const exportData = {
         exportDate: new Date().toISOString(),
-        version: "2.0",
+        version: "3.0",
         totalTasks: tasks.length,
+        totalArchivedTasks: archivedTasks.length,
         statusCounts: {
             todo: tasks.filter(t => t.status === 'todo').length,
             doing: tasks.filter(t => t.status === 'doing').length,
             done: tasks.filter(t => t.status === 'done').length
         },
-        tasks: tasks
+        tasks: tasks,
+        archivedTasks: archivedTasks,
+        settings: settings
     };
     
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
@@ -564,7 +655,8 @@ function performExport() {
     
     // Show detailed export confirmation
     const statusSummary = `📋 Todo: ${exportData.statusCounts.todo}, ⚡ Doing: ${exportData.statusCounts.doing}, ✅ Done: ${exportData.statusCounts.done}`;
-    showModal('Export Complete', `${exportData.totalTasks} tasks exported successfully!\n\n${statusSummary}\n\nFile saved with all task statuses preserved.`, false, '', false).then(() => {
+    const archiveSummary = archivedTasks.length > 0 ? `\n📦 Archived: ${archivedTasks.length} tasks` : '';
+    showModal('Export Complete', `${exportData.totalTasks} active tasks exported successfully!\n\n${statusSummary}${archiveSummary}\n\nFile saved with all task statuses and archive data preserved.`, false, '', false).then(() => {
         // Modal will be closed automatically when user clicks OK
     });
 }
@@ -658,10 +750,304 @@ if (newTaskBtn) {
     });
 }
 
+/**
+ * Check and perform automatic archiving of old completed tasks
+ */
+function performAutoArchive() {
+    const settings = getSettings();
+    if (!settings.enableAutoArchive) return;
+    
+    const tasks = getTasks();
+    const archivedTasks = getArchivedTasks();
+    const today = new Date();
+    const archiveThreshold = settings.autoArchiveDays;
+    
+    const tasksToArchive = tasks.filter(task => {
+        if (task.status !== 'done' || !task.completedDate) return false;
+        
+        const completedDate = new Date(task.completedDate);
+        const daysSinceCompletion = Math.floor((today - completedDate) / (1000 * 60 * 60 * 24));
+        
+        return daysSinceCompletion >= archiveThreshold;
+    });
+    
+    if (tasksToArchive.length > 0) {
+        // Mark tasks as archived
+        const currentDate = new Date().toISOString().split('T')[0];
+        tasksToArchive.forEach(task => {
+            task.archived = true;
+            task.archivedDate = currentDate;
+        });
+        
+        // Move to archived tasks
+        const updatedArchivedTasks = [...archivedTasks, ...tasksToArchive];
+        saveArchivedTasks(updatedArchivedTasks);
+        
+        // Remove from active tasks
+        const remainingTasks = tasks.filter(task => !tasksToArchive.includes(task));
+        saveTasks(remainingTasks);
+        
+        console.log(`Auto-archived ${tasksToArchive.length} tasks`);
+    }
+}
+
+/**
+ * Manually archive a specific task
+ * @param {string} taskId - Task ID to archive
+ */
+function archiveTask(taskId) {
+    const tasks = getTasks();
+    const taskIndex = tasks.findIndex(task => task.id === taskId);
+    
+    if (taskIndex !== -1) {
+        const task = tasks[taskIndex];
+        task.archived = true;
+        task.archivedDate = new Date().toISOString().split('T')[0];
+        
+        // Move to archived tasks
+        const archivedTasks = getArchivedTasks();
+        archivedTasks.push(task);
+        saveArchivedTasks(archivedTasks);
+        
+        // Remove from active tasks
+        tasks.splice(taskIndex, 1);
+        saveTasks(tasks);
+        
+        renderTasks();
+    }
+}
+
+/**
+ * Manually archive all completed tasks
+ */
+function archiveAllCompleted() {
+    const tasks = getTasks();
+    const completedTasks = tasks.filter(task => task.status === 'done');
+    
+    if (completedTasks.length === 0) {
+        showModal('No Tasks', 'No completed tasks to archive.');
+        return;
+    }
+    
+    showModal('Archive Completed Tasks', `Archive ${completedTasks.length} completed tasks?`).then((confirmed) => {
+        if (confirmed) {
+            const currentDate = new Date().toISOString().split('T')[0];
+            completedTasks.forEach(task => {
+                task.archived = true;
+                task.archivedDate = currentDate;
+            });
+            
+            // Move to archived tasks
+            const archivedTasks = getArchivedTasks();
+            const updatedArchivedTasks = [...archivedTasks, ...completedTasks];
+            saveArchivedTasks(updatedArchivedTasks);
+            
+            // Remove from active tasks
+            const remainingTasks = tasks.filter(task => task.status !== 'done');
+            saveTasks(remainingTasks);
+            
+            renderTasks();
+            showModal('Archive Complete', `${completedTasks.length} tasks archived successfully!`, false, '', false);
+        }
+    });
+}
+
+/**
+ * Restore an archived task
+ * @param {string} taskId - Task ID to restore
+ */
+function restoreArchivedTask(taskId) {
+    const archivedTasks = getArchivedTasks();
+    const taskIndex = archivedTasks.findIndex(task => task.id === taskId);
+    
+    if (taskIndex !== -1) {
+        const task = archivedTasks[taskIndex];
+        delete task.archived;
+        delete task.archivedDate;
+        
+        // Move back to active tasks
+        const tasks = getTasks();
+        tasks.push(task);
+        saveTasks(tasks);
+        
+        // Remove from archived tasks
+        archivedTasks.splice(taskIndex, 1);
+        saveArchivedTasks(archivedTasks);
+        
+        renderTasks();
+    }
+}
+
+/**
+ * Show archive settings modal
+ */
+function showArchiveSettings() {
+    const settings = getSettings();
+    
+    const settingsHtml = `
+        <div class="settings-form">
+            <div class="mb-3">
+                <label for="auto-archive-days" class="form-label">Auto-archive completed tasks after:</label>
+                <div class="input-group-container">
+                    <input type="number" id="auto-archive-days" class="form-control" min="1" max="365" value="${settings.autoArchiveDays}" style="width: 70px;">
+                    <span class="days-label">days</span>
+                </div>
+            </div>
+            <div class="mb-3">
+                <div class="form-check">
+                    <input type="checkbox" id="enable-auto-archive" class="form-check-input" ${settings.enableAutoArchive ? 'checked' : ''}>
+                    <label for="enable-auto-archive" class="form-check-label">
+                        Enable automatic archiving
+                    </label>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    showCustomModal('Archive Settings', settingsHtml, true).then((result) => {
+        if (result) {
+            const autoArchiveDays = parseInt(document.getElementById('auto-archive-days').value);
+            const enableAutoArchive = document.getElementById('enable-auto-archive').checked;
+            
+            if (autoArchiveDays >= 1 && autoArchiveDays <= 365) {
+                const newSettings = {
+                    autoArchiveDays,
+                    enableAutoArchive
+                };
+                saveSettings(newSettings);
+                showModal('Settings Saved', 'Archive settings have been updated!', false, '', false);
+            } else {
+                showModal('Invalid Input', 'Please enter a number between 1 and 365 days.');
+            }
+        }
+    });
+}
+
+/**
+ * Show archived tasks view
+ */
+function showArchivedTasks() {
+    const archivedTasks = getArchivedTasks();
+    
+    if (archivedTasks.length === 0) {
+        showModal('No Archived Tasks', 'You have no archived tasks.');
+        return;
+    }
+    
+    // Sort by archive date (newest first)
+    archivedTasks.sort((a, b) => new Date(b.archivedDate) - new Date(a.archivedDate));
+    
+    const archiveListHtml = archivedTasks.map(task => `
+        <div class="archived-task-item border-bottom py-2">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1">
+                    <div class="fw-bold">${sanitizeOutput(task.text)}</div>
+                    <small class="text-muted">
+                        Completed: ${formatDate(task.completedDate || task.createdDate)}<br>
+                        Archived: ${formatDate(task.archivedDate)}
+                    </small>
+                </div>
+                <div class="ms-2">
+                    <button class="btn btn-sm btn-outline-primary" onclick="restoreArchivedTask('${task.id}'); document.getElementById('custom-modal').style.display='none';">
+                        Restore
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    const archiveHtml = `
+        <div class="archive-view" style="max-height: 400px; overflow-y: auto;">
+            <div class="mb-3">
+                <strong>${archivedTasks.length} archived tasks</strong>
+            </div>
+            ${archiveListHtml}
+        </div>
+    `;
+    
+    showCustomModal('Archived Tasks', archiveHtml, true);
+}
+
+/**
+ * Show custom modal with HTML content
+ * @param {string} title - Modal title
+ * @param {string} htmlContent - HTML content to display
+ * @param {boolean} showCancelButton - Whether to show cancel button
+ * @returns {Promise<boolean>} Resolves with true if confirmed, false if canceled
+ */
+function showCustomModal(title, htmlContent, showCancelButton = true) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('custom-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const modalInput = document.getElementById('modal-input');
+        const modalConfirm = document.getElementById('modal-confirm');
+        const modalCancel = document.getElementById('modal-cancel');
+
+        modalTitle.textContent = title;
+        modalMessage.innerHTML = htmlContent;
+        modalInput.style.display = 'none';
+        modalCancel.style.display = showCancelButton ? 'block' : 'none';
+        modal.style.display = 'flex';
+
+        const closeModal = (result) => {
+            modal.style.display = 'none';
+            modalConfirm.onclick = null;
+            modalCancel.onclick = null;
+            resolve(result);
+        };
+
+        modalConfirm.textContent = showCancelButton ? 'Close' : 'OK';
+        modalConfirm.onclick = () => closeModal(true);
+        modalCancel.onclick = () => closeModal(false);
+    });
+}
+
 // Make functions globally available for onclick handlers
 window.moveTask = moveTask;
 window.editTask = editTask;
 window.deleteTask = deleteTask;
+window.archiveTask = archiveTask;
+window.restoreArchivedTask = restoreArchivedTask;
+window.archiveAllCompleted = archiveAllCompleted;
+window.showArchiveSettings = showArchiveSettings;
+window.showArchivedTasks = showArchivedTasks;
 
-// Initial render
-renderTasks();
+// Setup archive and settings button event listeners
+function setupArchiveButtons() {
+    const archiveButton = document.getElementById('archive-button');
+    const settingsButton = document.getElementById('settings-button');
+    
+    if (archiveButton) {
+        archiveButton.addEventListener('click', function(event) {
+            event.preventDefault();
+            archiveAllCompleted();
+        });
+    }
+    
+    if (settingsButton) {
+        settingsButton.addEventListener('click', function(event) {
+            event.preventDefault();
+            showArchiveSettings();
+        });
+    }
+}
+
+// Initialize the application
+function initializeApp() {
+    // Setup archive buttons
+    setupArchiveButtons();
+    
+    // Initial render
+    renderTasks();
+    
+    // Perform auto-archive check on load
+    performAutoArchive();
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+    initializeApp();
+}
