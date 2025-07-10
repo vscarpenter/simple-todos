@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Product Requirements Document - Simple To-Do List Management App</title>
+        <title>Product Requirements Document - Cascade Task Management App</title>
         <link
             href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap"
             rel="stylesheet"
@@ -20,20 +20,21 @@
                 padding: 2rem;
             }
             .prd-section {
-                background: white;
-                border-radius: 8px;
+                background: var(--md-surface);
+                border-radius: var(--md-shape-large);
                 padding: 2rem;
                 margin-bottom: 2rem;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-                border: 1px solid #e9ecef;
+                box-shadow: var(--md-elevation-1);
+                border: 1px solid var(--md-outline-variant);
             }
             .prd-header {
                 text-align: center;
                 padding: 3rem 2rem;
-                background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-                color: white;
+                background: linear-gradient(135deg, var(--md-primary) 0%, var(--md-secondary) 100%);
+                color: var(--md-on-primary);
                 margin-bottom: 3rem;
-                border-radius: 12px;
+                border-radius: var(--md-shape-large);
+                box-shadow: var(--md-elevation-2);
             }
             .feature-grid {
                 display: grid;
@@ -42,14 +43,19 @@
                 margin-top: 1.5rem;
             }
             .feature-card {
-                background: #f8f9fa;
+                background: var(--md-surface-variant);
                 padding: 1.5rem;
-                border-radius: 8px;
-                border-left: 4px solid #007bff;
+                border-radius: var(--md-shape-medium);
+                border-left: 4px solid var(--md-primary);
+                transition: all var(--md-duration-medium2) cubic-bezier(0.4, 0.0, 0.2, 1);
             }
-            .priority-high { border-left-color: #dc3545; }
-            .priority-medium { border-left-color: #ffc107; }
-            .priority-low { border-left-color: #28a745; }
+            .feature-card:hover {
+                box-shadow: var(--md-elevation-2);
+                transform: translateY(-2px);
+            }
+            .priority-high { border-left-color: var(--md-error); }
+            .priority-medium { border-left-color: var(--md-warning); }
+            .priority-low { border-left-color: var(--md-success); }
             .tech-stack {
                 display: flex;
                 flex-wrap: wrap;
@@ -57,60 +63,84 @@
                 margin-top: 1rem;
             }
             .tech-badge {
-                background: #007bff;
-                color: white;
+                background: var(--md-primary);
+                color: var(--md-on-primary);
                 padding: 0.25rem 0.75rem;
-                border-radius: 20px;
-                font-size: 0.875rem;
+                border-radius: var(--md-shape-extra-large);
+                font-size: var(--md-label-medium);
                 font-weight: 500;
+                box-shadow: var(--md-elevation-1);
             }
             .back-link {
                 position: fixed;
                 top: 1rem;
                 left: 1rem;
                 z-index: 1000;
+                background: var(--md-surface);
+                color: var(--md-on-surface);
+                border: 1px solid var(--md-outline);
+                border-radius: var(--md-shape-large);
+                padding: 0.5rem 1rem;
+                text-decoration: none;
+                font-size: var(--md-label-medium);
+                font-weight: 500;
+                transition: all var(--md-duration-medium2) cubic-bezier(0.4, 0.0, 0.2, 1);
+                box-shadow: var(--md-elevation-1);
+            }
+            .back-link:hover {
+                background: var(--md-surface-variant);
+                color: var(--md-on-surface);
+                box-shadow: var(--md-elevation-2);
+                transform: translateY(-1px);
+                text-decoration: none;
             }
             table {
                 margin-top: 1rem;
             }
+            body {
+                background: var(--md-background);
+                color: var(--md-on-background);
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            }
         </style>
     </head>
-    <body style="background-color: #f8f9fa;">
-        <a href="index.html" class="back-link btn btn-outline-primary btn-sm">
-            ← Back to App
+    <body>
+        <a href="index.html" class="back-link">
+            ← Back to Cascade
         </a>
 
         <div class="prd-content">
             <div class="prd-header">
                 <h1 class="display-4 fw-bold mb-3">Product Requirements Document</h1>
-                <h2 class="h4 mb-4">Simple To-Do List Management App</h2>
-                <p class="lead">A client-side task management application with Kanban-style board functionality</p>
+                <h2 class="h4 mb-4">Cascade Task Management App</h2>
+                <p class="lead">Watch your productivity flow with intelligent task management</p>
                 <p class="text-light mb-0">Version 2.0 | Last Updated: January 2025</p>
             </div>
 
             <div class="prd-section">
-                <h2 class="h3 mb-4 text-primary">📋 Executive Summary</h2>
-                <p class="lead">The Simple To-Do List Management App is a vanilla JavaScript web application designed to provide users with an intuitive, efficient way to manage their tasks using a Kanban-style board interface.</p>
+                <h2 class="h3 mb-4" style="color: var(--md-primary);">📋 Executive Summary</h2>
+                <p class="lead">Cascade is a Material Design 3 compliant task management application that provides users with an intuitive, efficient way to manage their tasks using a Kanban-style board interface with modern design principles.</p>
                 
                 <div class="row mt-4">
                     <div class="col-md-6">
                         <h4>🎯 Primary Goal</h4>
-                        <p>Enable users to organize, track, and manage their tasks through a clean, responsive web interface with persistent local storage.</p>
+                        <p>Enable users to organize, track, and manage their tasks through a clean, responsive web interface with persistent local storage, following Material Design 3 guidelines for optimal user experience.</p>
                     </div>
                     <div class="col-md-6">
                         <h4>👥 Target Audience</h4>
-                        <p>Individual users seeking a simple, browser-based task management solution without the complexity of enterprise tools.</p>
+                        <p>Individual users seeking a modern, browser-based task management solution with professional design standards and intuitive interactions.</p>
                     </div>
                 </div>
             </div>
 
             <div class="prd-section">
-                <h2 class="h3 mb-4 text-primary">🚀 Product Overview</h2>
+                <h2 class="h3 mb-4" style="color: var(--md-primary);">🚀 Product Overview</h2>
                 
                 <div class="row">
                     <div class="col-md-8">
                         <h4>Key Value Propositions</h4>
                         <ul class="list-unstyled">
+                            <li class="mb-2">✅ <strong>Material Design 3:</strong> Modern, accessible design system</li>
                             <li class="mb-2">✅ <strong>Zero Configuration:</strong> Works immediately in any modern browser</li>
                             <li class="mb-2">✅ <strong>Data Privacy:</strong> All data stored locally in browser storage</li>
                             <li class="mb-2">✅ <strong>Offline Capable:</strong> No internet connection required after initial load</li>
@@ -119,13 +149,14 @@
                         </ul>
                     </div>
                     <div class="col-md-4">
-                        <div class="bg-light p-3 rounded">
+                        <div class="bg-light p-3 rounded" style="background: var(--md-surface-variant) !important;">
                             <h5>Success Metrics</h5>
                             <ul class="mb-0">
                                 <li>User task completion rate</li>
                                 <li>Daily active usage</li>
                                 <li>Data export utilization</li>
                                 <li>Mobile responsiveness score</li>
+                                <li>Accessibility compliance</li>
                             </ul>
                         </div>
                     </div>
@@ -133,11 +164,11 @@
             </div>
 
             <div class="prd-section">
-                <h2 class="h3 mb-4 text-primary">⭐ Core Features</h2>
+                <h2 class="h3 mb-4" style="color: var(--md-primary);">⭐ Core Features</h2>
                 
                 <div class="feature-grid">
                     <div class="feature-card priority-high">
-                        <h5 class="text-danger mb-3">🎯 Task Management (High Priority)</h5>
+                        <h5 class="mb-3" style="color: var(--md-error);">🎯 Task Management (High Priority)</h5>
                         <ul class="mb-0">
                             <li>Create new tasks with descriptive text</li>
                             <li>Edit existing task descriptions</li>
@@ -148,7 +179,7 @@
                     </div>
 
                     <div class="feature-card priority-high">
-                        <h5 class="text-danger mb-3">📊 Kanban Board (High Priority)</h5>
+                        <h5 class="mb-3" style="color: var(--md-error);">📊 Kanban Board (High Priority)</h5>
                         <ul class="mb-0">
                             <li>Three-column layout: To-Do, In Progress, Done</li>
                             <li>Drag-and-drop task movement</li>
@@ -159,7 +190,7 @@
                     </div>
 
                     <div class="feature-card priority-high">
-                        <h5 class="text-danger mb-3">💾 Data Persistence (High Priority)</h5>
+                        <h5 class="mb-3" style="color: var(--md-error);">💾 Data Persistence (High Priority)</h5>
                         <ul class="mb-0">
                             <li>Automatic localStorage saving</li>
                             <li>Session recovery on page reload</li>
@@ -169,7 +200,7 @@
                     </div>
 
                     <div class="feature-card priority-medium">
-                        <h5 class="text-warning mb-3">📤 Import/Export (Medium Priority)</h5>
+                        <h5 class="mb-3" style="color: var(--md-warning);">📤 Import/Export (Medium Priority)</h5>
                         <ul class="mb-0">
                             <li>Export tasks to JSON format</li>
                             <li>Import tasks from JSON files</li>
@@ -180,9 +211,9 @@
                     </div>
 
                     <div class="feature-card priority-medium">
-                        <h5 class="text-warning mb-3">🎨 User Experience (Medium Priority)</h5>
+                        <h5 class="mb-3" style="color: var(--md-warning);">🎨 Material Design 3 (Medium Priority)</h5>
                         <ul class="mb-0">
-                            <li>Clean, modern interface design</li>
+                            <li>Modern Material Design 3 interface</li>
                             <li>Responsive mobile layout</li>
                             <li>Accessibility compliance</li>
                             <li>Smooth animations and transitions</li>
@@ -191,7 +222,7 @@
                     </div>
 
                     <div class="feature-card priority-low">
-                        <h5 class="text-success mb-3">🔧 Developer Experience (Low Priority)</h5>
+                        <h5 class="mb-3" style="color: var(--md-success);">🔧 Developer Experience (Low Priority)</h5>
                         <ul class="mb-0">
                             <li>Well-documented codebase</li>
                             <li>Modular JavaScript architecture</li>

@@ -33,7 +33,7 @@ function generateUniqueId() {
  */
 function getTasks() {
     try {
-        const tasks = JSON.parse(localStorage.getItem('trello-tasks')) || [];
+        const tasks = JSON.parse(localStorage.getItem('cascade-tasks')) || [];
         // Migrate old todos to new format if they exist
         const oldTodos = JSON.parse(localStorage.getItem('todos')) || [];
         if (oldTodos.length > 0 && tasks.length === 0) {
@@ -60,7 +60,7 @@ function getTasks() {
  */
 function saveTasks(tasks) {
     try {
-        localStorage.setItem('trello-tasks', JSON.stringify(tasks));
+        localStorage.setItem('cascade-tasks', JSON.stringify(tasks));
     } catch (error) {
         console.error('Failed to save tasks to localStorage:', error);
         showModal('Error', 'Failed to save tasks. Your browser storage might be full.');
@@ -557,7 +557,7 @@ function performExport() {
 
     const a = document.createElement('a');
     a.href = url;
-    a.download = `trello-tasks-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `cascade-tasks-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
 
     URL.revokeObjectURL(url);

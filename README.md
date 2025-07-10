@@ -1,24 +1,26 @@
-# Professional Task Management Board
+# Cascade - Material Design 3 Task Management
 
-A professional, enterprise-grade task management web application with a clean, modern design system. The application allows users to organize their tasks across three columns: To-Do, In Progress, and Completed. Built with professional typography, intuitive interactions, and a polished user interface.
+A modern, Material Design 3 compliant task management web application with a clean, accessible design system. Cascade allows users to organize their tasks across three columns: To-Do, In Progress, and Completed. Built with Material Design 3 principles, intuitive interactions, and a polished user interface that follows Google's latest design guidelines.
+
+**Watch your productivity flow.**
 
 ---
 
 ## ✨ Features
 
 ### **Core Functionality**
-- **Professional Kanban Board**: Three-column layout (To-Do, In Progress, Completed) for visual task management
-- **Drag & Drop**: Smooth drag-and-drop functionality to move tasks between columns
+- **Material Design 3 Kanban Board**: Three-column layout (To-Do, In Progress, Completed) for visual task management
+- **Drag & Drop**: Smooth drag-and-drop functionality with Material Design 3 animations
 - **Task Management**: Create, edit, move, and delete tasks with intuitive controls
 - **Status Transitions**: Move tasks using drag-and-drop or dedicated action buttons
 - **Real-time Counters**: Live task count display in each column header
 
-### **Professional Design**
-- **Modern Design System**: Colors, typography, and design patterns following professional standards
-- **Clean Interface**: Modern, uncluttered design with professional aesthetics
+### **Material Design 3 Design System**
+- **Modern Design System**: Colors, typography, and design patterns following Material Design 3 standards
+- **Clean Interface**: Modern, uncluttered design with Material Design 3 aesthetics
 - **Responsive Design**: Optimized for desktop, tablet, and mobile devices
-- **Visual Status Indicators**: Color-coded task cards and column headers
-- **Professional Typography**: Guardian Sans font family with proper weights and hierarchy
+- **Visual Status Indicators**: Color-coded task cards and column headers using MD3 color tokens
+- **Professional Typography**: Inter font family with proper Material Design 3 type scale
 
 ### **Enterprise Features**
 - **Enhanced Export**: Export with metadata, status counts, and date information
@@ -29,41 +31,45 @@ A professional, enterprise-grade task management web application with a clean, m
 
 ---
 
-## 🎨 Design System
+## 🎨 Material Design 3 Design System
 
 ### **Color Palette**
-- **Primary Blue**: `#002B49` - Primary brand blue
-- **Digital Blue**: `#0E497B` - Secondary blue for backgrounds and CTAs
-- **Brand Gold**: `#FFB81C` - Primary action color and accents
-- **Gun Grey**: `#2A2A2A` - Primary text color
-- **Storm**: `#EDF0F3` - Background color for modules
-- **Cloud**: `#F8FAFC` - Light background color
+- **Primary**: `#6750A4` - Primary brand color
+- **Secondary**: `#625B71` - Secondary color for accents
+- **Tertiary**: `#7D5260` - Tertiary color for highlights
+- **Surface**: `#FFFBFE` - Surface background color
+- **Background**: `#FFFBFE` - Main background color
+- **Error**: `#BA1A1A` - Error states and destructive actions
+- **Success**: `#00A67E` - Success states and positive actions
+- **Warning**: `#FFB81C` - Warning states and caution elements
 
 ### **Typography**
-- **Primary Font**: Guardian Sans (Light, Regular, Medium weights)
-- **Secondary Font**: Arial (fallback)
-- **Font Weights**: Light (300), Regular (400), Medium (500)
-- **Hierarchy**: Professional digital typography standards
+- **Primary Font**: Inter (Light, Regular, Medium, SemiBold weights)
+- **Type Scale**: Material Design 3 typography scale (Display, Headline, Title, Body, Label)
+- **Font Weights**: Light (300), Regular (400), Medium (500), SemiBold (600)
+- **Hierarchy**: Material Design 3 typography standards
 
 ### **Visual Elements**
-- **Professional Buttons**: Gold CTAs with proper hover states
-- **Clean Cards**: White backgrounds with subtle shadows and brand-colored borders
-- **Consistent Spacing**: Professional spacing following the style guide
-- **Accessibility**: Proper focus states and color contrast ratios
+- **Material Buttons**: MD3 button variants with proper elevation and state layers
+- **Clean Cards**: Surface backgrounds with Material Design 3 elevation system
+- **Consistent Spacing**: Material Design 3 spacing tokens
+- **Accessibility**: Proper focus states and color contrast ratios following MD3 guidelines
 
 ---
 
 ## 🏗️ Project Structure
 
 ```
-simple-todos/
+cascade-todos/
 ├── index.html              # Main application entry point
 ├── styles/
-│   └── components.css      # Professional design system CSS
+│   └── components.css      # Material Design 3 system CSS
 ├── scripts/
 │   ├── app.js             # Core application logic with drag-and-drop
 │   └── validation.js      # Input validation and error handling
-├── Digital Style Guide.pdf # Design system style guide
+├── assets/
+│   └── cascade-icon.svg   # Custom brand icon
+├── prd.html              # Product Requirements Document
 ├── Dockerfile             # Docker configuration with security best practices
 ├── nginx.conf            # Custom nginx configuration with security headers
 ├── README.md             # Comprehensive project documentation
@@ -79,7 +85,7 @@ simple-todos/
 1. **Clone the repository:**
    ```bash
    git clone <repository-url>
-   cd simple-todos
+   cd cascade-todos
    ```
 
 2. **Run locally:**
@@ -99,8 +105,8 @@ simple-todos/
 
 1. **Build and run:**
    ```bash
-   docker build -t task-board .
-   docker run -p 8080:8080 task-board
+   docker build -t cascade-app .
+   docker run -p 8080:8080 cascade-app
    ```
 
 2. **Access the application:**
@@ -113,23 +119,23 @@ simple-todos/
 ### **Task Management**
 - **Creating Tasks**: Enter task text and click "Add Task" - new tasks appear in To-Do column
 - **Moving Tasks**: 
-  - **Drag & Drop**: Click and drag task cards between columns
+  - **Drag & Drop**: Click and drag task cards between columns with Material Design 3 animations
   - **Action Buttons**: Use "→ To-Do", "→ In Progress", "→ Completed" buttons on task cards
 - **Editing Tasks**: Click "Edit" button on any task card to modify text
-- **Deleting Tasks**: Click "Delete" button with confirmation dialog
+- **Deleting Tasks**: Click "Delete" button with Material Design 3 confirmation dialog
 
 ### **Board Features**
-- **Task Counters**: Each column header shows real-time task count
-- **Visual Status**: Task cards have colored left borders indicating status
+- **Task Counters**: Each column header shows real-time task count with Material Design 3 styling
+- **Visual Status**: Task cards have Material Design 3 elevation and state layers
 - **Responsive Layout**: Columns stack vertically on mobile devices
-- **Professional Animations**: Smooth transitions following brand guidelines
+- **Material Animations**: Smooth transitions following Material Design 3 motion guidelines
 
 ### **Data Management**
 
 #### **Exporting Tasks**
 1. Click "Export Tasks" button
-2. Review task distribution preview with professional formatting
-3. Confirm to download JSON file with format: `task-board-YYYY-MM-DD.json`
+2. Review task distribution preview with Material Design 3 formatting
+3. Confirm to download JSON file with format: `cascade-tasks-YYYY-MM-DD.json`
 4. Export includes metadata, status counts, and all task data
 
 #### **Importing Tasks**
@@ -143,9 +149,9 @@ simple-todos/
 ## 🛠️ Technologies Used
 
 - **Frontend**: HTML5, CSS3, JavaScript (ES6+)
-- **Styling**: Professional design system compliant CSS
-- **Typography**: Guardian Sans font family (with Arial fallback)
-- **Drag & Drop**: Native HTML5 Drag and Drop API
+- **Design System**: Material Design 3 compliant CSS
+- **Typography**: Inter font family with Material Design 3 type scale
+- **Drag & Drop**: Native HTML5 Drag and Drop API with MD3 animations
 - **Storage**: Browser localStorage with JSON serialization
 - **Containerization**: Docker with nginx:1.27.0-alpine
 - **Security**: CSP headers, XSS prevention, input sanitization
@@ -159,6 +165,7 @@ simple-todos/
 {
   "exportDate": "2025-01-06T23:00:00.000Z",
   "version": "2.0",
+  "appName": "Cascade",
   "totalTasks": 5,
   "statusCounts": {
     "todo": 2,
@@ -180,17 +187,17 @@ simple-todos/
 
 ## 🏛️ Board Columns
 
-### **📋 To-Do (Digital Blue)**
+### **📋 To-Do (Primary Color)**
 - New tasks start here automatically
 - Planning and backlog items
 - Tasks awaiting action
 
-### **⚡ In Progress (Brand Gold)**
+### **⚡ In Progress (Secondary Color)**
 - Tasks currently in progress
 - Active work items
 - Items being worked on
 
-### **✅ Completed (Success Green)**
+### **✅ Completed (Success Color)**
 - Completed tasks
 - Finished work items
 - Accomplished goals

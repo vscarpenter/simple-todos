@@ -1,68 +1,312 @@
-/* Professional Design System Implementation */
+/* Material Design 3 Implementation */
 /* Color Variables */
 :root {
-    /* Primary Colors */
-    --primary-blue: #002B49;
-    --brand-gold: #FFB81C;
-    --gun-grey: #2A2A2A;
-    --white: #FFFFFF;
+    /* Material Design 3 Dynamic Colors */
+    --md-primary: #6750A4;
+    --md-on-primary: #FFFFFF;
+    --md-primary-container: #EADDFF;
+    --md-on-primary-container: #21005D;
     
-    /* Secondary Colors */
-    --digital-blue: #0E497B;
-    --storm: #EDF0F3;
-    --cloud: #F8FAFC;
+    --md-secondary: #625B71;
+    --md-on-secondary: #FFFFFF;
+    --md-secondary-container: #E8DEF8;
+    --md-on-secondary-container: #1D192B;
     
-    /* Tertiary Colors */
-    --orange: #f36f35;
-    --light-blue-1: #64b5d6;
-    --light-blue-2: #83d4f1;
-    --light-blue-3: #b4e4fa;
+    --md-tertiary: #7D5260;
+    --md-on-tertiary: #FFFFFF;
+    --md-tertiary-container: #FFD8E4;
+    --md-on-tertiary-container: #31111D;
     
-    /* Alert Colors */
-    --success: #00afa5;
-    --error: #ec564b;
+    /* Surface Colors */
+    --md-surface: #FFFBFE;
+    --md-on-surface: #1C1B1F;
+    --md-surface-variant: #E7E0EC;
+    --md-on-surface-variant: #49454F;
     
-    /* CTA Colors */
-    --cta-hover: #D39100;
-    --secondary-cta: #3586CA;
-    --secondary-hover: #C7C7C7;
+    /* Background Colors */
+    --md-background: #FFFBFE;
+    --md-on-background: #1C1B1F;
+    
+    /* Error Colors */
+    --md-error: #BA1A1A;
+    --md-on-error: #FFFFFF;
+    --md-error-container: #FFDAD6;
+    --md-on-error-container: #410002;
+    
+    /* Success Colors */
+    --md-success: #00A67E;
+    --md-on-success: #FFFFFF;
+    --md-success-container: #CCF7E5;
+    --md-on-success-container: #002114;
+    
+    /* Warning Colors */
+    --md-warning: #FFB81C;
+    --md-on-warning: #1C1B1F;
+    --md-warning-container: #FFF3CD;
+    --md-on-warning-container: #3D2F00;
+    
+    /* Outline Colors */
+    --md-outline: #79747E;
+    --md-outline-variant: #CAC4D0;
+    
+    /* Elevation */
+    --md-elevation-1: 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.30);
+    --md-elevation-2: 0px 2px 6px 2px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.30);
+    --md-elevation-3: 0px 4px 8px 3px rgba(0, 0, 0, 0.15), 0px 1px 3px 0px rgba(0, 0, 0, 0.30);
+    --md-elevation-4: 0px 6px 10px 4px rgba(0, 0, 0, 0.15), 0px 2px 4px 0px rgba(0, 0, 0, 0.30);
+    --md-elevation-5: 0px 8px 12px 6px rgba(0, 0, 0, 0.15), 0px 4px 4px 0px rgba(0, 0, 0, 0.30);
+    
+    /* State Layers */
+    --md-state-hover: rgba(103, 80, 164, 0.08);
+    --md-state-focus: rgba(103, 80, 164, 0.12);
+    --md-state-pressed: rgba(103, 80, 164, 0.12);
+    --md-state-dragged: rgba(103, 80, 164, 0.16);
+    
+    /* Typography Scale */
+    --md-display-large: 3.5rem;
+    --md-display-medium: 2.8rem;
+    --md-display-small: 2.25rem;
+    --md-headline-large: 2rem;
+    --md-headline-medium: 1.75rem;
+    --md-headline-small: 1.5rem;
+    --md-title-large: 1.375rem;
+    --md-title-medium: 1rem;
+    --md-title-small: 0.875rem;
+    --md-body-large: 1rem;
+    --md-body-medium: 0.875rem;
+    --md-body-small: 0.75rem;
+    --md-label-large: 0.875rem;
+    --md-label-medium: 0.75rem;
+    --md-label-small: 0.6875rem;
+    
+    /* Shape */
+    --md-shape-extra-small: 4px;
+    --md-shape-small: 8px;
+    --md-shape-medium: 12px;
+    --md-shape-large: 16px;
+    --md-shape-extra-large: 28px;
+    
+    /* Motion */
+    --md-duration-short1: 50ms;
+    --md-duration-short2: 100ms;
+    --md-duration-short3: 150ms;
+    --md-duration-short4: 200ms;
+    --md-duration-medium1: 250ms;
+    --md-duration-medium2: 300ms;
+    --md-duration-medium3: 350ms;
+    --md-duration-medium4: 400ms;
+    --md-duration-long1: 500ms;
+    --md-duration-long2: 700ms;
+    --md-duration-long3: 1000ms;
+    --md-duration-long4: 2000ms;
+    --md-duration-extra-long1: 3000ms;
+    --md-duration-extra-long2: 5000ms;
 }
 
-/* General styles */
+/* Material Design 3 Typography and General Styles */
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background: #f8f9fa;
+    background: var(--md-background);
     min-height: 100vh;
-    color: #333;
+    color: var(--md-on-background);
     font-weight: 400;
+    font-size: var(--md-body-large);
+    line-height: 1.5;
+    letter-spacing: 0.15px;
 }
 
-/* Header styles - Backlog.md style */
+/* Material Design 3 Header Styles */
 header {
-    background: white;
-    color: #333;
+    background: var(--md-surface);
+    color: var(--md-on-surface);
     padding: 1rem 0;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    border-bottom: 1px solid #e9ecef;
+    box-shadow: var(--md-elevation-1);
+    border-bottom: 1px solid var(--md-outline-variant);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+    background: rgba(255, 251, 254, 0.95);
 }
 
-header h1 {
-    font-size: 1.5rem;
-    margin: 0;
-    color: #333;
+/* Enhanced Header Content */
+.header-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.app-brand {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.brand-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: var(--md-primary-container);
+    color: var(--md-on-primary-container);
+    border-radius: var(--md-shape-large);
+    box-shadow: var(--md-elevation-1);
+    transition: all var(--md-duration-medium2) cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.brand-icon:hover {
+    box-shadow: var(--md-elevation-2);
+    transform: scale(1.05);
+}
+
+.brand-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.app-title {
+    font-size: var(--md-headline-medium);
     font-weight: 600;
+    color: var(--md-on-surface);
+    margin: 0;
+    letter-spacing: -0.25px;
+    line-height: 1.2;
+    background: linear-gradient(135deg, var(--md-primary) 0%, var(--md-secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.app-subtitle {
+    font-size: var(--md-body-medium);
+    color: var(--md-on-surface-variant);
+    margin: 0;
+    font-weight: 400;
+    letter-spacing: 0.15px;
+    line-height: 1.4;
+}
+
+.app-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.prd-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--md-surface-variant);
+    color: var(--md-on-surface-variant);
+    border-radius: var(--md-shape-large);
+    text-decoration: none;
+    font-size: var(--md-label-medium);
+    font-weight: 500;
+    letter-spacing: 0.1px;
+    transition: all var(--md-duration-medium2) cubic-bezier(0.4, 0.0, 0.2, 1);
+    border: 1px solid var(--md-outline-variant);
+    box-shadow: var(--md-elevation-1);
+}
+
+.prd-link:hover {
+    background: var(--md-surface-variant);
+    color: var(--md-on-surface);
+    box-shadow: var(--md-elevation-2);
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+
+.prd-icon {
+    font-size: 1rem;
+}
+
+.prd-text {
+    font-size: var(--md-label-medium);
+}
+
+/* Responsive Header */
+@media (max-width: 768px) {
+    .app-brand {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .brand-icon {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .app-title {
+        font-size: var(--md-headline-small);
+    }
+    
+    .app-subtitle {
+        font-size: var(--md-body-small);
+    }
+    
+    .app-actions {
+        margin-top: 0.5rem;
+    }
+    
+    .prd-link {
+        padding: 0.375rem 0.75rem;
+        font-size: var(--md-label-small);
+    }
+}
+
+@media (max-width: 480px) {
+    .header-content {
+        gap: 0.5rem;
+    }
+    
+    .app-title {
+        font-size: var(--md-title-large);
+    }
+    
+    .app-subtitle {
+        font-size: var(--md-body-small);
+    }
+}
+
+/* Legacy header styles for backward compatibility */
+header h1 {
+    font-size: var(--md-headline-small);
+    margin: 0;
+    color: var(--md-on-surface);
+    font-weight: 500;
+    letter-spacing: 0.1px;
 }
 
 header .text-muted {
-    color: #6c757d !important;
+    color: var(--md-on-surface-variant) !important;
+    font-size: var(--md-body-medium);
+    letter-spacing: 0.25px;
 }
 
 header .btn-primary {
-    background: #007bff;
-    border-color: #007bff;
+    background: var(--md-primary);
+    border-color: var(--md-primary);
+    color: var(--md-on-primary);
     font-weight: 500;
+    font-size: var(--md-label-large);
+    letter-spacing: 0.1px;
+    text-transform: none;
+    border-radius: var(--md-shape-large);
+    padding: 0.75rem 1.5rem;
+    transition: all var(--md-duration-medium2) cubic-bezier(0.4, 0.0, 0.2, 1);
+    box-shadow: var(--md-elevation-1);
+}
+
+header .btn-primary:hover {
+    background: var(--md-primary);
+    box-shadow: var(--md-elevation-2);
+    transform: translateY(-1px);
 }
 
 /* Header button group */
@@ -94,79 +338,144 @@ main {
     padding: 2rem 1.5rem;
 }
 
-/* Form styles */
+/* Material Design 3 Form Styles */
 form {
     display: flex;
     gap: 1rem;
     margin-bottom: 2rem;
+    align-items: center;
 }
 
 input[type="text"] {
     flex: 1;
     padding: 1rem 1.25rem;
-    border: 1px solid #dee2e6;
-    border-radius: 25px;
-    font-size: 1rem;
-    background: white;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--md-outline);
+    border-radius: var(--md-shape-large);
+    font-size: var(--md-body-large);
+    background: var(--md-surface);
+    transition: all var(--md-duration-medium2) cubic-bezier(0.4, 0.0, 0.2, 1);
+    box-shadow: var(--md-elevation-1);
     font-family: inherit;
     font-weight: 400;
-    color: #333;
+    color: var(--md-on-surface);
+    letter-spacing: 0.15px;
+    position: relative;
 }
 
 input[type="text"]:focus {
-    border-color: #007bff;
+    border-color: var(--md-primary);
     outline: none;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1), 0 4px 12px rgba(0, 0, 0, 0.15);
-    background: white;
+    box-shadow: var(--md-elevation-2), 0 0 0 1px var(--md-primary);
+    background: var(--md-surface);
+}
+
+input[type="text"]:hover {
+    border-color: var(--md-outline-variant);
+    box-shadow: var(--md-elevation-2);
 }
 
 input[type="text"]::placeholder {
-    color: #6c757d;
+    color: var(--md-on-surface-variant);
     font-weight: 400;
+    letter-spacing: 0.15px;
 }
 
-/* Primary Button Styles */
+/* Material Design 3 Button Styles */
 button {
-    padding: 1rem 2rem;
-    background: #007bff;
-    color: white;
+    padding: 0.75rem 1.5rem;
+    background: var(--md-primary);
+    color: var(--md-on-primary);
     border: none;
-    border-radius: 25px;
+    border-radius: var(--md-shape-large);
     cursor: pointer;
     font-weight: 500;
-    font-size: 0.875rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+    font-size: var(--md-label-large);
+    transition: all var(--md-duration-medium2) cubic-bezier(0.4, 0.0, 0.2, 1);
+    box-shadow: var(--md-elevation-1);
     position: relative;
     overflow: hidden;
     font-family: inherit;
+    letter-spacing: 0.1px;
+    text-transform: none;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 }
 
 button::before {
     content: '';
     position: absolute;
     top: 0;
-    left: -100%;
+    left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s;
+    background: var(--md-state-hover);
+    opacity: 0;
+    transition: opacity var(--md-duration-short2) cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
 button:hover::before {
-    left: 100%;
+    opacity: 1;
 }
 
 button:hover {
-    background: #0056b3;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+    background: var(--md-primary);
+    box-shadow: var(--md-elevation-2);
+    transform: translateY(-1px);
 }
 
 button:active {
     transform: translateY(0);
+    background: var(--md-primary);
+    box-shadow: var(--md-elevation-1);
+}
+
+button:focus {
+    outline: none;
+    box-shadow: var(--md-elevation-2), 0 0 0 2px var(--md-primary);
+}
+
+/* Material Design 3 Button Variants */
+.btn-secondary {
+    background: var(--md-secondary);
+    color: var(--md-on-secondary);
+}
+
+.btn-secondary:hover {
+    background: var(--md-secondary);
+    box-shadow: var(--md-elevation-2);
+}
+
+.btn-success {
+    background: var(--md-success);
+    color: var(--md-on-success);
+}
+
+.btn-success:hover {
+    background: var(--md-success);
+    box-shadow: var(--md-elevation-2);
+}
+
+.btn-warning {
+    background: var(--md-warning);
+    color: var(--md-on-warning);
+}
+
+.btn-warning:hover {
+    background: var(--md-warning);
+    box-shadow: var(--md-elevation-2);
+}
+
+.btn-danger {
+    background: var(--md-error);
+    color: var(--md-on-error);
+}
+
+.btn-danger:hover {
+    background: var(--md-error);
+    box-shadow: var(--md-elevation-2);
 }
 
 /* Backlog Board Container */
@@ -179,44 +488,65 @@ button:active {
     margin: 0 2rem;
 }
 
-/* Board Columns - Backlog.md style */
+/* Material Design 3 Board Columns */
 .board-column {
     flex: 1;
     min-width: 320px;
-    background: #f8f9fa;
-    border-radius: 8px;
+    background: var(--md-surface-variant);
+    border-radius: var(--md-shape-large);
     display: flex;
     flex-direction: column;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--md-outline-variant);
+    box-shadow: var(--md-elevation-1);
+    transition: all var(--md-duration-medium2) cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.board-column:hover {
+    box-shadow: var(--md-elevation-2);
+    border-color: var(--md-outline);
 }
 
 .column-header {
     padding: 1.5rem 1.5rem 1rem 1.5rem;
-    border-radius: 8px 8px 0 0;
+    border-radius: var(--md-shape-large) var(--md-shape-large) 0 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-weight: 600;
-    background: transparent;
-    border-bottom: 1px solid #e9ecef;
+    font-weight: 500;
+    background: var(--md-surface);
+    border-bottom: 1px solid var(--md-outline-variant);
+    position: relative;
+}
+
+.column-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--md-outline-variant);
 }
 
 .column-header h3 {
     margin: 0;
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #333;
+    font-size: var(--md-title-medium);
+    font-weight: 500;
+    color: var(--md-on-surface);
+    letter-spacing: 0.15px;
 }
 
 .task-count {
-    background: #6c757d;
-    color: white;
-    padding: 0.25rem 0.5rem;
-    border-radius: 12px;
-    font-size: 0.875rem;
+    background: var(--md-primary-container);
+    color: var(--md-on-primary-container);
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--md-shape-extra-large);
+    font-size: var(--md-label-medium);
     font-weight: 500;
-    min-width: 24px;
+    min-width: 28px;
     text-align: center;
+    letter-spacing: 0.1px;
+    box-shadow: var(--md-elevation-1);
 }
 
 .column-content {
@@ -224,72 +554,106 @@ button:active {
     padding: 1.5rem;
     min-height: 400px;
     overflow-y: auto;
-    background: #f8f9fa;
+    background: var(--md-surface-variant);
+    border-radius: 0 0 var(--md-shape-large) var(--md-shape-large);
 }
 
-/* Task Cards - Backlog.md style */
+/* Material Design 3 Task Cards */
 .task-card {
-    background: white;
-    border-radius: 6px;
+    background: var(--md-surface);
+    border-radius: var(--md-shape-medium);
     padding: 1rem;
     margin-bottom: 0.75rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--md-elevation-1);
     cursor: grab;
-    transition: all 0.2s ease;
-    border: 1px solid #e9ecef;
+    transition: all var(--md-duration-medium2) cubic-bezier(0.4, 0.0, 0.2, 1);
+    border: 1px solid var(--md-outline-variant);
+    position: relative;
+    overflow: hidden;
+}
+
+.task-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--md-state-hover);
+    opacity: 0;
+    transition: opacity var(--md-duration-short2) cubic-bezier(0.4, 0.0, 0.2, 1);
+    pointer-events: none;
+}
+
+.task-card:hover::before {
+    opacity: 1;
 }
 
 .task-card:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    transform: translateY(-1px);
+    box-shadow: var(--md-elevation-2);
+    transform: translateY(-2px);
+    border-color: var(--md-outline);
 }
 
 .task-card.dragging {
-    opacity: 0.8;
+    opacity: 0.9;
     cursor: grabbing;
-    transform: rotate(1deg) scale(1.01);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    transform: rotate(2deg) scale(1.02);
+    box-shadow: var(--md-elevation-4);
+    z-index: 1000;
+}
+
+.task-card:focus {
+    outline: none;
+    box-shadow: var(--md-elevation-2), 0 0 0 2px var(--md-primary);
 }
 
 .task-content {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    position: relative;
+    z-index: 1;
 }
 
 .task-text {
-    font-size: 0.875rem;
+    font-size: var(--md-body-medium);
     font-weight: 500;
-    color: #333;
+    color: var(--md-on-surface);
     line-height: 1.4;
     word-wrap: break-word;
     margin-bottom: 0.5rem;
+    letter-spacing: 0.15px;
 }
 
 .task-id {
-    font-size: 0.75rem;
-    color: #6c757d;
+    font-size: var(--md-label-small);
+    color: var(--md-on-surface-variant);
     font-weight: 400;
     margin-bottom: 0.25rem;
+    letter-spacing: 0.4px;
 }
 
 .task-description {
-    font-size: 0.8rem;
-    color: #666;
+    font-size: var(--md-body-small);
+    color: var(--md-on-surface-variant);
     line-height: 1.4;
     margin-bottom: 0.5rem;
+    letter-spacing: 0.25px;
 }
 
 .task-meta {
-    font-size: 0.75rem;
-    color: #6c757d;
+    font-size: var(--md-label-small);
+    color: var(--md-on-surface-variant);
     margin-top: 0.5rem;
+    letter-spacing: 0.4px;
 }
 
 .task-date {
-    font-size: 0.75rem;
-    color: #6c757d;
+    font-size: var(--md-label-small);
+    color: var(--md-on-surface-variant);
     font-weight: 400;
+    letter-spacing: 0.4px;
 }
 
 .task-actions {
@@ -297,177 +661,226 @@ button:active {
     gap: 0.5rem;
     margin-top: 0.75rem;
     flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
 }
 
 .task-actions button {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-    border-radius: 4px;
-    border: 1px solid #dee2e6;
+    padding: 0.375rem 0.75rem;
+    font-size: var(--md-label-small);
+    border-radius: var(--md-shape-small);
+    border: 1px solid var(--md-outline);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all var(--md-duration-short2) cubic-bezier(0.4, 0.0, 0.2, 1);
     font-weight: 500;
-    background: white;
-    color: #6c757d;
+    background: var(--md-surface);
+    color: var(--md-on-surface-variant);
+    letter-spacing: 0.1px;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .task-actions button:hover {
-    background: #f8f9fa;
-    border-color: #adb5bd;
-    color: #495057;
+    background: var(--md-surface-variant);
+    border-color: var(--md-outline-variant);
+    color: var(--md-on-surface);
+    box-shadow: var(--md-elevation-1);
+}
+
+.task-actions button:focus {
+    outline: none;
+    box-shadow: var(--md-elevation-1), 0 0 0 2px var(--md-primary);
 }
 
 .btn-edit {
-    background: #ffc107;
-    color: #000;
-    border-color: #ffc107;
+    background: var(--md-warning-container);
+    color: var(--md-on-warning-container);
+    border-color: var(--md-warning);
 }
 
 .btn-edit:hover {
-    background: #e0a800;
-    border-color: #e0a800;
+    background: var(--md-warning-container);
+    color: var(--md-on-warning-container);
+    box-shadow: var(--md-elevation-1);
 }
 
 .btn-delete {
-    background: #dc3545;
-    color: white;
-    border-color: #dc3545;
+    background: var(--md-error-container);
+    color: var(--md-on-error-container);
+    border-color: var(--md-error);
 }
 
 .btn-delete:hover {
-    background: #c82333;
-    border-color: #c82333;
+    background: var(--md-error-container);
+    color: var(--md-on-error-container);
+    box-shadow: var(--md-elevation-1);
 }
 
 .btn-move {
-    background: #007bff;
-    color: white;
-    border-color: #007bff;
+    background: var(--md-primary-container);
+    color: var(--md-on-primary-container);
+    border-color: var(--md-primary);
 }
 
 .btn-move:hover {
-    background: #0069d9;
-    border-color: #0069d9;
+    background: var(--md-primary-container);
+    color: var(--md-on-primary-container);
+    box-shadow: var(--md-elevation-1);
 }
 
-/* Drag and Drop States */
+/* Material Design 3 Drag and Drop States */
 .column-content.drag-over {
-    background: linear-gradient(135deg, rgba(14, 73, 123, 0.1) 0%, rgba(255, 184, 28, 0.1) 100%);
-    border: 2px dashed var(--brand-gold);
-    border-radius: 8px;
+    background: var(--md-primary-container);
+    border: 2px dashed var(--md-primary);
+    border-radius: var(--md-shape-large);
+    opacity: 0.8;
 }
 
 .drop-zone {
     min-height: 50px;
     border: 2px dashed transparent;
-    border-radius: 8px;
-    transition: all 0.3s ease;
+    border-radius: var(--md-shape-large);
+    transition: all var(--md-duration-medium2) cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
 .drop-zone.drag-over {
-    border-color: var(--brand-gold);
-    background: linear-gradient(135deg, rgba(14, 73, 123, 0.05) 0%, rgba(255, 184, 28, 0.05) 100%);
+    border-color: var(--md-primary);
+    background: var(--md-primary-container);
+    opacity: 0.6;
 }
 
-/* Footer styles - Backlog.md style */
+/* Material Design 3 Footer Styles */
 footer {
-    font-size: 0.875rem;
-    background: white;
-    color: #6c757d;
+    font-size: var(--md-body-medium);
+    background: var(--md-surface);
+    color: var(--md-on-surface-variant);
     padding: 1.5rem 1.25rem;
     text-align: center;
     margin-top: 3rem;
-    border-top: 1px solid #e9ecef;
+    border-top: 1px solid var(--md-outline-variant);
+    letter-spacing: 0.25px;
 }
 
-/* Modal overlay */
+/* Material Design 3 Modal Styles */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 43, 73, 0.6);
-    backdrop-filter: blur(5px);
+    background: rgba(28, 27, 31, 0.32);
+    backdrop-filter: blur(8px);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    transition: all var(--md-duration-medium2) cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
-/* Modal box */
 .modal-box {
-    background: var(--white);
-    padding: 32px;
-    border-radius: 12px;
-    box-shadow: 0 20px 60px rgba(0, 43, 73, 0.3);
+    background: var(--md-surface);
+    color: var(--md-on-surface);
+    border-radius: var(--md-shape-large);
+    box-shadow: var(--md-elevation-4);
+    border: 1px solid var(--md-outline-variant);
+    transition: all var(--md-duration-medium2) cubic-bezier(0.4, 0.0, 0.2, 1);
+    transform: scale(0.9);
+    opacity: 0;
+    animation: modalEnter var(--md-duration-medium2) cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+}
+
+@keyframes modalEnter {
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.modal-box {
+    padding: 2rem;
+    border-radius: var(--md-shape-large);
     text-align: center;
     max-width: 420px;
     width: 90%;
-    border: 1px solid var(--storm);
     position: relative;
     overflow: hidden;
 }
 
-.modal-box::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, rgba(255, 184, 28, 0.05) 0%, transparent 100%);
-    pointer-events: none;
-}
-
 .modal-box h5 {
-    color: var(--gun-grey);
-    margin-bottom: 16px;
+    color: var(--md-on-surface);
+    margin-bottom: 1rem;
     font-weight: 500;
-    font-size: 1.25rem;
+    font-size: var(--md-title-large);
     position: relative;
     z-index: 1;
+    letter-spacing: 0.1px;
 }
 
 .modal-box p {
-    color: var(--gun-grey);
-    margin-bottom: 20px;
+    color: var(--md-on-surface-variant);
+    margin-bottom: 1.5rem;
     position: relative;
     z-index: 1;
-    font-weight: 300;
+    font-weight: 400;
     line-height: 1.5;
+    font-size: var(--md-body-medium);
+    letter-spacing: 0.25px;
 }
 
 .modal-box input {
-    margin-bottom: 20px;
+    margin-bottom: 1.5rem;
     position: relative;
     z-index: 1;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .modal-actions {
-    margin-top: 24px;
+    margin-top: 1.5rem;
     display: flex;
     justify-content: space-around;
-    gap: 16px;
+    gap: 1rem;
     position: relative;
     z-index: 1;
 }
 
 .modal-actions button {
     flex: 1;
-    padding: 12px 24px;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--md-shape-large);
+    font-size: var(--md-label-large);
+    font-weight: 500;
+    letter-spacing: 0.1px;
+    transition: all var(--md-duration-medium2) cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
-/* Secondary button style for cancel */
+/* Material Design 3 Modal Button Styles */
+.modal-actions button:first-child {
+    background: var(--md-primary);
+    color: var(--md-on-primary);
+    box-shadow: var(--md-elevation-1);
+}
+
+.modal-actions button:first-child:hover {
+    background: var(--md-primary);
+    box-shadow: var(--md-elevation-2);
+    transform: translateY(-1px);
+}
+
 .modal-actions button:last-child {
-    background: var(--storm);
-    color: var(--gun-grey);
-    box-shadow: 0 2px 6px rgba(0, 43, 73, 0.1);
+    background: var(--md-surface-variant);
+    color: var(--md-on-surface-variant);
+    border: 1px solid var(--md-outline);
+    box-shadow: var(--md-elevation-1);
 }
 
 .modal-actions button:last-child:hover {
-    background: #d1d5db;
-    box-shadow: 0 4px 12px rgba(0, 43, 73, 0.15);
+    background: var(--md-surface-variant);
+    color: var(--md-on-surface);
+    box-shadow: var(--md-elevation-2);
+    transform: translateY(-1px);
 }
 
 /* Responsive Design */
@@ -539,100 +952,100 @@ footer {
     animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* Scrollbar styling */
+/* Material Design 3 Scrollbar Styling */
 .column-content::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
 }
 
 .column-content::-webkit-scrollbar-track {
-    background: rgba(0, 43, 73, 0.05);
-    border-radius: 3px;
+    background: var(--md-surface-variant);
+    border-radius: var(--md-shape-small);
 }
 
 .column-content::-webkit-scrollbar-thumb {
-    background: var(--brand-gold);
-    border-radius: 3px;
+    background: var(--md-outline);
+    border-radius: var(--md-shape-small);
+    border: 2px solid var(--md-surface-variant);
 }
 
 .column-content::-webkit-scrollbar-thumb:hover {
-    background: var(--cta-hover);
+    background: var(--md-outline-variant);
 }
 
-/* Button variants for import/export */
+/* Material Design 3 Import/Export Button Styles */
 #import-button {
-    background: #28a745;
-    color: white;
+    background: var(--md-success);
+    color: var(--md-on-success);
 }
 
 #import-button:hover {
-    background: #218838;
-    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+    background: var(--md-success);
+    box-shadow: var(--md-elevation-2);
+    transform: translateY(-1px);
 }
 
 #export-button {
-    background: #ffc107;
-    color: #212529;
+    background: var(--md-warning);
+    color: var(--md-on-warning);
 }
 
 #export-button:hover {
-    background: #e0a800;
-    box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
+    background: var(--md-warning);
+    box-shadow: var(--md-elevation-2);
+    transform: translateY(-1px);
 }
 
-/* Focus states for accessibility */
+/* Material Design 3 Focus States for Accessibility */
 button:focus,
 input:focus {
-    outline: 2px solid #007bff;
-    outline-offset: 2px;
+    outline: none;
+    box-shadow: 0 0 0 2px var(--md-primary);
 }
 
-/* Typography improvements */
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    :root {
+        --md-primary: #000000;
+        --md-on-primary: #FFFFFF;
+        --md-outline: #000000;
+        --md-on-surface: #000000;
+        --md-surface: #FFFFFF;
+    }
+}
+
+/* Material Design 3 Typography Scale */
 h1, h2, h3, h4, h5, h6 {
-    font-family: 'Guardian Sans', Arial, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--md-on-surface);
     font-weight: 500;
-    color: var(--gun-grey);
+    letter-spacing: 0.1px;
+    line-height: 1.2;
 }
 
-/* Link styles */
+h1 { font-size: var(--md-display-small); }
+h2 { font-size: var(--md-headline-large); }
+h3 { font-size: var(--md-headline-medium); }
+h4 { font-size: var(--md-headline-small); }
+h5 { font-size: var(--md-title-large); }
+h6 { font-size: var(--md-title-medium); }
+
+/* Material Design 3 Link Styles */
 a {
-    color: var(--digital-blue);
+    color: var(--md-primary);
     text-decoration: none;
-    transition: color 0.3s ease;
+    transition: color var(--md-duration-short2) cubic-bezier(0.4, 0.0, 0.2, 1);
+    font-weight: 500;
+    letter-spacing: 0.1px;
 }
 
 a:hover {
-    color: var(--cta-hover);
+    color: var(--md-primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
 }
 
-/* Additional professional design compliance */
-.brand-compliant {
-    font-family: 'Guardian Sans', Arial, sans-serif;
-    color: var(--gun-grey);
-}
-
-/* CTA styles following professional design guidelines */
-.cta-primary {
-    background: var(--brand-gold);
-    color: var(--gun-grey);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-weight: 500;
-}
-
-.cta-primary:hover {
-    background: var(--cta-hover);
-}
-
-.cta-secondary {
-    background: transparent;
-    color: var(--digital-blue);
-    border: 2px solid var(--digital-blue);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-weight: 500;
-}
-
-.cta-secondary:hover {
-    background: var(--digital-blue);
-    color: var(--white);
+a:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--md-primary);
+    border-radius: var(--md-shape-small);
 }
