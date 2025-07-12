@@ -17,6 +17,8 @@
         <link rel="stylesheet" href="styles/components.css" />
     </head>
     <body class="bg-light" style="background-color: #f8f9fa !important">
+        <!-- Skip to main content link for screen readers -->
+        <a href="#main-content" class="sr-only sr-only-focusable btn btn-primary">Skip to main content</a>
         <header class="bg-white text-dark shadow-sm py-4">
             <div class="container-fluid">
                 <div
@@ -95,7 +97,7 @@
                 </div>
             </div>
         </header>
-        <main class="container-fluid mt-4">
+        <main id="main-content" class="container-fluid mt-4">
             <section id="todo-app">
                 <form
                     id="todo-form"

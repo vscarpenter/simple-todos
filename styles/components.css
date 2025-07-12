@@ -1143,3 +1143,77 @@ a:focus {
     box-shadow: 0 0 0 2px var(--md-primary);
     border-radius: var(--md-shape-small);
 }
+
+/* Screen reader only styles */
+.sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+.sr-only-focusable:focus,
+.sr-only-focusable:active {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    padding: 0.25rem 0.5rem !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    clip: auto !important;
+    white-space: normal !important;
+}
+
+/* Accessibility enhancements */
+.task-card:focus {
+    outline: 2px solid var(--md-primary);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(103, 80, 164, 0.2);
+}
+
+.column-content:focus {
+    outline: 2px solid var(--md-primary);
+    outline-offset: -2px;
+    background-color: rgba(103, 80, 164, 0.05);
+}
+
+.keyboard-dragging {
+    opacity: 0.7;
+    transform: scale(0.95);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    outline: 3px dashed var(--md-primary) !important;
+}
+
+[aria-dropeffect="move"] {
+    background-color: rgba(103, 80, 164, 0.1);
+    border: 2px dashed var(--md-primary);
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .task-card {
+        border: 2px solid;
+    }
+    
+    .task-card:focus {
+        outline-width: 3px;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .task-card,
+    .keyboard-dragging {
+        transition: none;
+        transform: none;
+    }
+    
+    .task-card.new-task {
+        animation: none;
+    }
+}

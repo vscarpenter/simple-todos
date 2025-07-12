@@ -1,4 +1,5 @@
 import eventBus from './eventBus.js';
+import accessibility from './accessibility.js';
 
 /**
  * DOM manipulation and event delegation module
@@ -350,6 +351,7 @@ class DOMManager {
         });
 
         // Render tasks in each column
+        const allTaskElements = [];
         Object.entries(tasksByStatus).forEach(([status, tasks]) => {
             const columnElement = this.elements[`${status}List`];
             if (!columnElement) return;
@@ -360,12 +362,16 @@ class DOMManager {
                 tasks.forEach(task => {
                     const taskCard = this.createTaskCard(task);
                     columnElement.appendChild(taskCard);
+                    allTaskElements.push(taskCard);
                 });
             }
         });
         
         // Update counters
         this.updateTaskCounts(tasksByStatus);
+        
+        // Update accessibility features for new task elements
+        accessibility.updateTasksAccessibility(allTaskElements);
     }
 
     /**

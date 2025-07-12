@@ -2,6 +2,7 @@ import eventBus from './eventBus.js';
 import appState from './state.js';
 import storage from './storage.js';
 import domManager from './dom.js';
+import accessibility from './accessibility.js';
 import { Task, createTask } from './models.js';
 
 /**
