@@ -5,9 +5,11 @@ import eventBus from './eventBus.js';
  */
 class StorageAPI {
     constructor() {
-        this.version = '1.0';
+        this.version = '2.0';
         this.storageKey = 'cascade-app';
-        this.migrations = {};
+        this.migrations = {
+            '1.0': this.migrateFrom1to2.bind(this)
+        };
         
         this.init();
     }
@@ -144,7 +146,25 @@ class StorageAPI {
             if (cascadeTasks) {
                 const tasks = JSON.parse(cascadeTasks);
                 localStorage.removeItem('cascade-tasks');
-                return { tasks };
+                
+                // Create default board with legacy tasks
+                const defaultBoard = {
+                    id: this.generateUniqueId(),
+                    name: 'Main Board',
+                    description: 'Migrated from previous version',
+                    color: '#6750a4',
+                    tasks: tasks,
+                    createdDate: new Date().toISOString(),
+                    lastModified: new Date().toISOString(),
+                    isArchived: false,
+                    isDefault: true
+                };
+                
+                return {
+                    boards: [defaultBoard],
+                    currentBoardId: defaultBoard.id,
+                    tasks: tasks // For backward compatibility
+                };
             }
             
             // Check for even older todos format
@@ -158,7 +178,25 @@ class StorageAPI {
                     createdDate: todo.createdDate || new Date().toISOString().split('T')[0]
                 }));
                 localStorage.removeItem('todos');
-                return { tasks };
+                
+                // Create default board with migrated tasks
+                const defaultBoard = {
+                    id: this.generateUniqueId(),
+                    name: 'Main Board',
+                    description: 'Migrated from legacy todos',
+                    color: '#6750a4',
+                    tasks: tasks,
+                    createdDate: new Date().toISOString(),
+                    lastModified: new Date().toISOString(),
+                    isArchived: false,
+                    isDefault: true
+                };
+                
+                return {
+                    boards: [defaultBoard],
+                    currentBoardId: defaultBoard.id,
+                    tasks: tasks
+                };
             }
             
             return null;
@@ -166,6 +204,42 @@ class StorageAPI {
             console.error('Legacy migration failed:', error);
             return null;
         }
+    }
+
+    /**
+     * Migrate from version 1.0 to 2.0 (single board to multi-board)
+     * @param {Object} oldData - Data from version 1.0
+     * @returns {Object} Migrated data for version 2.0
+     */
+    migrateFrom1to2(oldData) {
+        console.log('Migrating from v1.0 to v2.0: Converting single board to multi-board structure');
+        
+        if (!oldData || !oldData.tasks) {
+            // No existing data, create empty multi-board structure
+            return {
+                boards: [],
+                currentBoardId: null
+            };
+        }
+        
+        // Create default board with existing tasks
+        const defaultBoard = {
+            id: this.generateUniqueId(),
+            name: 'Main Board',
+            description: 'Default board created from migration',
+            color: '#6750a4',
+            tasks: oldData.tasks || [],
+            createdDate: new Date().toISOString(),
+            lastModified: new Date().toISOString(),
+            isArchived: false,
+            isDefault: true
+        };
+        
+        return {
+            boards: [defaultBoard],
+            currentBoardId: defaultBoard.id,
+            filter: oldData.filter || 'all'
+        };
     }
 
     /**

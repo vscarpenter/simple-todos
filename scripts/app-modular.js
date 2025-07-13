@@ -1,8 +1,13 @@
 import CascadeApp from './modules/main.js';
+import { Task, Board, createTask, createBoard } from './modules/models.js';
+import './modules/dropdown.js';
 
 // Initialize the application when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     try {
+        // Expose models globally for cross-module access
+        window.cascadeModels = { Task, Board, createTask, createBoard };
+        
         // Create and initialize the app
         window.cascadeApp = new CascadeApp();
         

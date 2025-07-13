@@ -10,11 +10,7 @@
             href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap"
             rel="stylesheet"
         />
-        <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-            rel="stylesheet"
-        />
-        <link rel="stylesheet" href="styles/components.css" />
+        <link rel="stylesheet" href="styles/main.css" />
     </head>
     <body class="bg-light" style="background-color: #f8f9fa !important">
         <!-- Skip to main content link for screen readers -->
@@ -24,23 +20,56 @@
                 <div
                     class="d-flex justify-content-between align-items-center mb-3"
                 >
-                    <div class="header-content">
-                        <div class="app-brand">
-                            <div class="brand-icon">
+                    <div class="header__brand">
+                        <div class="brand">
+                            <div class="brand__icon">
                                 <img src="assets/cascade-icon.svg" alt="Cascade App Icon" width="32" height="32">
                             </div>
-                            <div class="brand-text">
-                                <h1 class="app-title">
+                            <div class="brand__text">
+                                <h1 class="brand__title">
                                     Cascade
                                 </h1>
-                                <p class="app-subtitle">
+                                <p class="brand__subtitle">
                                     Watch your productivity flow.
                                 </p>
                             </div>
                         </div>
-
+                        
+                        <!-- Board Selector -->
+                        <div class="board-selector">
+                            <div class="dropdown">
+                                <button 
+                                    class="btn btn-outline-secondary dropdown-toggle" 
+                                    type="button" 
+                                    id="board-selector-btn"
+                                    data-bs-toggle="dropdown" 
+                                    aria-expanded="false"
+                                    title="Switch board"
+                                >
+                                    <span class="me-2">📋</span>
+                                    <span id="current-board-name">Main Board</span>
+                                </button>
+                                <ul class="dropdown-menu" id="board-selector-menu" aria-labelledby="board-selector-btn">
+                                    <li><h6 class="dropdown-header">Active Boards</h6></li>
+                                    <li id="active-boards-list">
+                                        <!-- Active boards will be populated here -->
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item" href="#" id="new-board-btn">
+                                            <span class="me-2">➕</span> New Board
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#" id="manage-boards-btn">
+                                            <span class="me-2">⚙️</span> Manage Boards
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
-                    <div class="btn-group-header d-flex gap-2">
+                    <div class="header__actions d-flex gap-2">
                         <button
                             id="archive-button"
                             class="btn btn-info rounded-pill px-3 py-2"
@@ -120,15 +149,15 @@
                     </button>
                 </form>
 
-                <!-- Backlog.md Style Task Board -->
-                <div class="backlog-board">
-                    <div class="board-column" id="todo-column">
-                        <div class="column-header">
-                            <h3>To Do</h3>
-                            <span class="task-count" id="todo-count">0</span>
+                <!-- Task Board -->
+                <div class="task-board">
+                    <div class="board-column board-column--todo" id="todo-column">
+                        <div class="board-column__header">
+                            <h3 class="board-column__title">To Do</h3>
+                            <span class="board-column__count" id="todo-count">0</span>
                         </div>
                         <div
-                            class="column-content"
+                            class="board-column__content"
                             id="todo-list"
                             data-status="todo"
                         >
@@ -136,13 +165,13 @@
                         </div>
                     </div>
 
-                    <div class="board-column" id="doing-column">
-                        <div class="column-header">
-                            <h3>In Progress</h3>
-                            <span class="task-count" id="doing-count">0</span>
+                    <div class="board-column board-column--doing" id="doing-column">
+                        <div class="board-column__header">
+                            <h3 class="board-column__title">In Progress</h3>
+                            <span class="board-column__count" id="doing-count">0</span>
                         </div>
                         <div
-                            class="column-content"
+                            class="board-column__content"
                             id="doing-list"
                             data-status="doing"
                         >
@@ -150,11 +179,11 @@
                         </div>
                     </div>
 
-                    <div class="board-column" id="done-column">
-                        <div class="column-header">
-                            <h3>Done</h3>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="task-count" id="done-count">0</span>
+                    <div class="board-column board-column--done" id="done-column">
+                        <div class="board-column__header">
+                            <h3 class="board-column__title">Done</h3>
+                            <div class="board-column__actions d-flex align-items-center gap-2">
+                                <span class="board-column__count" id="done-count">0</span>
                                 <button 
                                     class="btn btn-sm btn-outline-secondary"
                                     onclick="showArchivedTasks()"
@@ -165,7 +194,7 @@
                             </div>
                         </div>
                         <div
-                            class="column-content"
+                            class="board-column__content"
                             id="done-list"
                             data-status="done"
                         >
@@ -187,7 +216,7 @@
                 </div>
             </div>
         </footer>
-        <div id="custom-modal" class="modal-overlay" style="display: none">
+        <div id="custom-modal" class="modal-overlay">
             <div class="modal-box">
                 <h5 id="modal-title"></h5>
                 <p id="modal-message"></p>
@@ -199,16 +228,15 @@
                     style="display: none"
                 />
                 <div class="modal-actions">
-                    <button id="modal-confirm" class="btn btn-primary">
+                    <button id="modal-confirm" type="button" class="btn btn-primary">
                         Confirm
                     </button>
-                    <button id="modal-cancel" class="btn btn-secondary">
+                    <button id="modal-cancel" type="button" class="btn btn-secondary">
                         Cancel
                     </button>
                 </div>
             </div>
         </div>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
         <script type="module" src="scripts/app-modular.js"></script>
     </body>
 </html>

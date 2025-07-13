@@ -12,6 +12,136 @@ function generateUniqueId() {
 }
 
 /**
+ * Board model for organizing tasks into projects
+ */
+export class Board {
+    constructor(data = {}) {
+        this.id = data.id || generateUniqueId();
+        this.name = data.name || 'Untitled Board';
+        this.description = data.description || '';
+        this.color = data.color || '#6750a4';
+        this.tasks = data.tasks || [];
+        this.createdDate = data.createdDate || new Date().toISOString();
+        this.lastModified = data.lastModified || new Date().toISOString();
+        this.isArchived = data.isArchived || false;
+        this.isDefault = data.isDefault || false;
+        
+        this.validate();
+    }
+
+    /**
+     * Validate board data
+     * @throws {Error} If validation fails
+     */
+    validate() {
+        if (!this.name || typeof this.name !== 'string' || this.name.trim().length === 0) {
+            throw new Error('Board name is required and must be a non-empty string');
+        }
+        
+        if (this.name.length > 50) {
+            throw new Error('Board name cannot exceed 50 characters');
+        }
+        
+        if (this.description && this.description.length > 200) {
+            throw new Error('Board description cannot exceed 200 characters');
+        }
+        
+        if (typeof this.isArchived !== 'boolean') {
+            throw new Error('isArchived must be a boolean');
+        }
+        
+        if (typeof this.isDefault !== 'boolean') {
+            throw new Error('isDefault must be a boolean');
+        }
+    }
+
+    /**
+     * Update board properties
+     * @param {Object} updates - Properties to update
+     * @returns {Board} New board instance with updates
+     */
+    update(updates) {
+        const newData = {
+            ...this.toJSON(),
+            ...updates,
+            lastModified: new Date().toISOString()
+        };
+        
+        const updatedBoard = new Board(newData);
+        
+        eventBus.emit('board:updated', {
+            board: updatedBoard,
+            oldData: this.toJSON(),
+            updates
+        });
+        
+        return updatedBoard;
+    }
+
+    /**
+     * Archive board
+     * @returns {Board} New board instance that is archived
+     */
+    archive() {
+        return this.update({ isArchived: true });
+    }
+
+    /**
+     * Unarchive board
+     * @returns {Board} New board instance that is unarchived
+     */
+    unarchive() {
+        return this.update({ isArchived: false });
+    }
+
+    /**
+     * Convert to JSON for storage
+     * @returns {Object} Plain object representation
+     */
+    toJSON() {
+        return {
+            id: this.id,
+            name: this.name,
+            description: this.description,
+            color: this.color,
+            tasks: this.tasks,
+            createdDate: this.createdDate,
+            lastModified: this.lastModified,
+            isArchived: this.isArchived,
+            isDefault: this.isDefault
+        };
+    }
+
+    /**
+     * Create a duplicate of this board
+     * @param {string} newName - Name for the duplicated board
+     * @returns {Board} New board instance
+     */
+    duplicate(newName) {
+        const newData = {
+            ...this.toJSON(),
+            id: generateUniqueId(),
+            name: newName || `${this.name} (Copy)`,
+            tasks: [...this.tasks], // Create a copy of tasks array
+            createdDate: new Date().toISOString(),
+            lastModified: new Date().toISOString(),
+            isDefault: false
+        };
+        
+        return new Board(newData);
+    }
+
+    /**
+     * Create board from plain object
+     * @param {Object} data - Board data
+     * @returns {Board} Board instance
+     */
+    static fromJSON(data) {
+        return new Board(data);
+    }
+}
+
+/**
  * Task model with validation and methods
  */
 export class Task {
@@ -344,6 +474,15 @@ export class Column {
     static fromJSON(data) {
         return new Column(data);
     }
+}
+
+/**
+ * Factory function to create board
+ * @param {Object} data - Board data
+ * @returns {Board} Board instance
+ */
+export function createBoard(data) {
+    return new Board(data);
 }
 
 /**

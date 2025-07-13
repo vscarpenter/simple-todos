@@ -58,7 +58,15 @@ class DOMManager {
             modalMessage: document.getElementById('modal-message'),
             modalInput: document.getElementById('modal-input'),
             modalConfirm: document.getElementById('modal-confirm'),
-            modalCancel: document.getElementById('modal-cancel')
+            modalCancel: document.getElementById('modal-cancel'),
+            
+            // Board selector elements
+            boardSelectorBtn: document.getElementById('board-selector-btn'),
+            currentBoardName: document.getElementById('current-board-name'),
+            boardSelectorMenu: document.getElementById('board-selector-menu'),
+            activeBoardsList: document.getElementById('active-boards-list'),
+            newBoardBtn: document.getElementById('new-board-btn'),
+            manageBoardsBtn: document.getElementById('manage-boards-btn')
         };
         
         // Remove null elements
@@ -206,6 +214,52 @@ class DOMManager {
 
         // Setup drag and drop zones
         this.setupDropZones();
+        
+        // Setup board selector events
+        this.setupBoardSelectorEvents();
+    }
+
+    /**
+     * Setup board selector events
+     */
+    setupBoardSelectorEvents() {
+        // New board button
+        if (this.elements.newBoardBtn) {
+            this.elements.newBoardBtn.addEventListener('click', (event) => {
+                event.preventDefault();
+                this.handleNewBoard();
+            });
+        }
+
+        // Manage boards button
+        if (this.elements.manageBoardsBtn) {
+            this.elements.manageBoardsBtn.addEventListener('click', (event) => {
+                event.preventDefault();
+                this.handleManageBoards();
+            });
+        }
+
+        // Delegate board selection clicks
+        this.delegate('click', '[data-board-action]', (event, element) => {
+            event.preventDefault();
+            const action = element.dataset.boardAction;
+            const boardId = element.dataset.boardId;
+            
+            switch (action) {
+                case 'switch':
+                    eventBus.emit('board:switch', { boardId });
+                    break;
+                case 'edit':
+                    eventBus.emit('board:edit', { boardId });
+                    break;
+                case 'delete':
+                    eventBus.emit('board:delete', { boardId });
+                    break;
+                case 'duplicate':
+                    eventBus.emit('board:duplicate', { boardId });
+                    break;
+            }
+        });
     }
 
     /**
@@ -270,23 +324,30 @@ class DOMManager {
      */
     createTaskCard(task) {
         const card = document.createElement('div');
-        card.className = `task-card ${task.status}`;
+        card.className = `task-card task-card--${task.status}`;
         card.draggable = true;
         card.dataset.taskId = task.id;
         
         card.innerHTML = `
-            <div class="task-content">
-                <div class="task-text">${this.sanitizeHTML(task.text)}</div>
-                <div class="task-date">Created: ${this.formatDate(task.createdDate)}</div>
+            <div class="task-card__content">
+                <div class="task-card__text">${this.sanitizeHTML(task.text)}</div>
+                <div class="task-card__meta">
+                    <span class="task-card__date">Created: ${this.formatDate(task.createdDate)}</span>
+                    <span class="task-card__id">#${task.id.slice(-6)}</span>
+                </div>
             </div>
-            <div class="task-actions">
-                <button class="btn-edit" data-action="edit" data-task-id="${task.id}" title="Edit task">
-                    ✏️
-                </button>
-                <button class="btn-delete" data-action="delete" data-task-id="${task.id}" title="Delete task">
-                    🗑️
-                </button>
-                ${this.getStatusButtons(task.status, task.id)}
+            <div class="task-card__actions">
+                <div class="task-card__actions-primary">
+                    <button class="btn-task-action" data-action="edit" data-task-id="${task.id}" title="Edit task">
+                        ✏️
+                    </button>
+                    <button class="btn-task-action" data-action="delete" data-task-id="${task.id}" title="Delete task">
+                        🗑️
+                    </button>
+                </div>
+                <div class="task-card__actions-secondary">
+                    ${this.getStatusButtons(task.status, task.id)}
+                </div>
             </div>
         `;
         
@@ -304,7 +365,7 @@ class DOMManager {
         
         if (currentStatus !== 'todo') {
             buttons.push(`
-                <button class="btn-move" data-action="move" data-task-id="${taskId}" data-target-status="todo" title="Move to To-Do">
+                <button class="btn-task-action" data-action="move" data-task-id="${taskId}" data-target-status="todo" title="Move to To-Do">
                     📋
                 </button>
             `);
@@ -312,7 +373,7 @@ class DOMManager {
         
         if (currentStatus !== 'doing') {
             buttons.push(`
-                <button class="btn-move" data-action="move" data-task-id="${taskId}" data-target-status="doing" title="Move to In Progress">
+                <button class="btn-task-action" data-action="move" data-task-id="${taskId}" data-target-status="doing" title="Move to In Progress">
                     ⚡
                 </button>
             `);
@@ -320,7 +381,7 @@ class DOMManager {
         
         if (currentStatus !== 'done') {
             buttons.push(`
-                <button class="btn-move" data-action="move" data-task-id="${taskId}" data-target-status="done" title="Move to Done">
+                <button class="btn-task-action" data-action="move" data-task-id="${taskId}" data-target-status="done" title="Move to Done">
                     ✅
                 </button>
             `);
@@ -329,7 +390,7 @@ class DOMManager {
         // Add archive button for completed tasks
         if (currentStatus === 'done') {
             buttons.push(`
-                <button class="btn-archive" data-action="archive" data-task-id="${taskId}" title="Archive task">
+                <button class="btn-task-action" data-action="archive" data-task-id="${taskId}" title="Archive task">
                     📦
                 </button>
             `);
@@ -345,7 +406,7 @@ class DOMManager {
     renderTasks(tasksByStatus) {
         // Clear columns
         Object.values(this.elements).forEach(element => {
-            if (element && element.classList && element.classList.contains('column-content')) {
+            if (element && element.classList && (element.classList.contains('column-content') || element.classList.contains('board-column__content'))) {
                 element.innerHTML = '';
             }
         });
@@ -450,6 +511,7 @@ class DOMManager {
 
         return new Promise((resolve) => {
             if (!this.elements.customModal) {
+                console.error('Modal element not found!');
                 resolve(null);
                 return;
             }
@@ -461,6 +523,11 @@ class DOMManager {
             const modalConfirm = this.elements.modalConfirm;
             const modalCancel = this.elements.modalCancel;
 
+            // Clear any existing event handlers first to prevent conflicts
+            modalConfirm.removeEventListener('click', modalConfirm._currentHandler);
+            modalCancel.removeEventListener('click', modalCancel._currentHandler);
+            modal.removeEventListener('click', modal._currentHandler);
+
             // Set content
             modalTitle.textContent = title;
             modalMessage.textContent = message;
@@ -470,40 +537,69 @@ class DOMManager {
             modalConfirm.textContent = confirmText;
             modalCancel.textContent = cancelText;
 
-            // Show modal
-            modal.style.display = 'flex';
-
-            // Focus input if shown
-            if (showInput) {
-                setTimeout(() => modalInput.focus(), 100);
-            }
-
             const cleanup = () => {
-                modal.style.display = 'none';
-                modalConfirm.onclick = null;
-                modalCancel.onclick = null;
-                modalInput.onkeypress = null;
+                modal.classList.remove('modal-overlay--visible');
+                
+                // Remove event listeners
+                modalConfirm.removeEventListener('click', confirmHandler);
+                modalCancel.removeEventListener('click', cancelHandler);
+                modal.removeEventListener('click', overlayHandler);
+                modalInput.removeEventListener('keypress', keyHandler);
             };
 
-            modalConfirm.onclick = () => {
+            const confirmHandler = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 const result = showInput ? modalInput.value.trim() : true;
                 cleanup();
                 resolve(result);
             };
 
-            modalCancel.onclick = () => {
+            const cancelHandler = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 cleanup();
                 resolve(null);
             };
 
-            // Handle Enter key in input
-            modalInput.onkeypress = (e) => {
+            const overlayHandler = (e) => {
+                // Only close if clicking the overlay itself, not the modal content
+                if (e.target === modal) {
+                    cleanup();
+                    resolve(null);
+                }
+            };
+
+            const keyHandler = (e) => {
                 if (e.key === 'Enter') {
                     const result = modalInput.value.trim();
                     cleanup();
                     resolve(result);
                 }
             };
+
+            // Show modal
+            
+            // Add event listeners BEFORE making visible to prevent timing issues
+            modalConfirm.addEventListener('click', confirmHandler);
+            modalCancel.addEventListener('click', cancelHandler);
+            modal.addEventListener('click', overlayHandler);
+            modalInput.addEventListener('keypress', keyHandler);
+            
+            // Add delay before making visible to ensure handlers are ready
+            setTimeout(() => {
+                modal.classList.add('modal-overlay--visible');
+            }, 10);
+
+            // Store references for cleanup
+            modalConfirm._currentHandler = confirmHandler;
+            modalCancel._currentHandler = cancelHandler;
+            modal._currentHandler = overlayHandler;
+
+            // Focus input if shown
+            if (showInput) {
+                setTimeout(() => modalInput.focus(), 100);
+            }
         });
     }
 
@@ -512,7 +608,7 @@ class DOMManager {
      */
     hideModal() {
         if (this.elements.customModal) {
-            this.elements.customModal.style.display = 'none';
+            this.elements.customModal.classList.remove('modal-overlay--visible');
         }
     }
 
@@ -525,6 +621,84 @@ class DOMManager {
         const div = document.createElement('div');
         div.textContent = html;
         return div.innerHTML;
+    }
+
+    /**
+     * Handle new board creation
+     */
+    async handleNewBoard() {
+        try {
+            const boardName = await this.showModal('New Board', 'Enter board name:', {
+                showInput: true,
+                inputValue: '',
+                confirmText: 'Create Board'
+            });
+            
+            if (boardName && boardName.trim().length > 0) {
+                eventBus.emit('board:create', { 
+                    name: boardName.trim(),
+                    description: '',
+                    color: '#6750a4'
+                });
+            }
+        } catch (error) {
+            console.error('Failed to create new board:', error);
+        }
+    }
+
+    /**
+     * Handle manage boards
+     */
+    async handleManageBoards() {
+        // Emit event to show the board management interface
+        eventBus.emit('boards:manage');
+    }
+
+    /**
+     * Render board selector
+     * @param {Array} boards - Available boards
+     * @param {Object} currentBoard - Currently selected board
+     */
+    renderBoardSelector(boards, currentBoard) {
+        // Update current board name
+        if (this.elements.currentBoardName && currentBoard) {
+            this.elements.currentBoardName.textContent = currentBoard.name;
+        }
+
+        // Update boards list
+        if (this.elements.activeBoardsList) {
+            this.elements.activeBoardsList.innerHTML = '';
+            
+            if (boards.length === 0) {
+                const emptyItem = document.createElement('li');
+                emptyItem.innerHTML = '<span class="dropdown-item text-muted">No boards available</span>';
+                this.elements.activeBoardsList.appendChild(emptyItem);
+                return;
+            }
+            
+            boards.forEach(board => {
+                const listItem = document.createElement('li');
+                const isActive = currentBoard && board.id === currentBoard.id;
+                
+                listItem.innerHTML = `
+                    <a class="dropdown-item ${isActive ? 'active' : ''}" 
+                       href="#" 
+                       data-board-action="switch" 
+                       data-board-id="${board.id}">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="board-color" style="width: 12px; height: 12px; background-color: ${board.color}; border-radius: 2px;"></div>
+                            <div class="flex-grow-1">
+                                <div class="board-name">${this.sanitizeHTML(board.name)}</div>
+                                <small class="text-muted">${(board.tasks || []).length} tasks</small>
+                            </div>
+                            ${isActive ? '<span class="text-primary">✓</span>' : ''}
+                        </div>
+                    </a>
+                `;
+                
+                this.elements.activeBoardsList.appendChild(listItem);
+            });
+        }
     }
 
     /**

@@ -1,0 +1,261 @@
+/**
+ * Form components - BEM methodology
+ * Input fields, form groups, and form layouts
+ */
+
+/* Form component */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.form--inline {
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Form group component */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.form-group--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+/* Label component */
+.label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-on-surface);
+  line-height: var(--line-height-tight);
+}
+
+.label--required::after {
+  content: ' *';
+  color: var(--color-error-40);
+}
+
+/* Input component */
+.input {
+  width: 100%;
+  padding: var(--spacing-3) var(--spacing-4);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface-container-lowest);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  color: var(--color-on-surface);
+  transition: var(--task-transition);
+  min-height: var(--size-input-md);
+}
+
+.input::placeholder {
+  color: var(--color-on-surface-variant);
+  opacity: 0.7;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary-40);
+  box-shadow: 0 0 0 1px var(--color-primary-40);
+  background-color: var(--color-surface);
+}
+
+.input:disabled {
+  background-color: var(--color-surface-container);
+  color: var(--color-on-surface-variant);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Input sizes */
+.input--sm {
+  padding: var(--spacing-2) var(--spacing-3);
+  font-size: var(--font-size-sm);
+  min-height: var(--size-input-sm);
+}
+
+.input--lg {
+  padding: var(--spacing-4) var(--spacing-5);
+  font-size: var(--font-size-lg);
+  min-height: var(--size-input-lg);
+}
+
+/* Input states */
+.input--error {
+  border-color: var(--color-error-40);
+  background-color: var(--color-error-90);
+}
+
+.input--error:focus {
+  border-color: var(--color-error-40);
+  box-shadow: 0 0 0 1px var(--color-error-40);
+}
+
+.input--success {
+  border-color: var(--color-success-40);
+  background-color: var(--color-success-90);
+}
+
+.input--success:focus {
+  border-color: var(--color-success-40);
+  box-shadow: 0 0 0 1px var(--color-success-40);
+}
+
+/* Textarea component */
+.textarea {
+  resize: vertical;
+  min-height: 100px;
+  font-family: var(--font-family-primary);
+}
+
+/* Input group component */
+.input-group {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+
+.input-group .input {
+  border-radius: 0;
+  border-right: none;
+}
+
+.input-group .input:first-child {
+  border-top-left-radius: var(--radius-lg);
+  border-bottom-left-radius: var(--radius-lg);
+}
+
+.input-group .input:last-child {
+  border-top-right-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-lg);
+  border-right: 1px solid var(--color-outline-variant);
+}
+
+.input-group .btn {
+  border-radius: 0;
+  border-left: none;
+}
+
+.input-group .btn:last-child {
+  border-top-right-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-lg);
+}
+
+/* File input component */
+.file-input {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.file-input__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.file-input__label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-4);
+  background-color: var(--color-secondary-40);
+  color: var(--color-on-secondary);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: var(--task-transition);
+}
+
+.file-input__label:hover {
+  background-color: var(--color-secondary-30);
+}
+
+/* Help text component */
+.help-text {
+  font-size: var(--font-size-xs);
+  color: var(--color-on-surface-variant);
+  margin-top: var(--spacing-1);
+}
+
+.help-text--error {
+  color: var(--color-error-40);
+}
+
+.help-text--success {
+  color: var(--color-success-40);
+}
+
+/* Todo form specific */
+.todo-form {
+  display: flex;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4);
+  background-color: var(--color-surface-container-lowest);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--elevation-1);
+  align-items: stretch;
+  justify-content: center;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.todo-form__input {
+  flex: 1;
+  max-width: 400px;
+}
+
+.todo-form__button {
+  flex-shrink: 0;
+}
+
+/* Responsive forms */
+@media (max-width: 768px) {
+  .form--inline {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .form-group--inline {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .todo-form {
+    flex-direction: column;
+    padding: var(--spacing-3);
+  }
+  
+  .todo-form__input {
+    max-width: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .input {
+    padding: var(--spacing-2) var(--spacing-3);
+    font-size: var(--font-size-sm);
+  }
+  
+  .input--lg {
+    padding: var(--spacing-3) var(--spacing-4);
+    font-size: var(--font-size-base);
+  }
+  
+  .todo-form {
+    gap: var(--spacing-2);
+    padding: var(--spacing-2);
+  }
+}

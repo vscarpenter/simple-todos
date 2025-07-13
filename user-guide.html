@@ -4,17 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Guide - Cascade Task Management</title>
-    <meta name="description" content="User Guide for Cascade Task Management web application.">
+    <meta name="description" content="Complete User Guide for Cascade Task Management with multi-board support, accessibility features, and Material Design 3 interface.">
     
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap"
         rel="stylesheet"
     />
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    />
-    <link rel="stylesheet" href="styles/components.css">
+    <link rel="stylesheet" href="styles/main.css">
     <link rel="icon" type="image/svg+xml" href="assets/cascade-icon.svg">
 </head>
 <body>
@@ -42,13 +38,50 @@
     </header>
 
     <!-- User Guide Content -->
-    <main class="container mt-4">
+    <main class="container-fluid mt-4">
         <div class="row justify-content-center">
             <div class="col-lg-10">
                 <!-- Hero Section -->
                 <div class="bg-white rounded shadow-sm p-4 mb-4 text-center">
-                    <h1 class="mb-3">📋 User Guide</h1>
-                    <p class="lead text-muted">Get the most out of Cascade with this comprehensive guide</p>
+                    <h1 class="mb-3">📋 Cascade User Guide</h1>
+                    <p class="lead text-muted">Master your productivity with this comprehensive guide to all features</p>
+                    <div class="mt-3">
+                        <span class="badge bg-success me-2">v2.0</span>
+                        <span class="badge bg-info me-2">Multi-Board</span>
+                        <span class="badge bg-warning me-2">Material Design 3</span>
+                        <span class="badge bg-secondary">WCAG Compliant</span>
+                    </div>
+                </div>
+
+                <!-- What's New -->
+                <div class="bg-white rounded shadow-sm p-4 mb-4">
+                    <h2 class="d-flex align-items-center mb-3">
+                        <span class="me-2">🆕</span> What's New in v2.0
+                    </h2>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="alert alert-success">
+                                <h5>✨ Multi-Board Support</h5>
+                                <ul class="mb-0">
+                                    <li>Create unlimited boards</li>
+                                    <li>Switch between projects instantly</li>
+                                    <li>Rename and organize boards</li>
+                                    <li>Import/export across boards</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="alert alert-info">
+                                <h5>🎨 Material Design 3</h5>
+                                <ul class="mb-0">
+                                    <li>Modern, accessible interface</li>
+                                    <li>Improved color contrast</li>
+                                    <li>Responsive design</li>
+                                    <li>Touch-friendly controls</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Quick Start -->
@@ -57,46 +90,141 @@
                         <span class="me-2">🚀</span> Quick Start
                     </h2>
                     <div class="alert alert-info">
-                        <strong>Privacy First:</strong> Cascade runs entirely in your browser. Your data stays on your device - nothing is sent to any server.
+                        <strong>🔒 Privacy First:</strong> Cascade runs entirely in your browser. Your data stays on your device - nothing is sent to any server.
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4>📝 Create Your First Task</h4>
+                            <ol>
+                                <li>Type your task in the input field at the top</li>
+                                <li>Click "Add Task" or press <kbd>Enter</kbd></li>
+                                <li>Your task appears in the "To Do" column</li>
+                            </ol>
+                        </div>
+                        <div class="col-md-6">
+                            <h4>📋 Create Your First Board</h4>
+                            <ol>
+                                <li>Click the board dropdown in the header</li>
+                                <li>Select "New Board"</li>
+                                <li>Enter a name like "Work Projects"</li>
+                                <li>Start adding tasks to your new board</li>
+                            </ol>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Getting Started -->
+                <!-- Multi-Board Management -->
                 <div class="bg-white rounded shadow-sm p-4 mb-4">
                     <h2 class="d-flex align-items-center mb-4">
-                        <span class="me-2">🎯</span> Getting Started
+                        <span class="me-2">📋</span> Multi-Board Management
+                    </h2>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <h4 class="h5 text-primary">➕ Creating Boards</h4>
+                                <ul class="mb-0">
+                                    <li>Click the board dropdown</li>
+                                    <li>Select "New Board"</li>
+                                    <li>Enter a descriptive name</li>
+                                    <li>Start adding tasks immediately</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <h4 class="h5 text-success">🔄 Switching Boards</h4>
+                                <ul class="mb-0">
+                                    <li>Use the board dropdown in header</li>
+                                    <li>See task counts for each board</li>
+                                    <li>Current board is highlighted</li>
+                                    <li>Switch instantly between projects</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <h4 class="h5 text-warning">⚙️ Managing Boards</h4>
+                                <ul class="mb-0">
+                                    <li>Click "Manage Boards" in dropdown</li>
+                                    <li>Rename boards as needed</li>
+                                    <li>Delete unused boards</li>
+                                    <li>Default board cannot be deleted</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning mt-3">
+                        <strong>💡 Pro Tip:</strong> Create separate boards for different areas of your life - Work, Personal, Projects, etc.
+                    </div>
+                </div>
+
+                <!-- Task Management -->
+                <div class="bg-white rounded shadow-sm p-4 mb-4">
+                    <h2 class="d-flex align-items-center mb-4">
+                        <span class="me-2">⚡</span> Task Management
                     </h2>
                     
                     <div class="row">
                         <div class="col-md-6">
                             <div class="border rounded p-3 mb-3">
                                 <h4 class="h5 text-primary">📝 Adding Tasks</h4>
-                                <ol class="mb-0">
-                                    <li>Type your task in the input field at the top</li>
-                                    <li>Click "Add Task" or press <kbd>Enter</kbd></li>
-                                    <li>Tasks appear in the "To Do" column</li>
-                                </ol>
+                                <ul>
+                                    <li>Type in the input field at the top</li>
+                                    <li>Press <kbd>Enter</kbd> or click "Add Task"</li>
+                                    <li>Tasks are added to the current board</li>
+                                    <li>Maximum 200 characters per task</li>
+                                </ul>
                             </div>
                         </div>
                         
                         <div class="col-md-6">
                             <div class="border rounded p-3 mb-3">
-                                <h4 class="h5 text-success">⚡ Managing Tasks</h4>
-                                <ul class="mb-0">
-                                    <li><strong>Drag & drop</strong> between columns</li>
-                                    <li><strong>Edit</strong> by clicking the Edit button</li>
-                                    <li><strong>Delete</strong> unwanted tasks</li>
-                                    <li><strong>Move</strong> with arrow buttons</li>
+                                <h4 class="h5 text-success">✏️ Editing Tasks</h4>
+                                <ul>
+                                    <li>Click the edit button (✏️) on any task</li>
+                                    <li>Modify the task text</li>
+                                    <li>Press <kbd>Enter</kbd> to save</li>
+                                    <li>Press <kbd>Escape</kbd> to cancel</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 mb-3">
+                                <h4 class="h5 text-info">🚚 Moving Tasks</h4>
+                                <ul>
+                                    <li><strong>Drag & Drop:</strong> Drag between columns</li>
+                                    <li><strong>Buttons:</strong> Use column action buttons</li>
+                                    <li><strong>Keyboard:</strong> Tab + arrow keys</li>
+                                    <li><strong>Quick Actions:</strong> Click status icons</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 mb-3">
+                                <h4 class="h5 text-danger">🗑️ Deleting Tasks</h4>
+                                <ul>
+                                    <li>Click the delete button (🗑️)</li>
+                                    <li>Confirm deletion in the modal</li>
+                                    <li>Use <kbd>Ctrl+Z</kbd> to undo (50 actions)</li>
+                                    <li>Or archive completed tasks instead</li>
                                 </ul>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Three Columns -->
+                <!-- Workflow Columns -->
                 <div class="bg-white rounded shadow-sm p-4 mb-4">
                     <h2 class="d-flex align-items-center mb-4">
-                        <span class="me-2">📊</span> Workflow Columns
+                        <span class="me-2">📊</span> Kanban Workflow
                     </h2>
                     
                     <div class="row text-center">
@@ -104,27 +232,126 @@
                             <div class="border rounded p-3 h-100">
                                 <div class="display-6 mb-2">📋</div>
                                 <h4 class="h5">To Do</h4>
-                                <p class="text-muted mb-0">Tasks you haven't started yet</p>
+                                <p class="text-muted">Tasks you haven't started yet. New tasks automatically appear here.</p>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="border rounded p-3 h-100">
                                 <div class="display-6 mb-2">⚡</div>
                                 <h4 class="h5">In Progress</h4>
-                                <p class="text-muted mb-0">Tasks you're currently working on</p>
+                                <p class="text-muted">Tasks you're actively working on. Move here when you start work.</p>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="border rounded p-3 h-100">
                                 <div class="display-6 mb-2">✅</div>
                                 <h4 class="h5">Done</h4>
-                                <p class="text-muted mb-0">Completed tasks ready for archive</p>
+                                <p class="text-muted">Completed tasks. Archive these periodically to keep organized.</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Header Buttons -->
+                <!-- Keyboard Shortcuts -->
+                <div class="bg-white rounded shadow-sm p-4 mb-4">
+                    <h2 class="d-flex align-items-center mb-4">
+                        <span class="me-2">⌨️</span> Keyboard Shortcuts
+                    </h2>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4 class="h5">General</h4>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <tbody>
+                                        <tr>
+                                            <td><kbd>Ctrl/Cmd + N</kbd></td>
+                                            <td>Focus task input (new task)</td>
+                                        </tr>
+                                        <tr>
+                                            <td><kbd>Ctrl/Cmd + Z</kbd></td>
+                                            <td>Undo last action</td>
+                                        </tr>
+                                        <tr>
+                                            <td><kbd>Ctrl/Cmd + Shift + Z</kbd></td>
+                                            <td>Redo last action</td>
+                                        </tr>
+                                        <tr>
+                                            <td><kbd>Escape</kbd></td>
+                                            <td>Close modal/cancel edit</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h4 class="h5">Navigation</h4>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <tbody>
+                                        <tr>
+                                            <td><kbd>Tab</kbd></td>
+                                            <td>Navigate between elements</td>
+                                        </tr>
+                                        <tr>
+                                            <td><kbd>Arrow Keys</kbd></td>
+                                            <td>Navigate within task board</td>
+                                        </tr>
+                                        <tr>
+                                            <td><kbd>Enter</kbd></td>
+                                            <td>Activate buttons/save edits</td>
+                                        </tr>
+                                        <tr>
+                                            <td><kbd>Space</kbd></td>
+                                            <td>Activate focused element</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Import/Export -->
+                <div class="bg-white rounded shadow-sm p-4 mb-4">
+                    <h2 class="d-flex align-items-center mb-4">
+                        <span class="me-2">💾</span> Data Management
+                    </h2>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 mb-3">
+                                <h4 class="h5 text-success">↓ Import Data</h4>
+                                <ul>
+                                    <li>Click "Import Tasks" in header</li>
+                                    <li>Select a JSON backup file</li>
+                                    <li>Choose merge or replace options</li>
+                                    <li>Supports multi-board imports</li>
+                                    <li>Maximum file size: 5MB</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 mb-3">
+                                <h4 class="h5 text-warning">↑ Export Data</h4>
+                                <ul>
+                                    <li>Click "Export Tasks" in header</li>
+                                    <li>Choose current board or all boards</li>
+                                    <li>Downloads JSON backup file</li>
+                                    <li>Includes all task data and metadata</li>
+                                    <li>Compatible with future versions</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <strong>💡 Backup Strategy:</strong> Export your data regularly to avoid losing tasks if you clear browser data.
+                    </div>
+                </div>
+
+                <!-- Header Controls -->
                 <div class="bg-white rounded shadow-sm p-4 mb-4">
                     <h2 class="d-flex align-items-center mb-4">
                         <span class="me-2">🎛️</span> Header Controls
@@ -145,7 +372,7 @@
                                 <span class="badge bg-secondary rounded-pill me-2">⚙️</span>
                                 <div>
                                     <strong>Settings</strong><br>
-                                    <small class="text-muted">Configure auto-archive preferences</small>
+                                    <small class="text-muted">Configure app preferences</small>
                                 </div>
                             </div>
                         </div>
@@ -176,25 +403,62 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="col-sm-6 col-lg-4 mb-3">
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-secondary rounded-pill me-2">📋</span>
+                                <div>
+                                    <strong>Board Selector</strong><br>
+                                    <small class="text-muted">Switch and manage boards</small>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Archive Features -->
+                <!-- Accessibility Features -->
                 <div class="bg-white rounded shadow-sm p-4 mb-4">
-                    <h2 class="d-flex align-items-center mb-3">
-                        <span class="me-2">📦</span> Archive Features
+                    <h2 class="d-flex align-items-center mb-4">
+                        <span class="me-2">♿</span> Accessibility Features
                     </h2>
+                    
                     <div class="row">
                         <div class="col-md-6">
-                            <ul class="list-unstyled">
-                                <li class="mb-2">✓ Keep your board clean and organized</li>
-                                <li class="mb-2">✓ View archived tasks anytime</li>
+                            <h4 class="h5">Screen Reader Support</h4>
+                            <ul>
+                                <li>ARIA labels and descriptions</li>
+                                <li>Live region announcements</li>
+                                <li>Semantic HTML structure</li>
+                                <li>Proper heading hierarchy</li>
                             </ul>
                         </div>
                         <div class="col-md-6">
-                            <ul class="list-unstyled">
-                                <li class="mb-2">✓ Restore tasks back to active status</li>
-                                <li class="mb-2">✓ Configure automatic archiving</li>
+                            <h4 class="h5">Keyboard Navigation</h4>
+                            <ul>
+                                <li>Full keyboard accessibility</li>
+                                <li>Visible focus indicators</li>
+                                <li>Skip navigation links</li>
+                                <li>Logical tab order</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4 class="h5">Visual Accessibility</h4>
+                            <ul>
+                                <li>High contrast color scheme</li>
+                                <li>Scalable text and UI elements</li>
+                                <li>Clear visual hierarchy</li>
+                                <li>Reduced motion support</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h4 class="h5">Touch & Mobile</h4>
+                            <ul>
+                                <li>Touch-friendly target sizes</li>
+                                <li>Responsive design</li>
+                                <li>Gesture support</li>
+                                <li>Mobile-optimized layout</li>
                             </ul>
                         </div>
                     </div>
@@ -237,8 +501,8 @@
                             <div class="d-flex align-items-start">
                                 <span class="badge bg-success rounded-pill me-2 mt-1">💾</span>
                                 <div>
-                                    <strong>Export/Import</strong><br>
-                                    <small class="text-muted">Back up data with JSON files</small>
+                                    <strong>Version Migration</strong><br>
+                                    <small class="text-muted">Automatic data format updates</small>
                                 </div>
                             </div>
                         </div>
@@ -257,6 +521,10 @@
                                 <li class="mb-2">💾 Export tasks regularly as backup</li>
                                 <li class="mb-2">📅 Tasks show creation date for reference</li>
                                 <li class="mb-2">🗂️ Archive old tasks to stay organized</li>
+                                <li class="mb-2">📋 Create separate boards for different projects</li>
+                                <li class="mb-2">⌨️ Use keyboard shortcuts for faster workflow</li>
+                                <li class="mb-2">🔄 Use undo/redo for quick corrections</li>
+                                <li class="mb-2">📱 Works great on mobile devices</li>
                             </ul>
                         </div>
                     </div>
@@ -265,12 +533,45 @@
                             <h2 class="d-flex align-items-center mb-3">
                                 <span class="me-2">🌐</span> Browser Support
                             </h2>
-                            <div class="d-flex flex-wrap gap-2">
-                                <span class="badge bg-light text-dark">Chrome</span>
-                                <span class="badge bg-light text-dark">Firefox</span>
-                                <span class="badge bg-light text-dark">Safari</span>
-                                <span class="badge bg-light text-dark">Edge</span>
+                            <div class="mb-3">
+                                <strong>Modern Browsers (2017+)</strong>
                             </div>
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <span class="badge bg-light text-dark">Chrome 60+</span>
+                                <span class="badge bg-light text-dark">Firefox 55+</span>
+                                <span class="badge bg-light text-dark">Safari 11+</span>
+                                <span class="badge bg-light text-dark">Edge 79+</span>
+                            </div>
+                            <small class="text-muted">
+                                Requires ES6 modules support. No Internet Explorer support.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Troubleshooting -->
+                <div class="bg-white rounded shadow-sm p-4 mb-4">
+                    <h2 class="d-flex align-items-center mb-3">
+                        <span class="me-2">🔧</span> Troubleshooting
+                    </h2>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4 class="h5">Common Issues</h4>
+                            <ul>
+                                <li><strong>Tasks not saving:</strong> Check browser storage settings</li>
+                                <li><strong>Import failed:</strong> Verify JSON file format and size (&lt;5MB)</li>
+                                <li><strong>Drag not working:</strong> Try using action buttons instead</li>
+                                <li><strong>Slow performance:</strong> Archive old completed tasks</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h4 class="h5">Browser Data</h4>
+                            <ul>
+                                <li><strong>Clearing data:</strong> Will remove all tasks permanently</li>
+                                <li><strong>Incognito mode:</strong> Data won't persist after closing</li>
+                                <li><strong>Multiple tabs:</strong> Changes sync automatically</li>
+                                <li><strong>Different devices:</strong> Use export/import to transfer</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
