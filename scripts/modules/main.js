@@ -295,9 +295,29 @@ class CascadeApp {
                 return;
             }
             
-            // Create new task
-            const newTask = createTask({ text });
+            // Create new task with guaranteed unique ID
+            const newTask = createTask({ 
+                text: text.trim(),
+                // Force unique ID generation (models.js already does this, but being explicit)
+                id: generateUniqueId()
+            });
+            
+            console.log('🆕 Creating new task:', {
+                id: newTask.id,
+                text: newTask.text,
+                status: newTask.status,
+                createdDate: newTask.createdDate
+            });
+            
             const currentTasks = this.state.get('tasks');
+            
+            // Debug: Check for potential duplicates
+            const existingTasksWithSameText = currentTasks.filter(t => t.text === newTask.text);
+            if (existingTasksWithSameText.length > 0) {
+                console.log('⚠️ Creating task with duplicate text. Existing tasks:', 
+                    existingTasksWithSameText.map(t => ({ id: t.id, text: t.text }))
+                );
+            }
             
             // Add to current board
             const currentBoardId = this.state.get('currentBoardId');
@@ -306,19 +326,37 @@ class CascadeApp {
                 const updatedBoards = boards.map(board => {
                     if (board.id === currentBoardId) {
                         const updatedTasks = [...(board.tasks || []), newTask.toJSON()];
+                        console.log('📋 Adding task to board:', {
+                            boardId: board.id,
+                            boardName: board.name,
+                            taskCount: updatedTasks.length
+                        });
                         return new Board({ ...board.toJSON(), tasks: updatedTasks });
                     }
                     return board;
                 });
                 
+                const newTaskList = [...currentTasks, newTask];
+                console.log('📝 Updated task list:', {
+                    totalTasks: newTaskList.length,
+                    taskIds: newTaskList.map(t => t.id),
+                    lastTaskId: newTask.id
+                });
+                
                 this.state.setState({
                     boards: updatedBoards,
-                    tasks: [...currentTasks, newTask]
+                    tasks: newTaskList
                 });
             } else {
                 // Fallback for legacy mode
+                const newTaskList = [...currentTasks, newTask];
+                console.log('📝 Legacy mode - Updated task list:', {
+                    totalTasks: newTaskList.length,
+                    taskIds: newTaskList.map(t => t.id)
+                });
+                
                 this.state.setState({
-                    tasks: [...currentTasks, newTask]
+                    tasks: newTaskList
                 });
             }
             
@@ -326,9 +364,10 @@ class CascadeApp {
             this.dom.clearTaskInput();
             
             eventBus.emit('task:created', { task: newTask });
+            console.log('✅ Task creation complete');
             
         } catch (error) {
-            console.error('Failed to create task:', error);
+            console.error('❌ Failed to create task:', error);
             this.handleError('Failed to create task', error);
         }
     }
@@ -411,29 +450,126 @@ class CascadeApp {
         try {
             const { taskId, targetStatus } = data;
             
+            console.log('🔄 handleDropTask called:', { taskId, targetStatus });
+            
+            // Strict validation of inputs
+            if (!taskId || typeof taskId !== 'string') {
+                console.error('❌ Invalid taskId:', taskId);
+                return;
+            }
+            
             if (!['todo', 'doing', 'done'].includes(targetStatus)) {
-                console.error('Invalid target status:', targetStatus);
+                console.error('❌ Invalid target status:', targetStatus);
                 return;
             }
             
             const tasks = this.state.get('tasks');
-            const updatedTasks = tasks.map(task => {
-                if (task.id === taskId) {
+            console.log('📋 Current tasks before move:', {
+                totalTasks: tasks.length,
+                taskIds: tasks.map(t => t.id),
+                targetTaskId: taskId
+            });
+            
+            // Find the specific task using strict ID matching
+            const taskIndex = tasks.findIndex(task => task.id === taskId);
+            if (taskIndex === -1) {
+                console.error('❌ Task not found with ID:', taskId);
+                return;
+            }
+            
+            const taskToMove = tasks[taskIndex];
+            console.log('🎯 Found task to move:', {
+                index: taskIndex,
+                id: taskToMove.id,
+                text: taskToMove.text,
+                currentStatus: taskToMove.status,
+                targetStatus: targetStatus
+            });
+            
+            // Check for other tasks with same text (for debugging)
+            const tasksWithSameText = tasks.filter(t => t.text === taskToMove.text);
+            if (tasksWithSameText.length > 1) {
+                console.warn('⚠️ Multiple tasks found with same text:', {
+                    text: taskToMove.text,
+                    count: tasksWithSameText.length,
+                    ids: tasksWithSameText.map(t => t.id),
+                    movingTaskId: taskId
+                });
+            }
+            
+            // Create new array with ONLY the specific task modified
+            // Using index-based approach to ensure we only modify one task
+            const updatedTasks = tasks.map((task, index) => {
+                if (index === taskIndex) {
+                    console.log('✅ Moving task at index', index, ':', {
+                        id: task.id,
+                        text: task.text,
+                        from: task.status,
+                        to: targetStatus
+                    });
                     return task.moveTo(targetStatus);
+                } else {
+                    // Verify we're not accidentally modifying other tasks
+                    if (task.text === taskToMove.text && task.id !== taskId) {
+                        console.log('🔍 Keeping unchanged task with same text:', {
+                            id: task.id,
+                            text: task.text,
+                            status: task.status
+                        });
+                    }
+                    return task; // Return unchanged reference
                 }
-                return task;
+            });
+            
+            // Validation: Ensure only one task changed status
+            const originalByStatus = {
+                todo: tasks.filter(t => t.status === 'todo').length,
+                doing: tasks.filter(t => t.status === 'doing').length,
+                done: tasks.filter(t => t.status === 'done').length
+            };
+            
+            const updatedByStatus = {
+                todo: updatedTasks.filter(t => t.status === 'todo').length,
+                doing: updatedTasks.filter(t => t.status === 'doing').length,
+                done: updatedTasks.filter(t => t.status === 'done').length
+            };
+            
+            console.log('📊 Status count comparison:', {
+                original: originalByStatus,
+                updated: updatedByStatus
+            });
+            
+            // Verify exactly one task moved
+            const totalChanges = Math.abs(originalByStatus.todo - updatedByStatus.todo) +
+                               Math.abs(originalByStatus.doing - updatedByStatus.doing) +
+                               Math.abs(originalByStatus.done - updatedByStatus.done);
+            
+            if (totalChanges !== 2) { // Should be exactly 2 (one task leaves, one task enters)
+                console.error('🚨 UNEXPECTED: More than one task changed status!', {
+                    totalChanges,
+                    originalByStatus,
+                    updatedByStatus
+                });
+            }
+            
+            console.log('📋 Tasks after move operation:', {
+                totalTasks: updatedTasks.length,
+                byStatus: updatedByStatus
             });
             
             this.updateCurrentBoardTasks(updatedTasks);
             
+            const movedTask = updatedTasks[taskIndex];
             eventBus.emit('task:moved', { 
                 taskId, 
                 targetStatus,
-                task: updatedTasks.find(t => t.id === taskId)
+                task: movedTask
             });
             
+            console.log('✅ Task move completed successfully');
+            
         } catch (error) {
-            console.error('Failed to move task:', error);
+            console.error('❌ Failed to move task:', error);
             this.handleError('Failed to move task', error);
         }
     }

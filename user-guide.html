@@ -72,12 +72,12 @@
                         </div>
                         <div class="col-md-6">
                             <div class="alert alert-info">
-                                <h5>🎨 Material Design 3</h5>
+                                <h5>♿ Enhanced Accessibility</h5>
                                 <ul class="mb-0">
-                                    <li>Modern, accessible interface</li>
-                                    <li>Improved color contrast</li>
-                                    <li>Responsive design</li>
-                                    <li>Touch-friendly controls</li>
+                                    <li>Full keyboard navigation</li>
+                                    <li>Screen reader support</li>
+                                    <li>WCAG 2.1 AA compliant</li>
+                                    <li>Keyboard drag & drop</li>
                                 </ul>
                             </div>
                         </div>
@@ -200,9 +200,10 @@
                                 <h4 class="h5 text-info">🚚 Moving Tasks</h4>
                                 <ul>
                                     <li><strong>Drag & Drop:</strong> Drag between columns</li>
-                                    <li><strong>Buttons:</strong> Use column action buttons</li>
-                                    <li><strong>Keyboard:</strong> Tab + arrow keys</li>
-                                    <li><strong>Quick Actions:</strong> Click status icons</li>
+                                    <li><strong>Keyboard:</strong> Select task, press <kbd>1</kbd>/<kbd>2</kbd>/<kbd>3</kbd></li>
+                                    <li><strong>Space Bar:</strong> Start keyboard drag mode</li>
+                                    <li><strong>Arrow Keys:</strong> Navigate between columns</li>
+                                    <li><strong>Action Buttons:</strong> Click status icons</li>
                                 </ul>
                             </div>
                         </div>
@@ -258,57 +259,130 @@
                         <span class="me-2">⌨️</span> Keyboard Shortcuts
                     </h2>
                     
+                    <div class="alert alert-info mb-4">
+                        <strong>💡 Quick Access:</strong> Press <kbd>?</kbd> or <kbd>Ctrl+/</kbd> in the app to see all shortcuts!
+                    </div>
+                    
                     <div class="row">
-                        <div class="col-md-6">
-                            <h4 class="h5">General</h4>
+                        <div class="col-lg-3 col-md-6 mb-4">
+                            <h4 class="h5 text-primary">Task Management</h4>
                             <div class="table-responsive">
                                 <table class="table table-sm">
                                     <tbody>
                                         <tr>
-                                            <td><kbd>Ctrl/Cmd + N</kbd></td>
-                                            <td>Focus task input (new task)</td>
-                                        </tr>
-                                        <tr>
-                                            <td><kbd>Ctrl/Cmd + Z</kbd></td>
-                                            <td>Undo last action</td>
-                                        </tr>
-                                        <tr>
-                                            <td><kbd>Ctrl/Cmd + Shift + Z</kbd></td>
-                                            <td>Redo last action</td>
-                                        </tr>
-                                        <tr>
-                                            <td><kbd>Escape</kbd></td>
-                                            <td>Close modal/cancel edit</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <h4 class="h5">Navigation</h4>
-                            <div class="table-responsive">
-                                <table class="table table-sm">
-                                    <tbody>
-                                        <tr>
-                                            <td><kbd>Tab</kbd></td>
-                                            <td>Navigate between elements</td>
-                                        </tr>
-                                        <tr>
-                                            <td><kbd>Arrow Keys</kbd></td>
-                                            <td>Navigate within task board</td>
+                                            <td><kbd>N</kbd></td>
+                                            <td>Create new task</td>
                                         </tr>
                                         <tr>
                                             <td><kbd>Enter</kbd></td>
-                                            <td>Activate buttons/save edits</td>
+                                            <td>Edit selected task</td>
                                         </tr>
                                         <tr>
-                                            <td><kbd>Space</kbd></td>
-                                            <td>Activate focused element</td>
+                                            <td><kbd>Delete</kbd></td>
+                                            <td>Delete selected task</td>
+                                        </tr>
+                                        <tr>
+                                            <td><kbd>Backspace</kbd></td>
+                                            <td>Delete selected task</td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
+                        
+                        <div class="col-lg-3 col-md-6 mb-4">
+                            <h4 class="h5 text-success">Navigation</h4>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <tbody>
+                                        <tr>
+                                            <td><kbd>↑</kbd></td>
+                                            <td>Select previous task</td>
+                                        </tr>
+                                        <tr>
+                                            <td><kbd>↓</kbd></td>
+                                            <td>Select next task</td>
+                                        </tr>
+                                        <tr>
+                                            <td><kbd>←</kbd></td>
+                                            <td>Navigate to left column</td>
+                                        </tr>
+                                        <tr>
+                                            <td><kbd>→</kbd></td>
+                                            <td>Navigate to right column</td>
+                                        </tr>
+                                        <tr>
+                                            <td><kbd>Escape</kbd></td>
+                                            <td>Clear selection / Close modals</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-3 col-md-6 mb-4">
+                            <h4 class="h5 text-warning">Task Status</h4>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <tbody>
+                                        <tr>
+                                            <td><kbd>1</kbd></td>
+                                            <td>Move to To-Do</td>
+                                        </tr>
+                                        <tr>
+                                            <td><kbd>2</kbd></td>
+                                            <td>Move to In Progress</td>
+                                        </tr>
+                                        <tr>
+                                            <td><kbd>3</kbd></td>
+                                            <td>Move to Done</td>
+                                        </tr>
+                                        <tr>
+                                            <td><kbd>Space</kbd></td>
+                                            <td>Start keyboard drag</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-3 col-md-6 mb-4">
+                            <h4 class="h5 text-info">Application</h4>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <tbody>
+                                        <tr>
+                                            <td><kbd>Ctrl+S</kbd></td>
+                                            <td>Export tasks</td>
+                                        </tr>
+                                        <tr>
+                                            <td><kbd>Ctrl+O</kbd></td>
+                                            <td>Import tasks</td>
+                                        </tr>
+                                        <tr>
+                                            <td><kbd>Ctrl+Z</kbd></td>
+                                            <td>Undo last action</td>
+                                        </tr>
+                                        <tr>
+                                            <td><kbd>Ctrl+Shift+Z</kbd></td>
+                                            <td>Redo last action</td>
+                                        </tr>
+                                        <tr>
+                                            <td><kbd>?</kbd></td>
+                                            <td>Show shortcuts</td>
+                                        </tr>
+                                        <tr>
+                                            <td><kbd>Ctrl+/</kbd></td>
+                                            <td>Show shortcuts</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <strong>📝 Note:</strong> Keyboard shortcuts work when not typing in input fields. Click outside inputs or press <kbd>Escape</kbd> to enable shortcuts.
                     </div>
                 </div>
 
@@ -517,14 +591,15 @@
                                 <span class="me-2">💡</span> Pro Tips
                             </h2>
                             <ul class="list-unstyled">
-                                <li class="mb-2">🎯 Use drag & drop for quick status changes</li>
-                                <li class="mb-2">💾 Export tasks regularly as backup</li>
-                                <li class="mb-2">📅 Tasks show creation date for reference</li>
-                                <li class="mb-2">🗂️ Archive old tasks to stay organized</li>
+                                <li class="mb-2">🎯 Press <kbd>N</kbd> to quickly add new tasks</li>
+                                <li class="mb-2">⌨️ Use <kbd>1</kbd>/<kbd>2</kbd>/<kbd>3</kbd> to move selected tasks</li>
+                                <li class="mb-2">💾 Press <kbd>Ctrl+S</kbd> to export tasks as backup</li>
+                                <li class="mb-2">🔄 Use <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Shift+Z</kbd> for undo/redo</li>
                                 <li class="mb-2">📋 Create separate boards for different projects</li>
-                                <li class="mb-2">⌨️ Use keyboard shortcuts for faster workflow</li>
-                                <li class="mb-2">🔄 Use undo/redo for quick corrections</li>
-                                <li class="mb-2">📱 Works great on mobile devices</li>
+                                <li class="mb-2">🗂️ Archive completed tasks regularly</li>
+                                <li class="mb-2">📅 Tasks show creation date for reference</li>
+                                <li class="mb-2">📱 Fully responsive on mobile devices</li>
+                                <li class="mb-2">♿ Screen reader friendly with full accessibility</li>
                             </ul>
                         </div>
                     </div>
@@ -560,7 +635,8 @@
                             <ul>
                                 <li><strong>Tasks not saving:</strong> Check browser storage settings</li>
                                 <li><strong>Import failed:</strong> Verify JSON file format and size (&lt;5MB)</li>
-                                <li><strong>Drag not working:</strong> Try using action buttons instead</li>
+                                <li><strong>Drag not working:</strong> Use keyboard shortcuts or action buttons</li>
+                                <li><strong>Shortcuts not working:</strong> Click outside inputs or press <kbd>Escape</kbd></li>
                                 <li><strong>Slow performance:</strong> Archive old completed tasks</li>
                             </ul>
                         </div>

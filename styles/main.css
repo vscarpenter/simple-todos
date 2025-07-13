@@ -27,6 +27,15 @@
 /* Import board selector component */
 @import 'modules/_board-selector.css';
 
+/* Import loading states */
+@import 'modules/_loading.css';
+
+/* Import error toast components */
+@import 'modules/_error-toast.css';
+
+/* Import keyboard navigation styles */
+@import 'modules/_keyboard-nav.css';
+
 /* Import utility classes last */
 @import 'modules/_utilities.css';
 

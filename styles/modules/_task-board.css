@@ -122,7 +122,7 @@
   border-radius: var(--task-card-radius);
   padding: var(--task-card-padding);
   box-shadow: var(--task-card-shadow);
-  transition: var(--task-transition);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: grab;
   position: relative;
   display: flex;
@@ -132,7 +132,13 @@
 
 .task-card:hover {
   box-shadow: var(--task-card-shadow-hover);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  border-color: var(--color-primary-40);
+}
+
+.task-card:active {
+  transform: translateY(0);
+  transition-duration: 0.1s;
 }
 
 .task-card:focus {
@@ -302,6 +308,13 @@
   }
   
   .task-card__actions {
+    position: sticky;
+    bottom: 0;
+    background: var(--color-surface-container-lowest);
+    margin: calc(-1 * var(--spacing-3));
+    margin-top: var(--spacing-3);
+    padding: var(--spacing-3);
+    border-top: 1px solid var(--color-outline-variant);
     flex-direction: column;
     gap: var(--spacing-2);
     align-items: stretch;

@@ -1,0 +1,211 @@
+/**
+ * Loading states and skeleton components
+ * Provides visual feedback during data loading
+ */
+
+/* Skeleton loading animation */
+@keyframes skeleton-loading {
+  0% { 
+    background-position: 200% 0; 
+  }
+  100% { 
+    background-position: -200% 0; 
+  }
+}
+
+/* Base skeleton component */
+.skeleton {
+  background: linear-gradient(90deg, 
+    var(--color-surface-container) 25%, 
+    var(--color-surface-container-high) 50%, 
+    var(--color-surface-container) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: var(--radius-md);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Skeleton variants */
+.skeleton--text {
+  height: 1em;
+  margin: 0.5em 0;
+}
+
+.skeleton--text-sm {
+  height: 0.875em;
+  margin: 0.25em 0;
+}
+
+.skeleton--text-lg {
+  height: 1.25em;
+  margin: 0.75em 0;
+}
+
+.skeleton--button {
+  height: var(--size-button-md);
+  width: 120px;
+  border-radius: var(--radius-lg);
+}
+
+.skeleton--card {
+  height: 120px;
+  border-radius: var(--task-card-radius);
+  margin-bottom: var(--spacing-3);
+}
+
+.skeleton--avatar {
+  width: var(--size-icon-xl);
+  height: var(--size-icon-xl);
+  border-radius: var(--radius-full);
+}
+
+/* Task card skeleton */
+.skeleton-task-card {
+  background-color: var(--color-surface-container-lowest);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--task-card-radius);
+  padding: var(--task-card-padding);
+  margin-bottom: var(--spacing-3);
+}
+
+.skeleton-task-card__text {
+  width: 100%;
+  margin-bottom: var(--spacing-2);
+}
+
+.skeleton-task-card__text:last-child {
+  width: 75%;
+}
+
+.skeleton-task-card__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--spacing-3);
+  padding-top: var(--spacing-2);
+  border-top: 1px solid var(--color-outline-variant);
+}
+
+.skeleton-task-card__date {
+  width: 80px;
+}
+
+.skeleton-task-card__actions {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.skeleton-task-card__button {
+  width: 60px;
+  height: 24px;
+}
+
+/* Loading spinner */
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-outline-variant);
+  border-radius: 50%;
+  border-top-color: var(--color-primary-40);
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { 
+    transform: rotate(360deg); 
+  }
+}
+
+.loading-spinner--sm {
+  width: 16px;
+  height: 16px;
+  border-width: 1.5px;
+}
+
+.loading-spinner--lg {
+  width: 32px;
+  height: 32px;
+  border-width: 3px;
+}
+
+/* Loading overlay */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-dropdown);
+  backdrop-filter: blur(1px);
+}
+
+.loading-overlay--dark {
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+}
+
+/* Loading states for buttons */
+.btn--loading {
+  position: relative;
+  color: transparent !important;
+  pointer-events: none;
+}
+
+.btn--loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Pulse animation for loading states */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.loading-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton,
+  .loading-spinner,
+  .btn--loading::after,
+  .loading-pulse {
+    animation: none;
+  }
+  
+  .skeleton {
+    background: var(--color-surface-container-high);
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .loading-overlay {
+    background-color: rgba(0, 0, 0, 0.8);
+  }
+  
+  .loading-overlay--dark {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}

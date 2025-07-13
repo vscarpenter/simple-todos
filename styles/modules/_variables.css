@@ -61,6 +61,16 @@
   --color-outline: #79747e;
   --color-outline-variant: #cac4d0;
   
+  /* Enhanced contrast colors for accessibility */
+  --color-text-high-contrast: #000000;
+  --color-text-medium-contrast: #1d1b20;
+  --color-text-low-contrast: #49454f;
+  
+  /* Status colors with better contrast */
+  --status-todo-text: #1565c0;
+  --status-doing-text: #ef6c00;
+  --status-done-text: #2e7d32;
+  
   /* === Typography === */
   
   /* Font Families */
@@ -83,11 +93,18 @@
   --font-size-2xl: 1.5rem;    /* 24px */
   --font-size-3xl: 1.875rem;  /* 30px */
   --font-size-4xl: 2.25rem;   /* 36px */
+  --font-size-headline: 2rem; /* 32px - for page titles */
+  --font-size-display: 3.5rem; /* 56px - for hero text */
   
   /* Line Heights */
   --line-height-tight: 1.25;
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.625;
+  
+  /* Letter Spacing */
+  --letter-spacing-tight: -0.025em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.025em;
   
   /* === Spacing === */
   
@@ -199,6 +216,21 @@
   --task-card-radius: var(--radius-lg);
   --task-card-shadow: var(--elevation-1);
   --task-card-shadow-hover: var(--elevation-2);
+  
+  /* Component padding consistency */
+  --component-padding-sm: var(--spacing-2) var(--spacing-3);
+  --component-padding-md: var(--spacing-3) var(--spacing-4);
+  --component-padding-lg: var(--spacing-4) var(--spacing-6);
+  
+  /* Visual emphasis system */
+  --emphasis-subtle: 0.6;
+  --emphasis-medium: 0.8;
+  --emphasis-strong: 1.0;
+  
+  /* Task priority indicators */
+  --priority-high: #d32f2f;
+  --priority-medium: #f57c00;
+  --priority-low: #388e3c;
   
   /* Status Colors */
   --status-todo-bg: #e3f2fd;

@@ -50,6 +50,7 @@ A modern, Material Design 3 compliant task management web application with a cle
 - **Type Scale**: Material Design 3 typography scale (Display, Headline, Title, Body, Label)
 - **Font Weights**: Light (300), Regular (400), Medium (500), SemiBold (600)
 - **Hierarchy**: Material Design 3 typography standards
+- **Letter Spacing**: Optimized for readability across all text sizes
 
 ### **Visual Elements**
 - **Material Buttons**: MD3 button variants with proper elevation and state layers
@@ -302,7 +303,7 @@ cascade-todos/
 
 This application follows modern web development best practices:
 - **Colors**: Professional color palette with proper contrast ratios
-- **Typography**: Guardian Sans font family with proper weights and hierarchy
+- **Typography**: Inter font family with proper weights and hierarchy
 - **Voice**: Professional, straightforward, and helpful tone
 - **Design**: Clean, modern, and uncluttered interface
 - **CTAs**: Proper button styling and hierarchy

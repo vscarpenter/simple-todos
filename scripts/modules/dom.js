@@ -117,12 +117,21 @@ class DOMManager {
         // Delegate drag and drop events
         this.delegate('dragstart', '.task-card', (event, element) => {
             const taskId = element.dataset.taskId;
+            console.log('🎯 Drag started:', {
+                taskId,
+                elementId: element.id,
+                taskText: element.querySelector('.task-card__text')?.textContent?.trim()
+            });
+            
             event.dataTransfer.setData('text/plain', taskId);
             element.classList.add('dragging');
             eventBus.emit('drag:start', { taskId, element });
         });
 
         this.delegate('dragend', '.task-card', (event, element) => {
+            const taskId = element.dataset.taskId;
+            console.log('🎯 Drag ended:', { taskId });
+            
             element.classList.remove('dragging');
             eventBus.emit('drag:end', { element });
         });
@@ -290,8 +299,18 @@ class DOMManager {
                 const taskId = event.dataTransfer.getData('text/plain');
                 const targetStatus = column.dataset.status;
                 
+                console.log('📦 Drop event:', {
+                    taskId,
+                    targetStatus,
+                    columnId: column.id,
+                    dataTransferData: event.dataTransfer.getData('text/plain')
+                });
+                
                 if (taskId && targetStatus) {
+                    console.log('✅ Emitting task:drop event:', { taskId, targetStatus });
                     eventBus.emit('task:drop', { taskId, targetStatus });
+                } else {
+                    console.error('❌ Missing taskId or targetStatus:', { taskId, targetStatus });
                 }
             });
         });
@@ -323,10 +342,33 @@ class DOMManager {
      * @returns {HTMLElement} Task card element
      */
     createTaskCard(task) {
+        // Validate task has required properties
+        if (!task.id || !task.text) {
+            console.error('❌ Invalid task data:', task);
+            return null;
+        }
+        
+        // Check for existing element with same ID (cleanup stale elements)
+        const existingElement = document.getElementById(`task-${task.id}`);
+        if (existingElement) {
+            console.warn('⚠️ Removing existing task element with same ID:', task.id);
+            existingElement.remove();
+        }
+        
         const card = document.createElement('div');
         card.className = `task-card task-card--${task.status}`;
         card.draggable = true;
         card.dataset.taskId = task.id;
+        card.id = `task-${task.id}`; // Ensure unique DOM ID
+        card.setAttribute('data-task-text', task.text); // For debugging
+        card.setAttribute('aria-label', `Task: ${task.text}`);
+        card.tabIndex = 0; // Make focusable for keyboard navigation
+        
+        // Validate uniqueness
+        const allTaskCards = document.querySelectorAll(`[data-task-id="${task.id}"]`);
+        if (allTaskCards.length > 1) {
+            console.error('🚨 Multiple task cards found with same ID:', task.id);
+        }
         
         card.innerHTML = `
             <div class="task-card__content">
@@ -338,18 +380,25 @@ class DOMManager {
             </div>
             <div class="task-card__actions">
                 <div class="task-card__actions-primary">
-                    <button class="btn-task-action" data-action="edit" data-task-id="${task.id}" title="Edit task">
+                    <button class="btn-task-action" data-action="edit" data-task-id="${task.id}" title="Edit task" aria-label="Edit task: ${this.sanitizeHTML(task.text)}">
                         ✏️
                     </button>
-                    <button class="btn-task-action" data-action="delete" data-task-id="${task.id}" title="Delete task">
+                    <button class="btn-task-action" data-action="delete" data-task-id="${task.id}" title="Delete task" aria-label="Delete task: ${this.sanitizeHTML(task.text)}">
                         🗑️
                     </button>
                 </div>
                 <div class="task-card__actions-secondary">
-                    ${this.getStatusButtons(task.status, task.id)}
+                    ${this.getStatusButtons(task.status, task.id, task.text)}
                 </div>
             </div>
         `;
+        
+        console.log('✅ Created task card:', {
+            id: task.id,
+            domId: card.id,
+            text: task.text.substring(0, 30) + (task.text.length > 30 ? '...' : ''),
+            status: task.status
+        });
         
         return card;
     }
@@ -358,14 +407,16 @@ class DOMManager {
      * Get status change buttons
      * @param {string} currentStatus - Current task status
      * @param {string} taskId - Task ID
+     * @param {string} taskText - Task text for accessibility
      * @returns {string} HTML for status buttons
      */
-    getStatusButtons(currentStatus, taskId) {
+    getStatusButtons(currentStatus, taskId, taskText = '') {
         const buttons = [];
+        const sanitizedText = this.sanitizeHTML(taskText);
         
         if (currentStatus !== 'todo') {
             buttons.push(`
-                <button class="btn-task-action" data-action="move" data-task-id="${taskId}" data-target-status="todo" title="Move to To-Do">
+                <button class="btn-task-action" data-action="move" data-task-id="${taskId}" data-target-status="todo" title="Move to To-Do" aria-label="Move '${sanitizedText}' to To-Do">
                     📋
                 </button>
             `);
@@ -373,7 +424,7 @@ class DOMManager {
         
         if (currentStatus !== 'doing') {
             buttons.push(`
-                <button class="btn-task-action" data-action="move" data-task-id="${taskId}" data-target-status="doing" title="Move to In Progress">
+                <button class="btn-task-action" data-action="move" data-task-id="${taskId}" data-target-status="doing" title="Move to In Progress" aria-label="Move '${sanitizedText}' to In Progress">
                     ⚡
                 </button>
             `);
@@ -381,7 +432,7 @@ class DOMManager {
         
         if (currentStatus !== 'done') {
             buttons.push(`
-                <button class="btn-task-action" data-action="move" data-task-id="${taskId}" data-target-status="done" title="Move to Done">
+                <button class="btn-task-action" data-action="move" data-task-id="${taskId}" data-target-status="done" title="Move to Done" aria-label="Move '${sanitizedText}' to Done">
                     ✅
                 </button>
             `);
@@ -390,7 +441,7 @@ class DOMManager {
         // Add archive button for completed tasks
         if (currentStatus === 'done') {
             buttons.push(`
-                <button class="btn-task-action" data-action="archive" data-task-id="${taskId}" title="Archive task">
+                <button class="btn-task-action" data-action="archive" data-task-id="${taskId}" title="Archive task" aria-label="Archive '${sanitizedText}'">
                     📦
                 </button>
             `);
@@ -404,9 +455,41 @@ class DOMManager {
      * @param {Object} tasksByStatus - Tasks grouped by status
      */
     renderTasks(tasksByStatus) {
-        // Clear columns
+        // Debug logging to help identify grouping issues
+        const totalTasks = Object.values(tasksByStatus).flat().length;
+        const taskIds = Object.values(tasksByStatus).flat().map(t => t.id);
+        const taskTexts = Object.values(tasksByStatus).flat().map(t => t.text);
+        const uniqueIds = [...new Set(taskIds)];
+        const uniqueTexts = [...new Set(taskTexts)];
+        
+        console.log('🔍 Rendering tasks:', {
+            total: totalTasks,
+            byStatus: {
+                todo: tasksByStatus.todo?.length || 0,
+                doing: tasksByStatus.doing?.length || 0,
+                done: tasksByStatus.done?.length || 0
+            },
+            uniqueIds: uniqueIds.length,
+            uniqueTexts: uniqueTexts.length,
+            hasDuplicateIds: taskIds.length !== uniqueIds.length,
+            hasDuplicateTexts: taskTexts.length !== uniqueTexts.length
+        });
+        
+        // Comprehensive DOM cleanup to prevent stale references
+        console.log('🧹 Cleaning up existing task cards...');
+        
+        // Remove all existing task cards first
+        const existingTaskCards = document.querySelectorAll('.task-card');
+        existingTaskCards.forEach((card, index) => {
+            console.log(`  Removing existing card ${index + 1}:`, card.dataset.taskId);
+            card.remove();
+        });
+        
+        // Clear column containers
         Object.values(this.elements).forEach(element => {
-            if (element && element.classList && (element.classList.contains('column-content') || element.classList.contains('board-column__content'))) {
+            if (element && element.classList && 
+                (element.classList.contains('column-content') || 
+                 element.classList.contains('board-column__content'))) {
                 element.innerHTML = '';
             }
         });
@@ -415,24 +498,68 @@ class DOMManager {
         const allTaskElements = [];
         Object.entries(tasksByStatus).forEach(([status, tasks]) => {
             const columnElement = this.elements[`${status}List`];
-            if (!columnElement) return;
+            if (!columnElement) {
+                console.warn(`⚠️ Column element not found for status: ${status}`);
+                return;
+            }
+
+            console.log(`📋 Rendering ${tasks.length} tasks in ${status} column`);
 
             if (tasks.length === 0) {
                 this.addEmptyState(columnElement, this.getEmptyMessage(status));
             } else {
-                tasks.forEach(task => {
+                tasks.forEach((task, index) => {
+                    console.log(`  📝 Creating task card ${index + 1}:`, {
+                        id: task.id,
+                        text: task.text.substring(0, 30) + (task.text.length > 30 ? '...' : ''),
+                        status: task.status
+                    });
+                    
                     const taskCard = this.createTaskCard(task);
+                    
+                    // Validate the card was created successfully
+                    if (!taskCard) {
+                        console.error('❌ Failed to create task card for:', task);
+                        return;
+                    }
+                    
+                    // Verify the card has unique identifiers
+                    if (!taskCard.id || !taskCard.dataset.taskId) {
+                        console.error('❌ Task card missing unique identifiers:', task);
+                        return;
+                    }
+                    
+                    // Double-check for DOM conflicts before adding
+                    const existingCardWithSameId = document.getElementById(taskCard.id);
+                    if (existingCardWithSameId && existingCardWithSameId !== taskCard) {
+                        console.error('🚨 DOM conflict: Element with same ID already exists:', taskCard.id);
+                        existingCardWithSameId.remove();
+                    }
+                    
                     columnElement.appendChild(taskCard);
                     allTaskElements.push(taskCard);
                 });
             }
         });
         
+        // Final validation: Check for duplicate DOM IDs
+        const allTaskIds = allTaskElements.map(el => el.dataset.taskId);
+        const uniqueDOMIds = [...new Set(allTaskIds)];
+        if (allTaskIds.length !== uniqueDOMIds.length) {
+            console.error('🚨 Duplicate task IDs found in DOM:', {
+                total: allTaskIds.length,
+                unique: uniqueDOMIds.length,
+                duplicates: allTaskIds.filter((id, index) => allTaskIds.indexOf(id) !== index)
+            });
+        }
+        
         // Update counters
         this.updateTaskCounts(tasksByStatus);
         
         // Update accessibility features for new task elements
         accessibility.updateTasksAccessibility(allTaskElements);
+        
+        console.log('✅ Task rendering complete. DOM elements created:', allTaskElements.length);
     }
 
     /**
@@ -506,7 +633,8 @@ class DOMManager {
             inputValue = '',
             showCancel = true,
             confirmText = 'Confirm',
-            cancelText = 'Cancel'
+            cancelText = 'Cancel',
+            allowHTML = false
         } = options;
 
         return new Promise((resolve) => {
@@ -530,7 +658,11 @@ class DOMManager {
 
             // Set content
             modalTitle.textContent = title;
-            modalMessage.textContent = message;
+            if (allowHTML) {
+                modalMessage.innerHTML = message;
+            } else {
+                modalMessage.textContent = message;
+            }
             modalInput.style.display = showInput ? 'block' : 'none';
             modalInput.value = inputValue;
             modalCancel.style.display = showCancel ? 'block' : 'none';

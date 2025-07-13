@@ -1,0 +1,223 @@
+/**
+ * Keyboard Navigation Styles
+ * Visual feedback for keyboard navigation and shortcuts
+ */
+
+/* Selected task card styling */
+.task-card--selected {
+  outline: 2px solid var(--color-primary-40);
+  outline-offset: 2px;
+  box-shadow: var(--elevation-3);
+  background-color: var(--color-primary-95);
+}
+
+.task-card--selected:hover {
+  background-color: var(--color-primary-95);
+}
+
+/* Keyboard shortcut help modal */
+.shortcut-help-modal .modal-box {
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.shortcut-help {
+  display: grid;
+  gap: var(--spacing-6);
+}
+
+.shortcut-category {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.shortcut-category__title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-on-surface);
+  margin: 0;
+  padding-bottom: var(--spacing-2);
+  border-bottom: 1px solid var(--color-outline-variant);
+}
+
+.shortcut-list {
+  display: grid;
+  gap: var(--spacing-2);
+}
+
+.shortcut-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  padding: var(--spacing-2) 0;
+}
+
+.shortcut-key {
+  background-color: var(--color-surface-container-high);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-1) var(--spacing-2);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-on-surface);
+  min-width: 60px;
+  text-align: center;
+  box-shadow: 0 1px 0 var(--color-outline-variant);
+  flex-shrink: 0;
+}
+
+.shortcut-description {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+  flex: 1;
+}
+
+/* Focus indicators for better keyboard navigation */
+.task-card:focus-visible {
+  outline: 2px solid var(--color-primary-40);
+  outline-offset: 2px;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--color-primary-40);
+  outline-offset: 2px;
+}
+
+.form-control:focus-visible {
+  outline: 2px solid var(--color-primary-40);
+  outline-offset: 1px;
+}
+
+/* Skip link styling */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: var(--color-primary-40);
+  color: var(--color-on-primary);
+  padding: var(--spacing-2) var(--spacing-3);
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-medium);
+  z-index: var(--z-tooltip);
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 6px;
+}
+
+/* Keyboard navigation hints */
+.keyboard-hint {
+  position: absolute;
+  top: var(--spacing-2);
+  right: var(--spacing-2);
+  background-color: var(--color-surface-container-highest);
+  color: var(--color-on-surface-variant);
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-family-mono);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.task-card:hover .keyboard-hint,
+.task-card:focus .keyboard-hint {
+  opacity: 1;
+}
+
+/* Responsive keyboard shortcuts modal */
+@media (max-width: 768px) {
+  .shortcut-help-modal .modal-box {
+    max-width: 95vw;
+    max-height: 85vh;
+    padding: var(--spacing-4);
+  }
+  
+  .shortcut-help {
+    gap: var(--spacing-4);
+  }
+  
+  .shortcut-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-2);
+  }
+  
+  .shortcut-key {
+    min-width: auto;
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .shortcut-category__title {
+    font-size: var(--font-size-base);
+  }
+  
+  .shortcut-key {
+    font-size: var(--font-size-xs);
+    padding: var(--spacing-1);
+  }
+  
+  .shortcut-description {
+    font-size: var(--font-size-xs);
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .task-card--selected {
+    outline-width: 3px;
+    background-color: var(--color-primary-90);
+  }
+  
+  .shortcut-key {
+    border-width: 2px;
+    font-weight: var(--font-weight-bold);
+  }
+  
+  .skip-link:focus,
+  .task-card:focus-visible,
+  .btn:focus-visible,
+  .form-control:focus-visible {
+    outline-width: 3px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .task-card--selected {
+    background-color: var(--color-primary-20);
+  }
+  
+  .shortcut-key {
+    background-color: var(--color-surface-container);
+    border-color: var(--color-outline);
+    box-shadow: 0 1px 0 var(--color-outline);
+  }
+  
+  .keyboard-hint {
+    background-color: var(--color-surface-container);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .skip-link {
+    transition: none;
+  }
+  
+  .keyboard-hint {
+    transition: none;
+  }
+  
+  .task-card--selected {
+    transition: none;
+  }
+}
