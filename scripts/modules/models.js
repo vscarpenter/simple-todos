@@ -225,6 +225,16 @@ export class Task {
         this.status = newStatus;
         this.lastModified = new Date().toISOString();
         
+        // Set completedDate when task is moved to done
+        if (newStatus === 'done' && oldStatus !== 'done') {
+            this.completedDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+        }
+        
+        // Clear completedDate when task is moved away from done
+        if (newStatus !== 'done' && oldStatus === 'done') {
+            this.completedDate = null;
+        }
+        
         eventBus.emit('task:moved', {
             task: this,
             oldStatus,

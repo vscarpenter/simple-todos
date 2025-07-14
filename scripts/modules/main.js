@@ -3,6 +3,7 @@ import appState from './state.js';
 import storage from './storage.js';
 import domManager from './dom.js';
 import accessibility from './accessibility.js';
+import { settingsManager } from './settings.js';
 import { Board, Task, createBoard, createTask } from './models.js';
 
 // Generate unique ID function (duplicated from models.js to avoid circular imports)
@@ -38,6 +39,13 @@ class CascadeApp {
             
             // Setup event listeners
             this.setupEventListeners();
+            
+            // Initialize settings and apply theme
+            settingsManager.loadSettings();
+            settingsManager.applyTheme();
+            
+            // Initialize auto-archive
+            this.initAutoArchive();
             
             // Initial render
             this.render();
@@ -83,7 +91,7 @@ class CascadeApp {
                     // Legacy single board format - create default board
                     const tasks = data.tasks.map(taskData => new Task(taskData));
                     const defaultBoard = createBoard({
-                        name: 'Personal Tasks',
+                        name: 'Main Board',
                         description: 'Your default task board',
                         tasks: tasks.map(t => t.toJSON()),
                         isDefault: true
@@ -118,7 +126,7 @@ class CascadeApp {
      */
     createDefaultBoard() {
         const defaultBoard = createBoard({
-            name: 'Personal Tasks',
+            name: 'Main Board',
             description: 'Your default task board',
             isDefault: true
         });
@@ -181,6 +189,7 @@ class CascadeApp {
 
         // Settings events
         eventBus.on('settings:show', this.handleShowSettings.bind(this));
+        eventBus.on('app:reset', this.handleResetApp.bind(this));
 
         // Board management events
         eventBus.on('board:create', this.handleCreateBoard.bind(this));
@@ -831,8 +840,143 @@ class CascadeApp {
      * Handle show settings
      */
     handleShowSettings() {
-        this.dom.showModal('Settings', 'Settings functionality coming soon!', {
-            showCancel: false
+        const settingsHTML = settingsManager.generateSettingsHTML();
+        
+        this.dom.showModal('Settings', settingsHTML, {
+            confirmText: 'Save Settings',
+            allowHTML: true,
+            customClass: 'settings-modal'
+        }).then((result) => {
+            if (result) {
+                this.handleSaveSettings();
+            }
+        });
+
+        // Setup additional event handlers for settings form
+        setTimeout(() => {
+            this.setupSettingsFormHandlers();
+        }, 100);
+    }
+
+    /**
+     * Setup settings form event handlers
+     */
+    setupSettingsFormHandlers() {
+        // Prevent modal from closing when clicking inside the settings form
+        const settingsForm = document.querySelector('.settings-form');
+        if (settingsForm) {
+            settingsForm.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
+
+        const resetBtn = document.getElementById('reset-settings-btn');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.handleResetSettings();
+            });
+        }
+
+        const resetAppBtn = document.getElementById('reset-app-btn');
+        if (resetAppBtn) {
+            resetAppBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.handleResetApp();
+            });
+        }
+
+        // Add live preview for theme changes
+        const themeSelect = document.getElementById('theme-select');
+        if (themeSelect) {
+            themeSelect.addEventListener('change', (e) => {
+                e.stopPropagation();
+                const newTheme = themeSelect.value;
+                settingsManager.setValue('theme', newTheme);
+                settingsManager.applyTheme();
+            });
+        }
+
+        // Prevent all form elements from closing the modal
+        if (settingsForm) {
+            const formElements = settingsForm.querySelectorAll('input, select, button, label');
+            formElements.forEach(element => {
+                element.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+                
+                // Also prevent on change events for form inputs
+                if (element.tagName === 'INPUT' || element.tagName === 'SELECT') {
+                    element.addEventListener('change', (e) => {
+                        e.stopPropagation();
+                    });
+                }
+            });
+        }
+    }
+
+    /**
+     * Handle save settings
+     */
+    handleSaveSettings() {
+        try {
+            const settingsForm = document.querySelector('.settings-form');
+            if (!settingsForm) {
+                throw new Error('Settings form not found');
+            }
+
+            const newSettings = settingsManager.parseSettingsFromForm(settingsForm);
+            
+            // Validate settings
+            if (newSettings.autoArchiveDays < 1 || newSettings.autoArchiveDays > 365) {
+                this.dom.showModal('Invalid Input', 'Please enter a number between 1 and 365 days for auto-archive.');
+                return;
+            }
+
+            settingsManager.saveSettings(newSettings);
+            settingsManager.applyTheme();
+            
+            this.dom.showModal('Settings Saved', 'Your settings have been updated successfully!', {
+                showCancel: false,
+                confirmText: 'OK'
+            });
+
+            // Trigger auto-archive if enabled and settings changed
+            if (newSettings.enableAutoArchive) {
+                this.performAutoArchive();
+            }
+
+        } catch (error) {
+            console.error('Failed to save settings:', error);
+            const errorMessage = error.message || 'Failed to save settings. Please try again.';
+            this.dom.showModal('Error', `Settings save failed: ${errorMessage}`);
+        }
+    }
+
+    /**
+     * Handle reset settings
+     */
+    handleResetSettings() {
+        this.dom.showModal('Reset Settings', 'Are you sure you want to reset all settings to their defaults?', {
+            confirmText: 'Reset',
+            cancelText: 'Cancel'
+        }).then((confirmed) => {
+            if (confirmed) {
+                settingsManager.resetSettings();
+                settingsManager.applyTheme();
+                
+                // Close current settings modal and reopen with reset values
+                const modal = document.getElementById('custom-modal');
+                if (modal) {
+                    modal.classList.remove('modal-overlay--visible');
+                }
+                
+                setTimeout(() => {
+                    this.handleShowSettings();
+                }, 300);
+            }
         });
     }
 
@@ -843,6 +987,84 @@ class CascadeApp {
     handleStorageError(data) {
         console.error('Storage error:', data);
         this.handleError('Storage operation failed', data.error);
+    }
+
+    /**
+     * Handle reset app - clear all data and start fresh
+     */
+    async handleResetApp() {
+        try {
+            const confirmed = await this.dom.showModal(
+                'Reset App', 
+                'This will permanently delete ALL boards, tasks, and data. You will start with a fresh, empty app. This action cannot be undone.\n\nAre you sure you want to continue?',
+                {
+                    confirmText: 'Reset Everything',
+                    cancelText: 'Cancel'
+                }
+            );
+
+            if (!confirmed) {
+                return;
+            }
+
+            // Second confirmation for such a destructive action
+            const finalConfirmed = await this.dom.showModal(
+                'Final Confirmation', 
+                'This is your FINAL WARNING!\n\nThis will permanently delete ALL your boards, tasks, and data. There is NO way to recover this data once deleted.\n\nAre you absolutely certain you want to continue?',
+                {
+                    confirmText: 'YES, DELETE EVERYTHING',
+                    cancelText: 'Cancel'
+                }
+            );
+
+            if (!finalConfirmed) {
+                return;
+            }
+
+            // Clear all localStorage data
+            this.storage.clearAll();
+            
+            // Reset settings to defaults
+            settingsManager.resetSettings();
+            
+            // Create a fresh default board
+            const defaultBoard = createBoard({
+                name: 'Main Board',
+                description: 'Your main task board',
+                isDefault: true
+            });
+
+            // Reset state to initial condition
+            this.state.setState({
+                boards: [defaultBoard],
+                currentBoardId: defaultBoard.id,
+                tasks: [],
+                filter: 'all'
+            }, { addToHistory: false });
+
+            // Save the fresh state
+            this.saveData();
+            
+            // Apply default theme
+            settingsManager.applyTheme();
+            
+            // Re-render everything
+            this.render();
+            this.renderBoardSelector();
+            
+            // Show success message
+            await this.dom.showModal('App Reset Complete', 
+                'The app has been reset successfully. You now have a fresh "Main Board" to start with.',
+                { 
+                    showCancel: false,
+                    confirmText: 'OK'
+                }
+            );
+            
+        } catch (error) {
+            console.error('Failed to reset app:', error);
+            this.handleError('Reset failed', error);
+        }
     }
 
     // Board Management Handlers
@@ -1364,94 +1586,70 @@ class CascadeApp {
                 for (const boardData of boardsToImport) {
                     totalTaskCount += boardData.tasks ? boardData.tasks.length : 0;
                     
-                    // Check for existing board by ID first, then by name (for default boards)
+                    // Check for existing board by ID only (exact match)
                     let existingBoard = existingBoardMap.get(boardData.id);
-                    let duplicateByName = false;
                     
-                    // If no ID match, check for default board names that should be merged
+                    // If no exact ID match, check for name conflicts
                     if (!existingBoard) {
-                        const defaultBoardNames = ['Personal Tasks', 'Main Board'];
-                        if (defaultBoardNames.includes(boardData.name)) {
-                            existingBoard = updatedExistingBoards.find(b => 
-                                defaultBoardNames.includes(b.name) && 
-                                (b.isDefault || defaultBoardNames.includes(b.name))
-                            );
-                            duplicateByName = true;
-                        }
+                        existingBoard = updatedExistingBoards.find(b => b.name === boardData.name);
                     }
                     
                     if (existingBoard) {
-                        // Check if boards are actually the same (same name or default boards)
-                        const isSameBoard = existingBoard.name === boardData.name || 
-                                          (duplicateByName && ['Personal Tasks', 'Main Board'].includes(boardData.name));
+                        // Ask user what to do with duplicate board
+                        const action = await this.dom.showModal(
+                            'Duplicate Board Found',
+                            `Board "${boardData.name}" already exists. What would you like to do?`,
+                            {
+                                confirmText: 'Merge Tasks',
+                                cancelText: 'Import as New Board'
+                            }
+                        );
                         
-                        if (isSameBoard) {
-                            // For default boards, automatically merge tasks without asking
-                            if (['Personal Tasks', 'Main Board'].includes(boardData.name) && 
-                                ['Personal Tasks', 'Main Board'].includes(existingBoard.name)) {
-                                
-                                // Merge tasks into existing default board
-                                const existingTasks = existingBoard.tasks || [];
-                                const newTasks = boardData.tasks || [];
-                                const mergedTasks = [...existingTasks, ...newTasks];
-                                
-                                // Update the existing board in the array
-                                const boardIndex = updatedExistingBoards.findIndex(b => 
-                                    b.id === existingBoard.id || 
-                                    (b.isDefault && ['Personal Tasks', 'Main Board'].includes(b.name))
-                                );
-                                if (boardIndex !== -1) {
-                                    updatedExistingBoards[boardIndex] = new Board({
-                                        ...existingBoard.toJSON(),
-                                        tasks: mergedTasks,
-                                        lastModified: new Date().toISOString()
-                                    });
-                                }
-                            } else {
-                                // Ask user what to do with duplicate board
-                                const action = await this.dom.showModal(
-                                    'Duplicate Board Found',
-                                    `Board "${boardData.name}" already exists. What would you like to do?`,
-                                    {
-                                        confirmText: 'Merge Tasks',
-                                        cancelText: 'Skip Board'
-                                    }
-                                );
-                                
-                                if (action) {
-                                    // Merge tasks into existing board
-                                    const existingTasks = existingBoard.tasks || [];
-                                    const newTasks = boardData.tasks || [];
-                                    const mergedTasks = [...existingTasks, ...newTasks];
-                                    
-                                    // Update the existing board in the array
-                                    const boardIndex = updatedExistingBoards.findIndex(b => b.id === existingBoard.id);
-                                    if (boardIndex !== -1) {
-                                        updatedExistingBoards[boardIndex] = new Board({
-                                            ...existingBoard.toJSON(),
-                                            tasks: mergedTasks,
-                                            lastModified: new Date().toISOString()
-                                        });
-                                    }
-                                }
-                                // If action is false (Skip Board), we don't add anything
+                        if (action) {
+                            // Merge tasks into existing board
+                            const existingTasks = existingBoard.tasks || [];
+                            const newTasks = boardData.tasks || [];
+                            const mergedTasks = [...existingTasks, ...newTasks];
+                            
+                            // Update the existing board in the array
+                            const boardIndex = updatedExistingBoards.findIndex(b => b.id === existingBoard.id);
+                            if (boardIndex !== -1) {
+                                updatedExistingBoards[boardIndex] = new Board({
+                                    ...existingBoard.toJSON(),
+                                    tasks: mergedTasks,
+                                    lastModified: new Date().toISOString()
+                                });
                             }
                         } else {
-                            // Different board with same ID - create new board with unique ID
+                            // Import as new board with unique name and ID
                             const newBoardData = {
                                 ...boardData,
-                                id: generateUniqueId(),
-                                name: `${boardData.name} (Imported)`
+                                id: generateUniqueId(), // Generate new ID
+                                name: this.generateUniqueBoardName(boardData.name, updatedExistingBoards),
+                                isDefault: false,
+                                createdDate: new Date().toISOString().split('T')[0],
+                                lastModified: new Date().toISOString()
                             };
-                            importedBoards.push(new Board(newBoardData));
+                            
+                            const newBoard = new Board(newBoardData);
+                            updatedExistingBoards.push(newBoard);
+                            importedBoards.push(newBoard);
                         }
                     } else {
-                        // No conflict - add the board as-is
-                        importedBoards.push(new Board(boardData));
+                        // No conflict - add the board as-is with unique ID to prevent conflicts
+                        const newBoardData = {
+                            ...boardData,
+                            id: generateUniqueId(),
+                            createdDate: new Date().toISOString().split('T')[0],
+                            lastModified: new Date().toISOString()
+                        };
+                        const newBoard = new Board(newBoardData);
+                        updatedExistingBoards.push(newBoard);
+                        importedBoards.push(newBoard);
                     }
                 }
                 
-                finalBoards = [...updatedExistingBoards, ...importedBoards];
+                finalBoards = updatedExistingBoards;
             } else {
                 // Replace all data
                 const confirmed = await this.dom.showModal(
@@ -1463,7 +1661,14 @@ class CascadeApp {
                 
                 finalBoards = boardsToImport.map(boardData => {
                     totalTaskCount += boardData.tasks ? boardData.tasks.length : 0;
-                    return new Board(boardData);
+                    // Ensure unique IDs to prevent conflicts
+                    const newBoardData = {
+                        ...boardData,
+                        id: generateUniqueId(),
+                        createdDate: new Date().toISOString().split('T')[0],
+                        lastModified: new Date().toISOString()
+                    };
+                    return new Board(newBoardData);
                 });
             }
             
@@ -1621,6 +1826,315 @@ class CascadeApp {
      */
     focusInput() {
         this.dom.focusTaskInput();
+    }
+
+    /**
+     * Perform automatic archiving of old completed tasks
+     */
+    performAutoArchive() {
+        const config = settingsManager.getAutoArchiveConfig();
+        if (!config.enabled) return;
+
+        const currentBoard = appState.getCurrentBoard();
+        const tasks = currentBoard.tasks;
+        const today = new Date();
+        const archiveThreshold = config.days;
+
+        const tasksToArchive = tasks.filter(task => {
+            if (task.status !== 'done' || !task.completedDate) return false;
+
+            const completedDate = new Date(task.completedDate);
+            const daysSinceCompletion = Math.floor((today - completedDate) / (1000 * 60 * 60 * 24));
+
+            return daysSinceCompletion >= archiveThreshold;
+        });
+
+        if (tasksToArchive.length > 0) {
+            // Mark tasks as archived
+            const currentDate = new Date().toISOString().split('T')[0];
+            tasksToArchive.forEach(task => {
+                task.archived = true;
+                task.archivedDate = currentDate;
+                eventBus.emit('task:archived', { task });
+            });
+
+            // Remove from active tasks
+            const remainingTasks = tasks.filter(task => !tasksToArchive.includes(task));
+            currentBoard.tasks = remainingTasks;
+
+            // Update state and storage
+            appState.saveState();
+            
+            console.log(`Auto-archived ${tasksToArchive.length} tasks`);
+            
+            // Show notification if enabled
+            if (tasksToArchive.length > 0) {
+                eventBus.emit('notification:show', {
+                    message: `Auto-archived ${tasksToArchive.length} completed tasks`,
+                    type: 'info'
+                });
+            }
+
+            // Re-render UI
+            this.renderTasks();
+        }
+    }
+
+    /**
+     * Manually archive a specific task
+     * @param {string} taskId - Task ID to archive
+     */
+    archiveTask(taskId) {
+        const currentBoard = appState.getCurrentBoard();
+        const task = currentBoard.tasks.find(t => t.id === taskId);
+        
+        if (!task) return;
+
+        // Mark as archived
+        task.archived = true;
+        task.archivedDate = new Date().toISOString().split('T')[0];
+
+        // Remove from active tasks
+        currentBoard.tasks = currentBoard.tasks.filter(t => t.id !== taskId);
+
+        // Update state and storage
+        appState.saveState();
+        
+        eventBus.emit('task:archived', { task });
+        
+        // Re-render UI
+        this.renderTasks();
+    }
+
+    /**
+     * Initialize auto-archive timer
+     */
+    initAutoArchive() {
+        // Run auto-archive on app start
+        this.performAutoArchive();
+
+        // Set up periodic auto-archive (every 6 hours)
+        setInterval(() => {
+            this.performAutoArchive();
+        }, 6 * 60 * 60 * 1000);
+    }
+
+    /**
+     * Generate a unique board name
+     * @param {string} baseName - Base name to make unique
+     * @param {Array} existingBoards - Array of existing boards
+     * @returns {string} Unique board name
+     */
+    generateUniqueBoardName(baseName, existingBoards) {
+        let uniqueName = baseName;
+        let counter = 1;
+        
+        while (existingBoards.some(board => board.name === uniqueName)) {
+            uniqueName = `${baseName} (${counter})`;
+            counter++;
+        }
+        
+        return uniqueName;
+    }
+
+    /**
+     * Show archived tasks modal
+     */
+    showArchivedTasksModal() {
+        try {
+            const allBoards = appState.get('boards') || [];
+            let archivedTasks = [];
+
+            // Collect archived tasks from all boards
+            allBoards.forEach(board => {
+                if (board.tasks) {
+                    const boardArchivedTasks = board.tasks.filter(task => task.archived === true);
+                    archivedTasks = archivedTasks.concat(boardArchivedTasks);
+                }
+            });
+
+            // Sort by archived date (most recent first)
+            archivedTasks.sort((a, b) => {
+                const dateA = new Date(a.archivedDate || a.lastModified);
+                const dateB = new Date(b.archivedDate || b.lastModified);
+                return dateB - dateA;
+            });
+
+            if (archivedTasks.length === 0) {
+                this.dom.showModal('Archived Tasks', 'No archived tasks found.', {
+                    showCancel: false,
+                    confirmText: 'OK'
+                });
+                return;
+            }
+
+            // Generate HTML for archived tasks
+            const archivedTasksHTML = this.generateArchivedTasksHTML(archivedTasks);
+
+            this.dom.showModal('Archived Tasks', archivedTasksHTML, {
+                showCancel: false,
+                confirmText: 'Close',
+                allowHTML: true,
+                customClass: 'archived-tasks-modal'
+            });
+
+        } catch (error) {
+            console.error('Error showing archived tasks:', error);
+            this.dom.showModal('Error', 'Failed to load archived tasks.');
+        }
+    }
+
+    /**
+     * Generate HTML for archived tasks list
+     * @param {Array} archivedTasks - Array of archived tasks
+     * @returns {string} HTML string
+     */
+    generateArchivedTasksHTML(archivedTasks) {
+        const tasksHTML = archivedTasks.map(task => {
+            const archivedDate = task.archivedDate ? 
+                new Date(task.archivedDate).toLocaleDateString() : 
+                'Unknown date';
+                
+            const completedDate = task.completedDate ? 
+                new Date(task.completedDate).toLocaleDateString() : 
+                'Unknown date';
+
+            return `
+                <div class="archived-task-item">
+                    <div class="archived-task-content">
+                        <div class="archived-task-text">${this.dom.sanitizeHTML(task.text)}</div>
+                        <div class="archived-task-dates">
+                            <small class="text-muted">
+                                Completed: ${completedDate} | Archived: ${archivedDate}
+                            </small>
+                        </div>
+                    </div>
+                    <div class="archived-task-actions">
+                        <button class="btn btn-sm btn-outline-primary" 
+                                onclick="window.cascadeApp.restoreArchivedTask('${task.id}')">
+                            Restore
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" 
+                                onclick="window.cascadeApp.deleteArchivedTask('${task.id}')">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <div class="archived-tasks-container">
+                <p class="archived-tasks-summary">
+                    Found ${archivedTasks.length} archived task${archivedTasks.length !== 1 ? 's' : ''}.
+                </p>
+                <div class="archived-tasks-list">
+                    ${tasksHTML}
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Restore an archived task
+     * @param {string} taskId - Task ID to restore
+     */
+    restoreArchivedTask(taskId) {
+        try {
+            const allBoards = appState.get('boards') || [];
+            let taskFound = false;
+
+            // Find and restore the task in any board
+            allBoards.forEach(board => {
+                if (board.tasks) {
+                    const taskIndex = board.tasks.findIndex(task => task.id === taskId && task.archived === true);
+                    if (taskIndex !== -1) {
+                        const task = board.tasks[taskIndex];
+                        task.archived = false;
+                        task.archivedDate = null;
+                        task.status = 'done'; // Keep as completed but active
+                        task.lastModified = new Date().toISOString();
+                        taskFound = true;
+                    }
+                }
+            });
+
+            if (taskFound) {
+                appState.saveState();
+                this.renderTasks();
+                
+                // Close the archived tasks modal and show success
+                const modal = document.getElementById('custom-modal');
+                if (modal) {
+                    modal.classList.remove('modal-overlay--visible');
+                }
+                
+                setTimeout(() => {
+                    this.dom.showModal('Task Restored', 'The task has been restored to your active tasks.', {
+                        showCancel: false,
+                        confirmText: 'OK'
+                    });
+                }, 300);
+            } else {
+                this.dom.showModal('Error', 'Task not found or already restored.');
+            }
+
+        } catch (error) {
+            console.error('Error restoring archived task:', error);
+            this.dom.showModal('Error', 'Failed to restore task.');
+        }
+    }
+
+    /**
+     * Permanently delete an archived task
+     * @param {string} taskId - Task ID to delete
+     */
+    deleteArchivedTask(taskId) {
+        this.dom.showModal('Delete Archived Task', 'Are you sure you want to permanently delete this task? This action cannot be undone.', {
+            confirmText: 'Delete',
+            cancelText: 'Cancel'
+        }).then((confirmed) => {
+            if (confirmed) {
+                try {
+                    const allBoards = appState.get('boards') || [];
+                    let taskFound = false;
+
+                    // Find and remove the task from any board
+                    allBoards.forEach(board => {
+                        if (board.tasks) {
+                            const originalLength = board.tasks.length;
+                            board.tasks = board.tasks.filter(task => !(task.id === taskId && task.archived === true));
+                            if (board.tasks.length < originalLength) {
+                                taskFound = true;
+                            }
+                        }
+                    });
+
+                    if (taskFound) {
+                        appState.saveState();
+                        
+                        // Close modal and show success
+                        const modal = document.getElementById('custom-modal');
+                        if (modal) {
+                            modal.classList.remove('modal-overlay--visible');
+                        }
+                        
+                        setTimeout(() => {
+                            this.dom.showModal('Task Deleted', 'The archived task has been permanently deleted.', {
+                                showCancel: false,
+                                confirmText: 'OK'
+                            });
+                        }, 300);
+                    } else {
+                        this.dom.showModal('Error', 'Task not found.');
+                    }
+
+                } catch (error) {
+                    console.error('Error deleting archived task:', error);
+                    this.dom.showModal('Error', 'Failed to delete task.');
+                }
+            }
+        });
     }
 }
 

@@ -1,0 +1,344 @@
+/**
+ * Settings Component Styles
+ * Styles for the settings modal and form
+ */
+
+/* Settings form container */
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: var(--spacing-2);
+}
+
+/* Settings sections */
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  padding: var(--spacing-4);
+  background-color: var(--color-surface-container-lowest);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-outline-variant);
+}
+
+.settings-section__title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-on-surface);
+  margin: 0;
+  padding-bottom: var(--spacing-2);
+  border-bottom: 1px solid var(--color-outline-variant);
+}
+
+/* Individual setting items */
+.setting-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.setting-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-on-surface);
+  margin: 0;
+}
+
+/* Input group for number inputs with suffix */
+.setting-input-group {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.setting-input-group .form-control {
+  max-width: 100px;
+  flex-shrink: 0;
+}
+
+.setting-suffix {
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Checkbox settings */
+.setting-checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-2) 0;
+}
+
+.setting-checkbox .form-check-input {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.setting-checkbox .setting-label {
+  margin: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Custom checkbox styling */
+.form-check-input {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color-outline);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface);
+  cursor: pointer;
+  transition: var(--task-transition);
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.form-check-input:checked {
+  background-color: var(--color-primary-40);
+  border-color: var(--color-primary-40);
+}
+
+.form-check-input:checked::after {
+  content: '✓';
+  color: var(--color-on-primary);
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.form-check-input:focus {
+  outline: 2px solid var(--color-primary-40);
+  outline-offset: 2px;
+}
+
+.form-check-input:hover:not(:disabled) {
+  border-color: var(--color-primary-40);
+}
+
+/* Select styling */
+.settings-form select.form-control {
+  max-width: 200px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right var(--spacing-2) center;
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  padding-right: var(--spacing-6);
+  appearance: none;
+}
+
+.settings-form select.form-control:focus {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%233b82f6' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+}
+
+/* Settings actions */
+.settings-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: var(--spacing-3);
+  padding-top: var(--spacing-4);
+  border-top: 1px solid var(--color-outline-variant);
+}
+
+.settings-actions .btn {
+  min-width: 120px;
+}
+
+/* Settings modal customizations */
+.settings-modal .modal-box {
+  max-width: 600px;
+  max-height: 85vh;
+}
+
+.settings-modal .modal-box h5 {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.settings-modal .modal-box h5::before {
+  content: '⚙️';
+  font-size: var(--font-size-lg);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .settings-form {
+    gap: var(--spacing-4);
+    max-height: 70vh;
+  }
+  
+  .settings-section {
+    padding: var(--spacing-3);
+    gap: var(--spacing-3);
+  }
+  
+  .settings-modal .modal-box {
+    max-width: 95vw;
+    max-height: 90vh;
+    padding: var(--spacing-4);
+  }
+  
+  .setting-item {
+    gap: var(--spacing-1);
+  }
+  
+  .setting-input-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-1);
+  }
+  
+  .setting-input-group .form-control {
+    max-width: 150px;
+  }
+  
+  .settings-actions {
+    flex-direction: column;
+    gap: var(--spacing-2);
+  }
+  
+  .settings-actions .btn {
+    min-width: auto;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .settings-section__title {
+    font-size: var(--font-size-base);
+  }
+  
+  .setting-label {
+    font-size: var(--font-size-xs);
+  }
+  
+  .setting-checkbox {
+    gap: var(--spacing-2);
+  }
+  
+  .form-check-input {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .form-check-input:checked::after {
+    font-size: 10px;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .settings-section {
+    border-width: 2px;
+  }
+  
+  .form-check-input {
+    border-width: 3px;
+  }
+  
+  .form-check-input:focus {
+    outline-width: 3px;
+  }
+  
+  .settings-section__title {
+    border-bottom-width: 2px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .settings-section {
+    background-color: var(--color-surface-container);
+    border-color: var(--color-outline);
+  }
+  
+  .form-check-input {
+    background-color: var(--color-surface-container);
+    border-color: var(--color-outline);
+  }
+  
+  .form-check-input:checked {
+    background-color: var(--color-primary-30);
+    border-color: var(--color-primary-30);
+  }
+  
+  .settings-form select.form-control {
+    background-color: var(--color-surface-container);
+    color: var(--color-on-surface);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .form-check-input {
+    transition: none;
+  }
+  
+  .settings-form select.form-control {
+    transition: none;
+  }
+}
+
+/* Animation for setting changes */
+.setting-item.setting-changed {
+  animation: settingHighlight 0.3s ease-out;
+}
+
+@keyframes settingHighlight {
+  0% {
+    background-color: var(--color-primary-95);
+    transform: scale(1.02);
+  }
+  100% {
+    background-color: transparent;
+    transform: scale(1);
+  }
+}
+
+/* Loading state for settings */
+.settings-form--loading {
+  opacity: 0.6;
+  pointer-events: none;
+  position: relative;
+}
+
+.settings-form--loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: var(--size-icon-lg);
+  height: var(--size-icon-lg);
+  border: 2px solid var(--color-outline-variant);
+  border-top: 2px solid var(--color-primary-40);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Success/error states */
+.setting-item--success {
+  animation: settingSuccess 0.5s ease-out;
+}
+
+.setting-item--error {
+  animation: settingError 0.5s ease-out;
+}
+
+@keyframes settingSuccess {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: var(--color-success-95); }
+}
+
+@keyframes settingError {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: var(--color-error-95); }
+}

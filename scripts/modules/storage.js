@@ -1,4 +1,5 @@
 import eventBus from './eventBus.js';
+import { settingsManager } from './settings.js';
 
 /**
  * Versioned localStorage API for better persistence control
@@ -100,6 +101,37 @@ class StorageAPI {
         } catch (error) {
             console.error('Failed to clear storage:', error);
             eventBus.emit('storage:error', { error, operation: 'clear' });
+            return false;
+        }
+    }
+
+    /**
+     * Clear all app data including settings
+     */
+    clearAll() {
+        try {
+            // Clear main app data
+            localStorage.removeItem(this.storageKey);
+            
+            // Clear settings data
+            localStorage.removeItem('cascade-settings');
+            
+            // Clear any archived tasks
+            localStorage.removeItem('cascade-archived-tasks');
+            
+            // Clear any other cascade-related items
+            const keys = Object.keys(localStorage);
+            keys.forEach(key => {
+                if (key.startsWith('cascade-')) {
+                    localStorage.removeItem(key);
+                }
+            });
+            
+            eventBus.emit('storage:all-cleared');
+            return true;
+        } catch (error) {
+            console.error('Failed to clear all storage:', error);
+            eventBus.emit('storage:error', { error, operation: 'clearAll' });
             return false;
         }
     }
@@ -257,11 +289,14 @@ class StorageAPI {
      */
     exportData() {
         const data = this.load();
+        const settings = settingsManager.get();
+        
         return {
             version: this.version,
             exportDate: new Date().toISOString(),
             appName: 'Cascade Tasks',
-            data
+            data,
+            settings
         };
     }
 
@@ -282,6 +317,17 @@ class StorageAPI {
             if (Array.isArray(dataToImport)) {
                 // Handle old format where data was just an array of tasks
                 dataToImport = { tasks: dataToImport };
+            }
+            
+            // Import settings if present
+            if (importData.settings && typeof importData.settings === 'object') {
+                try {
+                    settingsManager.importSettings(importData.settings);
+                    eventBus.emit('storage:settings-imported', { settings: importData.settings });
+                } catch (error) {
+                    console.warn('Failed to import settings:', error);
+                    // Continue with data import even if settings import fails
+                }
             }
             
             this.save(dataToImport);

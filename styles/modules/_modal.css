@@ -159,6 +159,115 @@
   color: var(--color-success-40);
 }
 
+/* Archived tasks modal styles */
+.archived-tasks-modal .modal-box {
+  max-width: 700px;
+  max-height: 80vh;
+}
+
+.archived-tasks-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.archived-tasks-summary {
+  margin: 0;
+  padding: var(--spacing-3);
+  background-color: var(--color-surface-container-low);
+  border-radius: var(--radius-md);
+  color: var(--color-on-surface-variant);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+.archived-tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  max-height: 400px;
+  overflow-y: auto;
+  padding: var(--spacing-2);
+}
+
+.archived-task-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3);
+  background-color: var(--color-surface-container-lowest);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-md);
+  transition: var(--task-transition);
+}
+
+.archived-task-item:hover {
+  background-color: var(--color-surface-container-low);
+  border-color: var(--color-outline);
+}
+
+.archived-task-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.archived-task-text {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-on-surface);
+  margin-bottom: var(--spacing-1);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.archived-task-dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}
+
+.archived-task-dates small {
+  font-size: var(--font-size-xs);
+  color: var(--color-on-surface-variant);
+}
+
+.archived-task-actions {
+  display: flex;
+  gap: var(--spacing-2);
+  flex-shrink: 0;
+}
+
+.archived-task-actions .btn {
+  min-width: 70px;
+  font-size: var(--font-size-xs);
+  padding: var(--spacing-1) var(--spacing-2);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .archived-tasks-modal .modal-box {
+    max-width: 95vw;
+    max-height: 85vh;
+  }
+  
+  .archived-task-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-2);
+  }
+  
+  .archived-task-actions {
+    justify-content: center;
+    gap: var(--spacing-3);
+  }
+  
+  .archived-task-actions .btn {
+    flex: 1;
+    min-width: auto;
+  }
+}
+
 .modal--info .modal__title {
   color: var(--color-secondary-40);
 }

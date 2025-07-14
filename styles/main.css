@@ -36,6 +36,9 @@
 /* Import keyboard navigation styles */
 @import 'modules/_keyboard-nav.css';
 
+/* Import settings styles */
+@import 'modules/_settings.css';
+
 /* Import utility classes last */
 @import 'modules/_utilities.css';
 

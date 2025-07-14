@@ -2,6 +2,7 @@ import CascadeApp from './modules/main.js';
 import { Task, Board, createTask, createBoard } from './modules/models.js';
 import { ErrorHandler, ErrorBoundary } from './modules/errorHandler.js';
 import { KeyboardNavigator } from './modules/keyboardNav.js';
+import { settingsManager } from './modules/settings.js';
 import './modules/dropdown.js';
 
 // Initialize the application when DOM is ready
@@ -32,13 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Make some functions globally available for backward compatibility
         // This allows any existing onclick handlers in HTML to continue working
         window.showArchivedTasks = ErrorBoundary.wrap(() => {
-            // For now, just show a placeholder since we haven't implemented
-            // archived tasks storage yet in this refactor
-            window.cascadeApp.dom.showModal(
-                'Archived Tasks', 
-                'Archived tasks feature will be implemented in the next phase.',
-                { showCancel: false }
-            );
+            window.cascadeApp.showArchivedTasksModal();
         }, 'Show Archived Tasks');
         
         // Expose some useful methods globally for debugging and console access
