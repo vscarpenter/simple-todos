@@ -319,7 +319,7 @@ This project is open-source and available under the **MIT License**.
 
 ## 👨‍💻 Author
 
-**Vinny Carpenter** - Full-stack developer specializing in enterprise-grade web applications with professional design systems.
+**Vinny Carpenter** - https://vinny.dev/
 
 ---
 
