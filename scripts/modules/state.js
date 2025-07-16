@@ -258,16 +258,47 @@ class AppState {
      * @param {Object} updates - Board updates
      */
     updateBoard(boardId, updates) {
-        const boards = this.state.boards.map(board => 
-            board.id === boardId ? { ...board, ...updates } : board
-        );
+        const boards = this.state.boards.map(board => {
+            if (board.id === boardId) {
+                // Create new Board instance to ensure proper validation
+                const { Board } = window.cascadeModels || {};
+                if (Board) {
+                    try {
+                        return new Board({ ...board.toJSON(), ...updates });
+                    } catch (e) {
+                        console.warn('Failed to create Board instance, using plain object:', e);
+                        return { ...board, ...updates };
+                    }
+                } else {
+                    return { ...board, ...updates };
+                }
+            }
+            return board;
+        });
         
         const stateUpdates = { boards };
         
-        // If updating current board, update tasks too
+        // If updating current board, update tasks too and ensure synchronization
         if (boardId === this.state.currentBoardId) {
             const updatedBoard = boards.find(b => b.id === boardId);
-            stateUpdates.tasks = updatedBoard ? (updatedBoard.tasks || []) : [];
+            if (updatedBoard) {
+                // Convert board tasks to Task instances for consistency
+                const { Task } = window.cascadeModels || {};
+                const tasks = (updatedBoard.tasks || []).map(taskData => {
+                    if (Task && typeof taskData === 'object' && taskData.id) {
+                        try {
+                            return new Task(taskData);
+                        } catch (e) {
+                            console.warn('Failed to create Task instance:', e);
+                            return taskData;
+                        }
+                    }
+                    return taskData;
+                });
+                stateUpdates.tasks = tasks;
+            } else {
+                stateUpdates.tasks = [];
+            }
         }
         
         this.setState(stateUpdates);

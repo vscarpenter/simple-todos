@@ -1,6 +1,6 @@
 # Cascade - Material Design 3 Task Management
 
-A modern, Material Design 3 compliant task management web application with a clean, accessible design system. Cascade allows users to organize their tasks across three columns: To-Do, In Progress, and Completed. Built with Material Design 3 principles, intuitive interactions, and a polished user interface that follows Google's latest design guidelines.
+Cascade is a privacy-first, client-side task management application implementing a Kanban-style workflow with multi-board support. Built with modern web technologies, it provides comprehensive task organization that runs entirely in the user's browser without requiring server infrastructure or user accounts.
 
 **Watch your productivity flow.**
 

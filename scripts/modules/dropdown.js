@@ -16,8 +16,14 @@ class DropdownManager {
                 event.preventDefault();
                 this.toggleDropdown(trigger);
             } else {
-                // Close all dropdowns when clicking outside
-                this.closeAllDropdowns();
+                // Don't close dropdowns when clicking on board action buttons or when modal is open
+                const boardAction = event.target.closest('[data-board-action]');
+                const modalOpen = document.querySelector('.modal-overlay--visible');
+                
+                if (!boardAction && !modalOpen) {
+                    // Close all dropdowns when clicking outside
+                    this.closeAllDropdowns();
+                }
             }
         });
 

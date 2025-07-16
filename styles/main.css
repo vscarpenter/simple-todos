@@ -21,6 +21,9 @@
 /* Import modal components */
 @import 'modules/_modal.css';
 
+/* Import header components */
+@import 'modules/_header.css';
+
 /* Import task board components */
 @import 'modules/_task-board.css';
 
@@ -32,6 +35,9 @@
 
 /* Import error toast components */
 @import 'modules/_error-toast.css';
+
+/* Import toast notification system */
+@import 'modules/_toast.css';
 
 /* Import keyboard navigation styles */
 @import 'modules/_keyboard-nav.css';

@@ -33,7 +33,7 @@ export class KeyboardNavigator {
 
     this.shortcuts.set('Escape', {
       description: 'Clear selection / Close modals',
-      action: () => this.clearSelection(),
+      action: () => this.handleEscape(),
       category: 'Navigation'
     });
 
@@ -148,9 +148,12 @@ export class KeyboardNavigator {
     // Handle task card focus
     document.addEventListener('click', (e) => {
       const taskCard = e.target.closest('.task-card');
+      const modalOpen = e.target.closest('.modal-overlay--visible');
+      
       if (taskCard) {
         this.selectTask(taskCard.dataset.taskId);
-      } else {
+      } else if (!modalOpen) {
+        // Only clear selection if not clicking inside an open modal
         this.clearSelection();
       }
     });
@@ -192,6 +195,21 @@ export class KeyboardNavigator {
   }
 
   /**
+   * Handle Escape key press
+   */
+  handleEscape() {
+    // First check if there's an open modal and close it
+    const modal = document.getElementById('custom-modal');
+    if (modal && modal.classList.contains('modal-overlay--visible')) {
+      modal.classList.remove('modal-overlay--visible');
+      return;
+    }
+
+    // If no modal is open, clear task selection
+    this.clearSelection();
+  }
+
+  /**
    * Clear current selection
    */
   clearSelection() {
@@ -203,11 +221,8 @@ export class KeyboardNavigator {
       this.selectedTaskId = null;
     }
 
-    // Close any open modals
-    const modal = document.getElementById('custom-modal');
-    if (modal && modal.classList.contains('modal-overlay--visible')) {
-      modal.classList.remove('modal-overlay--visible');
-    }
+    // Only close modals when explicitly requested (e.g., via Escape key)
+    // Don't close modals automatically when clearing selection from clicks
   }
 
   /**

@@ -195,6 +195,7 @@ class CascadeApp {
         eventBus.on('board:create', this.handleCreateBoard.bind(this));
         eventBus.on('board:switch', this.handleSwitchBoard.bind(this));
         eventBus.on('board:edit', this.handleEditBoard.bind(this));
+
         eventBus.on('board:delete', this.handleDeleteBoard.bind(this));
         eventBus.on('board:duplicate', this.handleDuplicateBoard.bind(this));
         eventBus.on('boards:manage', this.handleManageBoards.bind(this));
@@ -1116,37 +1117,61 @@ class CascadeApp {
     }
 
     /**
-     * Handle edit board
+     * Handle edit board - Simple modal-based editing
      * @param {Object} data - Event data
      */
     async handleEditBoard(data) {
         try {
             const { boardId } = data;
-            const board = this.state.get('boards').find(b => b.id === boardId);
+            const boards = this.state.get('boards');
+            const board = boards.find(b => b.id === boardId);
             
             if (!board) {
-                this.dom.showModal('Error', 'Board not found');
+                this.dom.showToast('Board not found', 'error');
                 return;
             }
             
-            const newName = await this.dom.showModal('Edit Board', 'Enter new board name:', {
+            const newName = await this.dom.showModal('Rename Board', 'Enter new board name:', {
                 showInput: true,
                 inputValue: board.name
             });
             
-            if (newName && newName !== board.name) {
-                if (newName.length > 50) {
-                    this.dom.showModal('Error', 'Board name cannot exceed 50 characters');
+            if (newName && newName.trim() !== board.name) {
+                const trimmedName = newName.trim();
+                
+                // Validate name length
+                if (trimmedName.length === 0) {
+                    this.dom.showToast('Board name cannot be empty', 'error');
                     return;
                 }
                 
-                this.state.updateBoard(boardId, { name: newName });
+                if (trimmedName.length > 50) {
+                    this.dom.showToast('Board name cannot exceed 50 characters', 'error');
+                    return;
+                }
+                
+                // Check for duplicate names
+                const existingBoard = boards.find(b => b.id !== boardId && b.name === trimmedName);
+                if (existingBoard) {
+                    this.dom.showToast(`A board named "${trimmedName}" already exists`, 'error');
+                    return;
+                }
+                
+                // Update board with proper state synchronization
+                this.state.updateBoard(boardId, { 
+                    name: trimmedName,
+                    lastModified: new Date().toISOString()
+                });
+                
                 this.saveData();
-                eventBus.emit('board:edited', { boardId, name: newName });
+                this.renderBoardSelector();
+                
+                this.dom.showToast(`Board renamed to "${trimmedName}"`, 'success');
+                eventBus.emit('board:edited', { boardId, name: trimmedName });
             }
         } catch (error) {
             console.error('Failed to edit board:', error);
-            this.handleError('Failed to edit board', error);
+            this.dom.showToast('Failed to rename board', 'error');
         }
     }
 
@@ -1236,244 +1261,69 @@ class CascadeApp {
     }
 
     /**
-     * Handle manage boards - show board management interface
+     * Handle manage boards - Modern simplified approach
      */
-    async handleManageBoards() {
-        try {
-            const boards = this.state.get('boards') || [];
-            const currentBoardId = this.state.get('currentBoardId');
-            
-            if (boards.length === 0) {
-                this.dom.showModal('No Boards', 'No boards found.', { showCancel: false });
-                return;
-            }
-            
-            // Test custom modal system with simple choice
-            const action = await this.dom.showModal(
-                'Manage Boards',
-                'Choose an action:',
-                {
-                    confirmText: 'Rename a Board',
-                    cancelText: 'Delete a Board'
+    handleManageBoards() {
+        // With the new inline editing system, board management is handled
+        // directly in the board selector dropdown. No separate modal needed.
+        this.dom.showToast('Use the edit (✏️) and delete (🗑️) buttons in the board selector to manage your boards', 'info', 5000);
+    }
+
+
+
+    /**
+     * Validate board data integrity
+     * @param {Object} board - Board to validate
+     * @returns {Object} Validation result
+     */
+    validateBoardData(board) {
+        const errors = [];
+        
+        if (!board || typeof board !== 'object') {
+            return { isValid: false, errors: ['Board data is not an object'] };
+        }
+        
+        if (!board.id || typeof board.id !== 'string') {
+            errors.push('Board ID is missing or invalid');
+        }
+        
+        if (!board.name || typeof board.name !== 'string' || board.name.trim().length === 0) {
+            errors.push('Board name is missing or empty');
+        }
+        
+        if (board.name && board.name.length > 50) {
+            errors.push('Board name exceeds 50 characters');
+        }
+        
+        if (board.tasks && !Array.isArray(board.tasks)) {
+            errors.push('Board tasks must be an array');
+        }
+        
+        if (board.tasks) {
+            board.tasks.forEach((task, index) => {
+                if (!task || typeof task !== 'object') {
+                    errors.push(`Task at index ${index} is not an object`);
+                } else {
+                    if (!task.id || typeof task.id !== 'string') {
+                        errors.push(`Task at index ${index} has missing or invalid ID`);
+                    }
+                    if (!task.text || typeof task.text !== 'string') {
+                        errors.push(`Task at index ${index} has missing or invalid text`);
+                    }
+                    if (!['todo', 'doing', 'done'].includes(task.status)) {
+                        errors.push(`Task at index ${index} has invalid status: ${task.status}`);
+                    }
                 }
-            );
-            
-            
-            if (action) {
-                // Show rename interface
-                await this.showBoardRenameInterface(boards);
-            } else if (action === null) {
-                // Show delete interface
-                await this.showBoardDeleteInterface(boards);
-            }
-            
-        } catch (error) {
-            console.error('Failed to manage boards:', error);
-            this.handleError('Failed to manage boards', error);
-        }
-    }
-
-    /**
-     * Custom modal board rename interface
-     */
-    async showBoardRenameInterface(boards) {
-        if (boards.length === 1) {
-            await this.renameSingleBoard(boards[0]);
-        } else {
-            await this.showBoardSelectionForRename(boards);
-        }
-    }
-
-    /**
-     * Custom modal board delete interface  
-     */
-    async showBoardDeleteInterface(boards) {
-        const deletableBoards = boards.filter(board => !board.isDefault);
-        
-        if (deletableBoards.length === 0) {
-            await this.dom.showModal('Cannot Delete', 
-                'No boards can be deleted. The default board cannot be removed.',
-                { showCancel: false }
-            );
-            return;
+            });
         }
         
-        if (boards.length <= 1) {
-            await this.dom.showModal('Cannot Delete', 
-                'You must have at least one board.',
-                { showCancel: false }
-            );
-            return;
-        }
-        
-        if (deletableBoards.length === 1) {
-            const board = deletableBoards[0];
-            const taskCount = board.tasks ? board.tasks.length : 0;
-            const confirmed = await this.dom.showModal(
-                'Confirm Delete',
-                `Delete "${board.name}"? This will remove ${taskCount} tasks and cannot be undone.`
-            );
-            
-            if (confirmed) {
-                eventBus.emit('board:delete', { boardId: board.id });
-            }
-        } else {
-            await this.showBoardSelectionForDelete(deletableBoards);
-        }
+        return {
+            isValid: errors.length === 0,
+            errors: errors
+        };
     }
 
 
-    /**
-     * Show board rename interface
-     */
-    async showBoardRenameInterface(boards) {
-        // If only one board, rename it directly
-        if (boards.length === 1) {
-            await this.renameSingleBoard(boards[0]);
-            return;
-        }
-        
-        // Multiple boards - let user choose which one to rename
-        const currentBoardId = this.state.get('currentBoardId');
-        const currentBoard = boards.find(b => b.id === currentBoardId);
-        
-        // Offer to rename current board or show selection
-        const renameCurrentBoard = await this.dom.showModal(
-            'Rename Board',
-            `Rename current board "${currentBoard?.name || 'Unknown'}"?`,
-            {
-                confirmText: 'Yes, Rename Current',
-                cancelText: 'Choose Different Board'
-            }
-        );
-        
-        if (renameCurrentBoard) {
-            await this.renameSingleBoard(currentBoard);
-        } else {
-            // Show selection of all boards
-            await this.showBoardSelectionForRename(boards);
-        }
-    }
-
-    /**
-     * Show board delete interface
-     */
-    async showBoardDeleteInterface(boards) {
-        // Filter out boards that cannot be deleted
-        const deletableBoards = boards.filter(board => !board.isDefault);
-        
-        if (deletableBoards.length === 0) {
-            this.dom.showModal('Cannot Delete', 
-                'No boards can be deleted. The default board cannot be removed.',
-                { showCancel: false }
-            );
-            return;
-        }
-        
-        if (boards.length <= 1) {
-            this.dom.showModal('Cannot Delete', 
-                'You must have at least one board.',
-                { showCancel: false }
-            );
-            return;
-        }
-        
-        // If only one deletable board, delete it directly
-        if (deletableBoards.length === 1) {
-            const taskCount = deletableBoards[0].tasks ? deletableBoards[0].tasks.length : 0;
-            const confirmed = await this.dom.showModal(
-                'Delete Board',
-                `Delete "${deletableBoards[0].name}"? This will remove ${taskCount} tasks and cannot be undone.`
-            );
-            
-            if (confirmed) {
-                eventBus.emit('board:delete', { boardId: deletableBoards[0].id });
-            }
-            return;
-        }
-        
-        // Multiple deletable boards - show selection
-        await this.showBoardSelectionForDelete(deletableBoards);
-    }
-
-    /**
-     * Rename a single board
-     */
-    async renameSingleBoard(board) {
-        const newName = await this.dom.showModal(
-            'Rename Board',
-            `Enter new name for "${board.name}":`,
-            {
-                showInput: true,
-                inputValue: board.name,
-                confirmText: 'Rename'
-            }
-        );
-        
-        if (newName && newName.trim() !== board.name) {
-            if (newName.trim().length > 50) {
-                this.dom.showModal('Error', 'Board name cannot exceed 50 characters', { showCancel: false });
-                return;
-            }
-            
-            this.state.updateBoard(board.id, { name: newName.trim() });
-            this.saveData();
-            this.dom.showModal('Success', 
-                `Board renamed to "${newName.trim()}" successfully!`, 
-                { showCancel: false }
-            );
-            eventBus.emit('board:edited', { boardId: board.id, name: newName.trim() });
-        }
-    }
-
-    /**
-     * Show board selection for rename
-     */
-    async showBoardSelectionForRename(boards) {
-        for (let i = 0; i < boards.length; i++) {
-            const board = boards[i];
-            const taskCount = board.tasks ? board.tasks.length : 0;
-            const isDefault = board.isDefault ? ' (Default)' : '';
-            
-            const shouldRename = await this.dom.showModal(
-                'Select Board to Rename',
-                `Rename "${board.name}${isDefault}"? (${taskCount} tasks)`,
-                {
-                    confirmText: 'Rename This Board',
-                    cancelText: i < boards.length - 1 ? 'Next Board' : 'Cancel'
-                }
-            );
-            
-            if (shouldRename) {
-                await this.renameSingleBoard(board);
-                return;
-            }
-        }
-    }
-
-    /**
-     * Show board selection for delete
-     */
-    async showBoardSelectionForDelete(deletableBoards) {
-        for (let i = 0; i < deletableBoards.length; i++) {
-            const board = deletableBoards[i];
-            const taskCount = board.tasks ? board.tasks.length : 0;
-            
-            const shouldDelete = await this.dom.showModal(
-                'Select Board to Delete',
-                `Delete "${board.name}"? This will remove ${taskCount} tasks and cannot be undone.`,
-                {
-                    confirmText: 'Delete This Board',
-                    cancelText: i < deletableBoards.length - 1 ? 'Next Board' : 'Cancel'
-                }
-            );
-            
-            if (shouldDelete) {
-                eventBus.emit('board:delete', { boardId: board.id });
-                return;
-            }
-        }
-    }
 
     // Utility Methods
 
@@ -1484,17 +1334,31 @@ class CascadeApp {
      */
     validateImportData(data) {
         try {
+            if (!data || typeof data !== 'object') {
+                return {
+                    isValid: false,
+                    error: 'Invalid data format - not a valid object'
+                };
+            }
+
             // Check for new multi-board format
             if (data.data && data.data.boards && Array.isArray(data.data.boards)) {
-                const boards = data.data.boards.filter(board => {
-                    return board.id && board.name && typeof board.name === 'string';
-                });
+                const validatedBoards = [];
                 
-                if (boards.length > 0) {
+                for (const board of data.data.boards) {
+                    const validation = this.validateBoardData(board);
+                    if (validation.isValid) {
+                        validatedBoards.push(board);
+                    } else {
+                        console.warn(`Skipping invalid board: ${validation.errors.join(', ')}`);
+                    }
+                }
+                
+                if (validatedBoards.length > 0) {
                     return {
                         isValid: true,
                         type: 'multi-board',
-                        boards: boards,
+                        boards: validatedBoards,
                         tasks: []
                     };
                 }
@@ -1509,6 +1373,8 @@ class CascadeApp {
                 tasksArray = data.data;
             } else if (data.tasks && Array.isArray(data.tasks)) {
                 tasksArray = data.tasks;
+            } else if (data.data && data.data.tasks && Array.isArray(data.data.tasks)) {
+                tasksArray = data.data.tasks;
             } else {
                 return {
                     isValid: false,
@@ -1518,26 +1384,38 @@ class CascadeApp {
             
             const validTasks = tasksArray.map(item => {
                 try {
-                    // Handle legacy format
+                    if (!item || typeof item !== 'object') return null;
+                    
+                    // Handle legacy format with 'completed' boolean
                     if (typeof item.completed === 'boolean') {
+                        if (!item.text || typeof item.text !== 'string' || item.text.trim().length === 0) {
+                            return null;
+                        }
                         return {
-                            text: item.text,
+                            id: generateUniqueId(),
+                            text: item.text.trim(),
                             status: item.completed ? 'done' : 'todo',
                             createdDate: item.createdDate || new Date().toISOString().split('T')[0]
                         };
                     }
                     
-                    // Handle current format
-                    if (item.text && ['todo', 'doing', 'done'].includes(item.status)) {
+                    // Handle current format with status
+                    if (item.text && typeof item.text === 'string' && 
+                        ['todo', 'doing', 'done'].includes(item.status)) {
+                        if (item.text.trim().length === 0 || item.text.length > 200) {
+                            return null;
+                        }
                         return {
-                            text: item.text,
+                            id: item.id || generateUniqueId(),
+                            text: item.text.trim(),
                             status: item.status,
                             createdDate: item.createdDate || new Date().toISOString().split('T')[0]
                         };
                     }
                     
                     return null;
-                } catch {
+                } catch (e) {
+                    console.warn('Failed to process task item:', e);
                     return null;
                 }
             }).filter(Boolean);
@@ -1573,62 +1451,86 @@ class CascadeApp {
         try {
             let finalBoards;
             let totalTaskCount = 0;
-            let importedBoards = []; // Declare at function scope
+            let importedBoards = [];
+            
+            // Validate imported boards first
+            const validatedBoards = boardsToImport.filter(boardData => {
+                if (!boardData || typeof boardData !== 'object') return false;
+                if (!boardData.name || typeof boardData.name !== 'string') return false;
+                if (boardData.name.trim().length === 0 || boardData.name.length > 50) return false;
+                return true;
+            });
+            
+            if (validatedBoards.length === 0) {
+                this.dom.showModal('Error', 'No valid boards found in import data');
+                return;
+            }
             
             if (mergeMode) {
                 // Merge with existing boards
                 const existingBoards = this.state.get('boards') || [];
-                const existingBoardMap = new Map(existingBoards.map(b => [b.id, b]));
-                
-                // Process imported boards, handling duplicates intelligently
                 const updatedExistingBoards = [...existingBoards];
                 
-                for (const boardData of boardsToImport) {
+                for (const boardData of validatedBoards) {
                     totalTaskCount += boardData.tasks ? boardData.tasks.length : 0;
                     
-                    // Check for existing board by ID only (exact match)
-                    let existingBoard = existingBoardMap.get(boardData.id);
+                    // Always generate new ID to prevent conflicts
+                    const uniqueId = generateUniqueId();
                     
-                    // If no exact ID match, check for name conflicts
-                    if (!existingBoard) {
-                        existingBoard = updatedExistingBoards.find(b => b.name === boardData.name);
-                    }
+                    // Check for name conflicts only
+                    const existingBoardWithSameName = updatedExistingBoards.find(b => b.name === boardData.name);
                     
-                    if (existingBoard) {
-                        // Ask user what to do with duplicate board
+                    if (existingBoardWithSameName) {
+                        // Ask user what to do with duplicate name
                         const action = await this.dom.showModal(
-                            'Duplicate Board Found',
-                            `Board "${boardData.name}" already exists. What would you like to do?`,
+                            'Duplicate Board Name',
+                            `A board named "${boardData.name}" already exists. What would you like to do?`,
                             {
                                 confirmText: 'Merge Tasks',
-                                cancelText: 'Import as New Board'
+                                cancelText: 'Import with New Name'
                             }
                         );
                         
                         if (action) {
                             // Merge tasks into existing board
-                            const existingTasks = existingBoard.tasks || [];
+                            const existingTasks = existingBoardWithSameName.tasks || [];
                             const newTasks = boardData.tasks || [];
-                            const mergedTasks = [...existingTasks, ...newTasks];
                             
-                            // Update the existing board in the array
-                            const boardIndex = updatedExistingBoards.findIndex(b => b.id === existingBoard.id);
+                            // Validate and convert tasks
+                            const validatedNewTasks = newTasks.filter(task => {
+                                return task && task.text && typeof task.text === 'string' && 
+                                       ['todo', 'doing', 'done'].includes(task.status);
+                            }).map(task => ({
+                                ...task,
+                                id: generateUniqueId(), // Ensure unique task IDs
+                                createdDate: task.createdDate || new Date().toISOString().split('T')[0]
+                            }));
+                            
+                            const mergedTasks = [...existingTasks, ...validatedNewTasks];
+                            
+                            // Update the existing board
+                            const boardIndex = updatedExistingBoards.findIndex(b => b.id === existingBoardWithSameName.id);
                             if (boardIndex !== -1) {
                                 updatedExistingBoards[boardIndex] = new Board({
-                                    ...existingBoard.toJSON(),
+                                    ...existingBoardWithSameName.toJSON(),
                                     tasks: mergedTasks,
                                     lastModified: new Date().toISOString()
                                 });
                             }
                         } else {
-                            // Import as new board with unique name and ID
+                            // Import as new board with unique name
+                            const uniqueName = this.generateUniqueBoardName(boardData.name, updatedExistingBoards);
                             const newBoardData = {
                                 ...boardData,
-                                id: generateUniqueId(), // Generate new ID
-                                name: this.generateUniqueBoardName(boardData.name, updatedExistingBoards),
+                                id: uniqueId,
+                                name: uniqueName,
                                 isDefault: false,
                                 createdDate: new Date().toISOString().split('T')[0],
-                                lastModified: new Date().toISOString()
+                                lastModified: new Date().toISOString(),
+                                tasks: (boardData.tasks || []).map(task => ({
+                                    ...task,
+                                    id: generateUniqueId()
+                                }))
                             };
                             
                             const newBoard = new Board(newBoardData);
@@ -1636,13 +1538,19 @@ class CascadeApp {
                             importedBoards.push(newBoard);
                         }
                     } else {
-                        // No conflict - add the board as-is with unique ID to prevent conflicts
+                        // No name conflict - add as new board
                         const newBoardData = {
                             ...boardData,
-                            id: generateUniqueId(),
+                            id: uniqueId,
+                            isDefault: false,
                             createdDate: new Date().toISOString().split('T')[0],
-                            lastModified: new Date().toISOString()
+                            lastModified: new Date().toISOString(),
+                            tasks: (boardData.tasks || []).map(task => ({
+                                ...task,
+                                id: generateUniqueId()
+                            }))
                         };
+                        
                         const newBoard = new Board(newBoardData);
                         updatedExistingBoards.push(newBoard);
                         importedBoards.push(newBoard);
@@ -1659,44 +1567,68 @@ class CascadeApp {
                 
                 if (!confirmed) return;
                 
-                finalBoards = boardsToImport.map(boardData => {
+                finalBoards = validatedBoards.map((boardData, index) => {
                     totalTaskCount += boardData.tasks ? boardData.tasks.length : 0;
-                    // Ensure unique IDs to prevent conflicts
+                    
                     const newBoardData = {
                         ...boardData,
                         id: generateUniqueId(),
+                        isDefault: index === 0, // First board becomes default
                         createdDate: new Date().toISOString().split('T')[0],
-                        lastModified: new Date().toISOString()
+                        lastModified: new Date().toISOString(),
+                        tasks: (boardData.tasks || []).map(task => ({
+                            ...task,
+                            id: generateUniqueId()
+                        }))
                     };
+                    
                     return new Board(newBoardData);
                 });
             }
             
-            // Update state
+            // Ensure we have at least one board
+            if (finalBoards.length === 0) {
+                this.createDefaultBoard();
+                return;
+            }
+            
+            // Determine current board - prefer existing current board if it still exists
+            const currentBoardId = this.state.get('currentBoardId');
+            let newCurrentBoardId = finalBoards.find(b => b.id === currentBoardId)?.id || finalBoards[0].id;
+            
+            // Get tasks for the current board
+            const currentBoard = finalBoards.find(b => b.id === newCurrentBoardId);
+            const currentTasks = currentBoard ? (currentBoard.tasks || []).map(taskData => {
+                try {
+                    return new Task(taskData);
+                } catch (e) {
+                    console.warn('Failed to create Task instance:', e);
+                    return taskData;
+                }
+            }) : [];
+            
+            // Update state with proper synchronization
             this.state.setState({
                 boards: finalBoards,
-                currentBoardId: finalBoards.length > 0 ? finalBoards[0].id : null,
-                tasks: finalBoards.length > 0 ? (finalBoards[0].tasks || []).map(t => new Task(t)) : []
+                currentBoardId: newCurrentBoardId,
+                tasks: currentTasks
             });
             
-            // Save data to persist changes
+            // Save and refresh UI
             this.saveData();
-            
-            // Re-render UI to reflect changes
             this.render();
             this.renderBoardSelector();
             
-            // Count actual boards added/updated  
+            // Show success message
             const newBoardsAdded = mergeMode ? importedBoards.length : finalBoards.length;
-            
             const successMessage = mergeMode ?
                 `Successfully merged data! Added ${newBoardsAdded} new boards and updated existing ones. Total tasks: ${totalTaskCount}` :
-                `Successfully imported ${boardsToImport.length} boards with ${totalTaskCount} tasks!`;
+                `Successfully imported ${validatedBoards.length} boards with ${totalTaskCount} tasks!`;
             
             this.dom.showModal('Success', successMessage, { showCancel: false });
             
             eventBus.emit('boards:imported', { 
-                count: boardsToImport.length, 
+                count: validatedBoards.length, 
                 tasks: totalTaskCount,
                 mode: mergeMode ? 'merge' : 'replace'
             });

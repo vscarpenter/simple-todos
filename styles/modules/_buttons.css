@@ -3,25 +3,27 @@
  * All button variants and states
  */
 
-/* Base button component */
+/* Base button component - Modern Design */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--spacing-2);
-  padding: var(--spacing-3) var(--spacing-4);
+  padding: var(--spacing-3) var(--spacing-5);
   border: none;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-semibold);
   line-height: 1;
   text-decoration: none;
   cursor: pointer;
-  transition: var(--task-transition);
+  transition: all var(--duration-normal) var(--ease-out);
   position: relative;
   overflow: hidden;
   user-select: none;
   min-height: var(--size-button-md);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn:disabled {
@@ -48,65 +50,77 @@
   min-height: var(--size-button-lg);
 }
 
-/* Button variants */
+/* Button variants - Modern Gradients */
 .btn--primary {
-  background-color: var(--color-primary-40);
+  background: linear-gradient(135deg, var(--color-primary-50) 0%, var(--color-primary-40) 100%);
   color: var(--color-on-primary);
+  box-shadow: var(--shadow-md);
 }
 
 .btn--primary:hover {
-  background-color: var(--color-primary-30);
-  box-shadow: var(--elevation-2);
+  background: linear-gradient(135deg, var(--color-primary-40) 0%, var(--color-primary-30) 100%);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
 }
 
 .btn--primary:active {
-  background-color: var(--color-primary-50);
-  box-shadow: var(--elevation-1);
+  background: linear-gradient(135deg, var(--color-primary-60) 0%, var(--color-primary-50) 100%);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(0);
 }
 
 .btn--secondary {
-  background-color: var(--color-secondary-40);
+  background: linear-gradient(135deg, var(--color-secondary-50) 0%, var(--color-secondary-40) 100%);
   color: var(--color-on-secondary);
+  box-shadow: var(--shadow-md);
 }
 
 .btn--secondary:hover {
-  background-color: var(--color-secondary-30);
-  box-shadow: var(--elevation-2);
+  background: linear-gradient(135deg, var(--color-secondary-40) 0%, var(--color-secondary-30) 100%);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
 }
 
 .btn--secondary:active {
-  background-color: var(--color-secondary-50);
-  box-shadow: var(--elevation-1);
+  background: linear-gradient(135deg, var(--color-secondary-60) 0%, var(--color-secondary-50) 100%);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(0);
 }
 
 .btn--success {
-  background-color: var(--color-success-40);
+  background: linear-gradient(135deg, var(--color-success-50) 0%, var(--color-success-40) 100%);
   color: var(--color-on-success);
+  box-shadow: var(--shadow-md);
 }
 
 .btn--success:hover {
-  background-color: var(--color-success-10);
-  box-shadow: var(--elevation-2);
+  background: linear-gradient(135deg, var(--color-success-40) 0%, var(--color-success-10) 100%);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
 }
 
 .btn--warning {
-  background-color: var(--color-warning-40);
+  background: linear-gradient(135deg, var(--color-warning-50) 0%, var(--color-warning-40) 100%);
   color: var(--color-on-warning);
+  box-shadow: var(--shadow-md);
 }
 
 .btn--warning:hover {
-  background-color: var(--color-warning-10);
-  box-shadow: var(--elevation-2);
+  background: linear-gradient(135deg, var(--color-warning-40) 0%, var(--color-warning-10) 100%);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
 }
 
 .btn--error {
-  background-color: var(--color-error-40);
+  background: linear-gradient(135deg, var(--color-error-50) 0%, var(--color-error-40) 100%);
   color: var(--color-on-error);
+  box-shadow: var(--shadow-md);
 }
 
 .btn--error:hover {
-  background-color: var(--color-error-10);
-  box-shadow: var(--elevation-2);
+  background: linear-gradient(135deg, var(--color-error-40) 0%, var(--color-error-10) 100%);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
 }
 
 /* Outline variants */

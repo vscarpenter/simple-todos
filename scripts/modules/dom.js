@@ -251,6 +251,8 @@ class DOMManager {
         // Delegate board selection clicks
         this.delegate('click', '[data-board-action]', (event, element) => {
             event.preventDefault();
+            event.stopPropagation(); // Prevent dropdown from closing
+            
             const action = element.dataset.boardAction;
             const boardId = element.dataset.boardId;
             
@@ -677,6 +679,12 @@ class DOMManager {
                 modalCancel.removeEventListener('click', cancelHandler);
                 modal.removeEventListener('click', overlayHandler);
                 modalInput.removeEventListener('keypress', keyHandler);
+                
+                // Clean up visibility observer
+                if (modal._visibilityObserver) {
+                    modal._visibilityObserver.disconnect();
+                    delete modal._visibilityObserver;
+                }
             };
 
             const confirmHandler = (e) => {
@@ -695,8 +703,10 @@ class DOMManager {
             };
 
             const overlayHandler = (e) => {
-                // Only close if clicking the overlay itself, not the modal content
-                if (e.target === modal) {
+                // Only close if clicking the overlay background, not modal content
+                // Check if the click target is outside the modal content box
+                const modalContent = modal.querySelector('.modal-box');
+                if (modalContent && !modalContent.contains(e.target)) {
                     cleanup();
                     resolve(null);
                 }
@@ -710,8 +720,6 @@ class DOMManager {
                 }
             };
 
-            // Show modal
-            
             // Add event listeners BEFORE making visible to prevent timing issues
             modalConfirm.addEventListener('click', confirmHandler);
             modalCancel.addEventListener('click', cancelHandler);
@@ -742,6 +750,71 @@ class DOMManager {
         if (this.elements.customModal) {
             this.elements.customModal.classList.remove('modal-overlay--visible');
         }
+    }
+
+    /**
+     * Show toast notification
+     * @param {string} message - Toast message
+     * @param {string} type - Toast type (success, error, info)
+     * @param {number} duration - Duration in milliseconds
+     */
+    showToast(message, type = 'info', duration = 3000) {
+        // Create toast container if it doesn't exist
+        let toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toast-container';
+            toastContainer.className = 'toast-container';
+            document.body.appendChild(toastContainer);
+        }
+
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = `toast toast--${type}`;
+        
+        const icon = {
+            success: '✅',
+            error: '❌',
+            info: 'ℹ️',
+            warning: '⚠️'
+        }[type] || 'ℹ️';
+        
+        toast.innerHTML = `
+            <div class="toast__content">
+                <span class="toast__icon">${icon}</span>
+                <span class="toast__message">${this.sanitizeHTML(message)}</span>
+            </div>
+            <button class="toast__close" aria-label="Close notification">×</button>
+        `;
+
+        // Add to container
+        toastContainer.appendChild(toast);
+
+        // Animate in
+        setTimeout(() => {
+            toast.classList.add('toast--visible');
+        }, 10);
+
+        // Auto remove
+        const removeToast = () => {
+            toast.classList.remove('toast--visible');
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 300);
+        };
+
+        // Close button
+        const closeBtn = toast.querySelector('.toast__close');
+        closeBtn.addEventListener('click', removeToast);
+
+        // Auto-hide
+        if (duration > 0) {
+            setTimeout(removeToast, duration);
+        }
+
+        return toast;
     }
 
     /**
@@ -782,7 +855,6 @@ class DOMManager {
      * Handle manage boards
      */
     async handleManageBoards() {
-        // Emit event to show the board management interface
         eventBus.emit('boards:manage');
     }
 
@@ -823,7 +895,17 @@ class DOMManager {
                                 <div class="board-name">${this.sanitizeHTML(board.name)}</div>
                                 <small class="text-muted">${(board.tasks || []).length} tasks</small>
                             </div>
-                            ${isActive ? '<span class="text-primary">✓</span>' : ''}
+                            <div class="board-actions">
+                                <button class="btn btn-sm btn-outline-secondary me-1" data-board-action="edit" data-board-id="${board.id}" title="Rename board">
+                                    ✏️
+                                </button>
+                                ${!board.isDefault ? `
+                                    <button class="btn btn-sm btn-outline-danger" data-board-action="delete" data-board-id="${board.id}" title="Delete board">
+                                        🗑️
+                                    </button>
+                                ` : ''}
+                            </div>
+                            ${isActive ? '<span class="text-primary ms-2">✓</span>' : ''}
                         </div>
                     </a>
                 `;
@@ -849,17 +931,6 @@ class DOMManager {
         } catch (error) {
             return dateString;
         }
-    }
-
-    /**
-     * Cleanup event listeners
-     */
-    cleanup() {
-        this.delegateHandlers.forEach((handler, key) => {
-            const [eventType] = key.split(':');
-            document.removeEventListener(eventType, handler);
-        });
-        this.delegateHandlers.clear();
     }
 }
 

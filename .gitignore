@@ -33,5 +33,8 @@ todos.json
 # Claude Code documentation
 CLAUDE.md
 
+# Kiro files
+.kiro/
+
 # Deployment scripts (local use only)
 deploy.sh
