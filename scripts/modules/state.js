@@ -1,4 +1,5 @@
 import eventBus from './eventBus.js';
+import { debugLog } from './settings.js';
 
 /**
  * Centralized application state with reactive updates
@@ -206,7 +207,7 @@ class AppState {
                 try {
                     return new Task(taskData);
                 } catch (e) {
-                    console.warn('Failed to create Task instance:', e);
+                    debugLog.warn('Failed to create Task instance:', e);
                     return taskData;
                 }
             }
@@ -266,7 +267,7 @@ class AppState {
                     try {
                         return new Board({ ...board.toJSON(), ...updates });
                     } catch (e) {
-                        console.warn('Failed to create Board instance, using plain object:', e);
+                        debugLog.warn('Failed to create Board instance, using plain object:', e);
                         return { ...board, ...updates };
                     }
                 } else {
@@ -289,7 +290,7 @@ class AppState {
                         try {
                             return new Task(taskData);
                         } catch (e) {
-                            console.warn('Failed to create Task instance:', e);
+                            debugLog.warn('Failed to create Task instance:', e);
                             return taskData;
                         }
                     }
@@ -356,6 +357,13 @@ class AppState {
      */
     getArchivedBoards() {
         return this.state.boards.filter(board => board.isArchived);
+    }
+
+    /**
+     * Save current state to history
+     */
+    saveState() {
+        this.addToHistory();
     }
 
     /**

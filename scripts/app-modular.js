@@ -92,3 +92,42 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.insertBefore(errorDiv, document.body.firstChild);
     }
 });
+
+// Global debug utilities (available in browser console)
+if (typeof window !== 'undefined') {
+    window.cascadeDebug = {
+        enableDebug() {
+            settingsManager.setDebugMode(true);
+            console.log('🔧 Debug mode enabled! Use cascadeDebug.disableDebug() to turn off.');
+        },
+        disableDebug() {
+            settingsManager.setDebugMode(false);
+            console.log('🔇 Debug mode disabled.');
+        },
+        getSettings() {
+            return settingsManager.get();
+        },
+        version: '3.0.0',
+        help() {
+            console.log(`
+🎯 Cascade Debug Utilities
+
+Available commands:
+• cascadeDebug.enableDebug() - Turn on verbose logging
+• cascadeDebug.disableDebug() - Turn off verbose logging  
+• cascadeDebug.getSettings() - View current settings
+• cascadeDebug.version - Show app version
+• cascadeDebug.help() - Show this help
+
+Debug mode is currently: ${settingsManager.get('debugMode') ? 'ON' : 'OFF'}
+            `);
+        }
+    };
+    
+    // Show available debug commands on first load (only in debug mode)
+    setTimeout(() => {
+        if (settingsManager.get('debugMode')) {
+            console.log('🔧 Debug mode is active! Type cascadeDebug.help() for available commands.');
+        }
+    }, 500);
+}

@@ -24,8 +24,12 @@
 /* Import header components */
 @import 'modules/_header.css';
 
+/* Import menu panel components */
+@import 'modules/_menu-panel.css';
+
 /* Import task board components */
 @import 'modules/_task-board.css';
+
 
 /* Import board selector component */
 @import 'modules/_board-selector.css';

@@ -19,7 +19,8 @@ export class Settings {
             defaultBoard: 'main',
             autoSave: true,
             showTaskCounts: true,
-            enableKeyboardShortcuts: true
+            enableKeyboardShortcuts: true,
+            debugMode: false // Enable verbose logging
         };
         
         this.currentSettings = null;
@@ -291,6 +292,24 @@ export class Settings {
     }
 
     /**
+     * Toggle debug mode on/off
+     * @param {boolean} enabled - Whether to enable debug mode
+     */
+    setDebugMode(enabled) {
+        this.setValue('debugMode', enabled);
+        
+        // Log the change (always show this, even when debug is off)
+        if (enabled) {
+            console.log('🔧 [DEBUG MODE ENABLED] Verbose logging is now active');
+            debugLog.log('Debug mode activated - you will see detailed console output');
+        } else {
+            console.log('🔇 [DEBUG MODE DISABLED] Verbose logging is now off');
+        }
+        
+        eventBus.emit('debug:toggled', { enabled });
+    }
+
+    /**
      * Generate settings UI HTML
      * @returns {string} Settings form HTML
      */
@@ -407,9 +426,6 @@ export class Settings {
                     <button type="button" class="btn btn-outline-secondary" id="reset-settings-btn">
                         Reset Settings
                     </button>
-                    <button type="button" class="btn btn-outline-danger" id="reset-app-btn">
-                        Reset App
-                    </button>
                 </div>
             </div>
         `;
@@ -456,3 +472,73 @@ export class Settings {
 
 // Create and export singleton instance
 export const settingsManager = new Settings();
+
+/**
+ * Debug logging utility
+ * Only logs when debug mode is enabled
+ */
+export const debugLog = {
+    log: (...args) => {
+        try {
+            if (settingsManager.get('debugMode')) {
+                console.log('[DEBUG]', ...args);
+            }
+        } catch (e) {
+            // Silently fail if settings not available - debug mode off by default
+        }
+    },
+    info: (...args) => {
+        try {
+            if (settingsManager.get('debugMode')) {
+                console.info('[DEBUG]', ...args);
+            }
+        } catch (e) {
+            // Silently fail if settings not available - debug mode off by default
+        }
+    },
+    warn: (...args) => {
+        try {
+            if (settingsManager.get('debugMode')) {
+                console.warn('[DEBUG]', ...args);
+            }
+        } catch (e) {
+            // Silently fail if settings not available - debug mode off by default
+        }
+    },
+    error: (...args) => {
+        try {
+            if (settingsManager.get('debugMode')) {
+                console.error('[DEBUG]', ...args);
+            }
+        } catch (e) {
+            // Silently fail if settings not available - debug mode off by default
+        }
+    },
+    group: (label) => {
+        try {
+            if (settingsManager.get('debugMode')) {
+                console.group(`[DEBUG] ${label}`);
+            }
+        } catch (e) {
+            // Silently fail if settings not available - debug mode off by default
+        }
+    },
+    groupEnd: () => {
+        try {
+            if (settingsManager.get('debugMode')) {
+                console.groupEnd();
+            }
+        } catch (e) {
+            // Silently fail if settings not available - debug mode off by default
+        }
+    },
+    table: (data) => {
+        try {
+            if (settingsManager.get('debugMode')) {
+                console.table(data);
+            }
+        } catch (e) {
+            // Silently fail if settings not available - debug mode off by default
+        }
+    }
+};

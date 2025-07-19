@@ -41,7 +41,9 @@
 }
 
 .brand__icon img {
-  filter: brightness(0) invert(1);
+  width: 32px;
+  height: 32px;
+  display: block;
 }
 
 .brand__text {

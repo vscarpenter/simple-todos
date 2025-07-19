@@ -3,7 +3,7 @@ import appState from './state.js';
 import storage from './storage.js';
 import domManager from './dom.js';
 import accessibility from './accessibility.js';
-import { settingsManager } from './settings.js';
+import { settingsManager, debugLog } from './settings.js';
 import { Board, Task, createBoard, createTask } from './models.js';
 
 // Generate unique ID function (duplicated from models.js to avoid circular imports)
@@ -22,6 +22,7 @@ class CascadeApp {
         this.state = appState;
         this.storage = storage;
         this.dom = domManager;
+        this.eventBus = eventBus;
         
         this.init();
     }
@@ -47,11 +48,12 @@ class CascadeApp {
             // Initialize auto-archive
             this.initAutoArchive();
             
+            
             // Initial render
             this.render();
             this.renderBoardSelector();
             
-            console.log('Cascade app initialized successfully');
+            debugLog.log('Cascade app initialized successfully');
             eventBus.emit('app:ready');
             
         } catch (error) {
@@ -190,18 +192,32 @@ class CascadeApp {
         // Settings events
         eventBus.on('settings:show', this.handleShowSettings.bind(this));
         eventBus.on('app:reset', this.handleResetApp.bind(this));
+        eventBus.on('debug:toggle', this.handleToggleDebug.bind(this));
 
         // Board management events
         eventBus.on('board:create', this.handleCreateBoard.bind(this));
         eventBus.on('board:switch', this.handleSwitchBoard.bind(this));
         eventBus.on('board:edit', this.handleEditBoard.bind(this));
-
         eventBus.on('board:delete', this.handleDeleteBoard.bind(this));
         eventBus.on('board:duplicate', this.handleDuplicateBoard.bind(this));
         eventBus.on('boards:manage', this.handleManageBoards.bind(this));
+        
+        // Board organization events
+        eventBus.on('task:moveToBoard', this.handleMoveTaskToBoard.bind(this));
+        eventBus.on('task:copyToBoard', this.handleCopyTaskToBoard.bind(this));
+        eventBus.on('boards:reorder', this.handleReorderBoards.bind(this));
+        eventBus.on('boards:sort', this.handleSortBoards.bind(this));
+        eventBus.on('boards:search', this.handleSearchBoards.bind(this));
+        eventBus.on('boards:filter', this.handleFilterBoards.bind(this));
+        eventBus.on('boards:clearFilters', this.handleClearBoardFilters.bind(this));
+        eventBus.on('boards:getStatistics', this.getBoardStatistics.bind(this));
+        eventBus.on('boards:getTrends', this.getBoardTrends.bind(this));
 
         // Storage events
         eventBus.on('storage:error', this.handleStorageError.bind(this));
+        eventBus.on('storage:imported', this.handleStorageImported.bind(this));
+        eventBus.on('storage:migrated', this.handleStorageMigrated.bind(this));
+
     }
 
     /**
@@ -214,7 +230,7 @@ class CascadeApp {
             const filter = this.state.get('filter');
             
             const data = {
-                boards: boards.map(board => board.toJSON()),
+                boards: boards.map(board => board.toJSON ? board.toJSON() : board),
                 currentBoardId,
                 filter,
                 lastSaved: new Date().toISOString()
@@ -231,7 +247,9 @@ class CascadeApp {
      * Render the current state
      */
     render() {
-        const tasks = this.state.get('tasks');
+        let tasks = this.state.get('tasks');
+        const filter = this.state.get('filter') || 'all';
+        
         
         // Group tasks by status
         const tasksByStatus = {
@@ -246,6 +264,22 @@ class CascadeApp {
         });
         
         this.dom.renderTasks(tasksByStatus);
+        
+        // Update board title to indicate filter
+        this.updateBoardTitle(filter);
+    }
+
+    /**
+     * Update board title to show filter status
+     */
+    updateBoardTitle(filter) {
+        const currentBoardNameEl = document.getElementById('current-board-name');
+        if (currentBoardNameEl) {
+            const currentBoard = this.state.getCurrentBoard();
+            const baseName = currentBoard ? currentBoard.name : 'Main Board';
+            
+            currentBoardNameEl.textContent = baseName;
+        }
     }
 
     /**
@@ -269,8 +303,10 @@ class CascadeApp {
             const boards = this.state.get('boards');
             const updatedBoards = boards.map(board => {
                 if (board.id === currentBoardId) {
+                    // Handle both Board instances and plain objects
+                    const boardData = board.toJSON ? board.toJSON() : board;
                     return new Board({ 
-                        ...board.toJSON(), 
+                        ...boardData, 
                         tasks: updatedTasks.map(t => t.toJSON ? t.toJSON() : t)
                     });
                 }
@@ -293,7 +329,7 @@ class CascadeApp {
      * Handle create task
      * @param {Object} data - Event data
      */
-    handleCreateTask(data) {
+    async handleCreateTask(data) {
         try {
             const { text } = data;
             
@@ -312,7 +348,7 @@ class CascadeApp {
                 id: generateUniqueId()
             });
             
-            console.log('🆕 Creating new task:', {
+            debugLog.log('🆕 Creating new task:', {
                 id: newTask.id,
                 text: newTask.text,
                 status: newTask.status,
@@ -324,7 +360,7 @@ class CascadeApp {
             // Debug: Check for potential duplicates
             const existingTasksWithSameText = currentTasks.filter(t => t.text === newTask.text);
             if (existingTasksWithSameText.length > 0) {
-                console.log('⚠️ Creating task with duplicate text. Existing tasks:', 
+                debugLog.log('⚠️ Creating task with duplicate text. Existing tasks:', 
                     existingTasksWithSameText.map(t => ({ id: t.id, text: t.text }))
                 );
             }
@@ -341,7 +377,9 @@ class CascadeApp {
                             boardName: board.name,
                             taskCount: updatedTasks.length
                         });
-                        return new Board({ ...board.toJSON(), tasks: updatedTasks });
+                        // Handle both Board instances and plain objects
+                        const boardData = board.toJSON ? board.toJSON() : board;
+                        return new Board({ ...boardData, tasks: updatedTasks });
                     }
                     return board;
                 });
@@ -405,9 +443,19 @@ class CascadeApp {
                     return;
                 }
                 
-                const updatedTasks = tasks.map(t => 
-                    t.id === taskId ? t.update({ text: newText }) : t
-                );
+                const updatedTasks = tasks.map(t => {
+                    if (t.id === taskId) {
+                        // Handle both Task instances and plain objects
+                        if (t.update) {
+                            return t.update({ text: newText });
+                        } else {
+                            // Create Task instance if it's a plain object
+                            const taskInstance = new Task(t);
+                            return taskInstance.update({ text: newText });
+                        }
+                    }
+                    return t;
+                });
                 
                 this.updateCurrentBoardTasks(updatedTasks);
                 eventBus.emit('task:edited', { task: updatedTasks.find(t => t.id === taskId) });
@@ -517,7 +565,14 @@ class CascadeApp {
                         from: task.status,
                         to: targetStatus
                     });
-                    return task.moveTo(targetStatus);
+                    // Handle both Task instances and plain objects
+                    if (task.moveTo) {
+                        return task.moveTo(targetStatus);
+                    } else {
+                        // Create Task instance if it's a plain object
+                        const taskInstance = new Task(task);
+                        return taskInstance.moveTo(targetStatus);
+                    }
                 } else {
                     // Verify we're not accidentally modifying other tasks
                     if (task.text === taskToMove.text && task.id !== taskId) {
@@ -588,15 +643,20 @@ class CascadeApp {
      * Handle archive task
      * @param {Object} data - Event data
      */
-    handleArchiveTask(data) {
+    async handleArchiveTask(data) {
         try {
             const { taskId } = data;
             const tasks = this.state.get('tasks');
-            const updatedTasks = tasks.filter(task => task.id !== taskId);
+            const task = tasks.find(t => t.id === taskId);
             
-            this.state.setState({ tasks: updatedTasks });
+            if (!task) {
+                console.warn('Task not found for archiving:', taskId);
+                return;
+            }
             
-            // Note: In a full implementation, archived tasks would be stored separately
+            // Use the proper archiveTask method that marks as archived
+            this.archiveTask(taskId);
+            
             eventBus.emit('task:archived', { taskId });
             
         } catch (error) {
@@ -799,9 +859,22 @@ class CascadeApp {
             );
             
             if (confirmed) {
-                const remainingTasks = tasks.filter(task => task.status !== 'done');
+                // Mark completed tasks as archived before removing them
+                const currentBoard = appState.getCurrentBoard();
+                completedTasks.forEach(task => {
+                    task.archived = true;
+                    task.archivedDate = new Date().toISOString().split('T')[0];
+                });
                 
-                this.updateCurrentBoardTasks(remainingTasks);
+                // Update board to include archived tasks
+                appState.updateBoard(currentBoard.id, {
+                    ...currentBoard,
+                    tasks: tasks // Keep all tasks including newly archived ones
+                });
+                
+                // Filter out archived tasks from active view
+                const activeTasks = tasks.filter(task => !task.archived);
+                this.updateCurrentBoardTasks(activeTasks);
                 
                 this.dom.showModal('Success',
                     `Successfully archived ${completedTasks.length} tasks!`,
@@ -880,15 +953,6 @@ class CascadeApp {
             });
         }
 
-        const resetAppBtn = document.getElementById('reset-app-btn');
-        if (resetAppBtn) {
-            resetAppBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                this.handleResetApp();
-            });
-        }
-
         // Add live preview for theme changes
         const themeSelect = document.getElementById('theme-select');
         if (themeSelect) {
@@ -936,8 +1000,17 @@ class CascadeApp {
                 return;
             }
 
+            // Check if debug mode changed
+            const oldDebugMode = settingsManager.get('debugMode');
+            const newDebugMode = newSettings.debugMode;
+            
             settingsManager.saveSettings(newSettings);
             settingsManager.applyTheme();
+            
+            // Handle debug mode toggle if it changed
+            if (oldDebugMode !== newDebugMode) {
+                settingsManager.setDebugMode(newDebugMode);
+            }
             
             this.dom.showModal('Settings Saved', 'Your settings have been updated successfully!', {
                 showCancel: false,
@@ -988,6 +1061,36 @@ class CascadeApp {
     handleStorageError(data) {
         console.error('Storage error:', data);
         this.handleError('Storage operation failed', data.error);
+    }
+
+    /**
+     * Handle storage imported - reload data after import
+     */
+    async handleStorageImported(data) {
+        try {
+            console.log('Storage imported, reloading data:', data);
+            await this.loadData();
+            this.render();
+            this.renderBoardSelector();
+        } catch (error) {
+            console.error('Failed to reload data after import:', error);
+            this.handleError('Failed to apply imported data', error);
+        }
+    }
+
+    /**
+     * Handle storage migrated - reload data after migration
+     */
+    async handleStorageMigrated(data) {
+        try {
+            console.log('Storage migrated, reloading data:', data);
+            await this.loadData();
+            this.render();
+            this.renderBoardSelector();
+        } catch (error) {
+            console.error('Failed to reload data after migration:', error);
+            this.handleError('Failed to apply migrated data', error);
+        }
     }
 
     /**
@@ -1065,6 +1168,39 @@ class CascadeApp {
         } catch (error) {
             console.error('Failed to reset app:', error);
             this.handleError('Reset failed', error);
+        }
+    }
+
+    /**
+     * Handle toggle debug mode
+     */
+    async handleToggleDebug() {
+        try {
+            const currentDebugMode = settingsManager.get('debugMode');
+            const newDebugMode = !currentDebugMode;
+            
+            // Toggle debug mode
+            settingsManager.setDebugMode(newDebugMode);
+            
+            // Update debug button text in menu
+            this.dom.updateDebugButtonText();
+            
+            // Show confirmation message
+            const status = newDebugMode ? 'enabled' : 'disabled';
+            const icon = newDebugMode ? '🔧' : '🔇';
+            
+            await this.dom.showModal(
+                `Debug Mode ${status.charAt(0).toUpperCase() + status.slice(1)}`, 
+                `${icon} Debug mode has been ${status}.\n\n${newDebugMode ? 'You will now see detailed console output for troubleshooting.' : 'Console logging has been turned off.'}`,
+                { 
+                    showCancel: false,
+                    confirmText: 'OK'
+                }
+            );
+            
+        } catch (error) {
+            console.error('Failed to toggle debug mode:', error);
+            this.handleError('Debug toggle failed', error);
         }
     }
 
@@ -1817,25 +1953,24 @@ class CascadeApp {
      * @param {string} taskId - Task ID to archive
      */
     archiveTask(taskId) {
-        const currentBoard = appState.getCurrentBoard();
-        const task = currentBoard.tasks.find(t => t.id === taskId);
+        const tasks = this.state.get('tasks');
+        const task = tasks.find(t => t.id === taskId);
         
         if (!task) return;
 
-        // Mark as archived
-        task.archived = true;
-        task.archivedDate = new Date().toISOString().split('T')[0];
-
-        // Remove from active tasks
-        currentBoard.tasks = currentBoard.tasks.filter(t => t.id !== taskId);
+        // Mark task as archived and remove from active tasks
+        const updatedTasks = tasks.filter(t => t.id !== taskId);
+        
+        // Update current board tasks
+        this.updateCurrentBoardTasks(updatedTasks);
 
         // Update state and storage
         appState.saveState();
         
-        eventBus.emit('task:archived', { task });
+        eventBus.emit('task:archived', { taskId });
         
         // Re-render UI
-        this.renderTasks();
+        this.render();
     }
 
     /**
@@ -2067,6 +2202,396 @@ class CascadeApp {
                 }
             }
         });
+    }
+
+    /**
+     * Handle moving task between boards
+     * @param {Object} data - Event data
+     */
+    async handleMoveTaskToBoard(data) {
+        try {
+            const { taskId } = data;
+            const boards = this.state.get('boards') || [];
+            const currentBoard = this.state.get('currentBoardId');
+            
+            // Find the task in current board
+            const task = this.state.get('tasks').find(t => t.id === taskId);
+            if (!task) {
+                console.error('❌ Task not found:', taskId);
+                return;
+            }
+
+            // Show board selection modal
+            const targetBoardId = await this.dom.showModal(
+                'Move Task',
+                'Select destination board:',
+                {
+                    showBoardSelector: true,
+                    boards: boards.filter(b => b.id !== currentBoard),
+                    currentBoardId: currentBoard
+                }
+            );
+
+            if (targetBoardId && targetBoardId !== currentBoard) {
+                // Remove from current board
+                const updatedTasks = this.state.get('tasks').filter(t => t.id !== taskId);
+                this.updateCurrentBoardTasks(updatedTasks);
+
+                // Add to target board
+                const targetBoard = boards.find(b => b.id === targetBoardId);
+                if (targetBoard) {
+                    targetBoard.tasks.push(task);
+                    this.state.setState({ boards });
+                    eventBus.emit('task:moved-between-boards', { taskId, fromBoard: currentBoard, toBoard: targetBoardId });
+                }
+            }
+        } catch (error) {
+            console.error('❌ Failed to move task between boards:', error);
+            this.handleError('Failed to move task', error);
+        }
+    }
+
+    /**
+     * Handle copying task to another board
+     * @param {Object} data - Event data
+     */
+    async handleCopyTaskToBoard(data) {
+        try {
+            const { taskId } = data;
+            const boards = this.state.get('boards') || [];
+            const currentBoard = this.state.get('currentBoardId');
+            
+            // Find the task in current board
+            const task = this.state.get('tasks').find(t => t.id === taskId);
+            if (!task) {
+                console.error('❌ Task not found:', taskId);
+                return;
+            }
+
+            // Show board selection modal
+            const targetBoardId = await this.dom.showModal(
+                'Copy Task',
+                'Select destination board:',
+                {
+                    showBoardSelector: true,
+                    boards: boards.filter(b => b.id !== currentBoard),
+                    currentBoardId: currentBoard
+                }
+            );
+
+            if (targetBoardId && targetBoardId !== currentBoard) {
+                // Create a copy of the task
+                const taskData = task.toJSON ? task.toJSON() : task;
+                const taskCopy = new Task({
+                    ...taskData,
+                    id: generateUniqueId(),
+                    createdDate: new Date().toISOString().split('T')[0],
+                    lastModified: new Date().toISOString()
+                });
+
+                // Add to target board
+                const targetBoard = boards.find(b => b.id === targetBoardId);
+                if (targetBoard) {
+                    targetBoard.tasks.push(taskCopy);
+                    this.state.setState({ boards });
+                    eventBus.emit('task:copied-between-boards', { 
+                        originalTaskId: taskId, 
+                        newTaskId: taskCopy.id, 
+                        fromBoard: currentBoard, 
+                        toBoard: targetBoardId 
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('❌ Failed to copy task between boards:', error);
+            this.handleError('Failed to copy task', error);
+        }
+    }
+
+    /**
+     * Handle reordering boards
+     * @param {Object} data - Event data
+     */
+    async handleReorderBoards(data) {
+        try {
+            const { newOrder } = data;
+            const boards = this.state.get('boards') || [];
+            
+            // Reorder boards based on new order
+            const reorderedBoards = newOrder.map(boardId => 
+                boards.find(b => b.id === boardId)
+            ).filter(Boolean);
+
+            this.state.setState({ boards: reorderedBoards });
+            eventBus.emit('boards:reordered', { newOrder });
+        } catch (error) {
+            console.error('❌ Failed to reorder boards:', error);
+            this.handleError('Failed to reorder boards', error);
+        }
+    }
+
+    /**
+     * Handle sorting boards
+     * @param {Object} data - Event data
+     */
+    async handleSortBoards(data) {
+        try {
+            const { sortBy } = data;
+            const boards = this.state.get('boards') || [];
+            
+            let sortedBoards = [...boards];
+            
+            switch (sortBy) {
+                case 'name':
+                    sortedBoards.sort((a, b) => a.name.localeCompare(b.name));
+                    break;
+                case 'date':
+                    sortedBoards.sort((a, b) => new Date(a.createdDate) - new Date(b.createdDate));
+                    break;
+                case 'tasks':
+                    sortedBoards.sort((a, b) => (b.tasks?.length || 0) - (a.tasks?.length || 0));
+                    break;
+                default:
+                    console.warn('❌ Invalid sort criteria:', sortBy);
+                    return;
+            }
+
+            this.state.setState({ boards: sortedBoards });
+            eventBus.emit('boards:sorted', { sortBy });
+        } catch (error) {
+            console.error('❌ Failed to sort boards:', error);
+            this.handleError('Failed to sort boards', error);
+        }
+    }
+
+    /**
+     * Handle searching boards
+     * @param {Object} data - Event data
+     */
+    async handleSearchBoards(data) {
+        try {
+            const { query } = data;
+            const boards = this.state.get('boards') || [];
+            
+            if (!query || query.trim() === '') {
+                // Show all boards when query is empty
+                this.dom.renderBoardSelector({ boards, searchQuery: '' });
+                return;
+            }
+
+            const filteredBoards = boards.filter(board => 
+                board.name.toLowerCase().includes(query.toLowerCase()) ||
+                board.description?.toLowerCase().includes(query.toLowerCase())
+            );
+
+            this.dom.renderBoardSelector({ boards: filteredBoards, searchQuery: query });
+            eventBus.emit('boards:searched', { query, results: filteredBoards.length });
+        } catch (error) {
+            console.error('❌ Failed to search boards:', error);
+            this.handleError('Failed to search boards', error);
+        }
+    }
+
+    /**
+     * Handle filtering boards
+     * @param {Object} data - Event data
+     */
+    async handleFilterBoards(data) {
+        try {
+            const { color, status } = data;
+            const boards = this.state.get('boards') || [];
+            
+            let filteredBoards = [...boards];
+            
+            if (color) {
+                filteredBoards = filteredBoards.filter(board => board.color === color);
+            }
+            
+            if (status) {
+                filteredBoards = filteredBoards.filter(board => {
+                    if (status === 'archived') return board.isArchived;
+                    if (status === 'active') return !board.isArchived;
+                    return true;
+                });
+            }
+
+            this.dom.renderBoardSelector({ boards: filteredBoards, filter: { color, status } });
+            eventBus.emit('boards:filtered', { filter: { color, status }, results: filteredBoards.length });
+        } catch (error) {
+            console.error('❌ Failed to filter boards:', error);
+            this.handleError('Failed to filter boards', error);
+        }
+    }
+
+    /**
+     * Handle clearing board filters
+     */
+    async handleClearBoardFilters() {
+        try {
+            const boards = this.state.get('boards') || [];
+            this.dom.renderBoardSelector({ boards, searchQuery: '', filter: null });
+            eventBus.emit('boards:filter-cleared');
+        } catch (error) {
+            console.error('❌ Failed to clear board filters:', error);
+            this.handleError('Failed to clear filters', error);
+        }
+    }
+
+    /**
+     * Get board statistics
+     * @param {Object} data - Event data
+     */
+    async getBoardStatistics(data) {
+        try {
+            const { boardId } = data;
+            const boards = this.state.get('boards') || [];
+            const board = boards.find(b => b.id === boardId);
+            
+            if (!board) {
+                throw new Error('Board not found');
+            }
+
+            const tasks = board.tasks || [];
+            const totalTasks = tasks.length;
+            const completedTasks = tasks.filter(t => t.status === 'done').length;
+            const activeTasks = tasks.filter(t => t.status !== 'done').length;
+            const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+
+            return {
+                boardId,
+                boardName: board.name,
+                totalTasks,
+                completedTasks,
+                activeTasks,
+                completionRate: Math.round(completionRate * 100) / 100,
+                averageCompletionTime: this.calculateAverageCompletionTime(tasks),
+                lastActivity: this.getLastActivityDate(tasks)
+            };
+        } catch (error) {
+            console.error('❌ Failed to get board statistics:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get board trends
+     * @param {Object} data - Event data
+     */
+    async getBoardTrends(data) {
+        try {
+            const { boardId, days = 7 } = data;
+            const boards = this.state.get('boards') || [];
+            const board = boards.find(b => b.id === boardId);
+            
+            if (!board) {
+                throw new Error('Board not found');
+            }
+
+            const tasks = board.tasks || [];
+            const now = new Date();
+            const cutoffDate = new Date(now.getTime() - (days * 24 * 60 * 60 * 1000));
+
+            const recentTasks = tasks.filter(task => {
+                const taskDate = new Date(task.lastModified);
+                return taskDate >= cutoffDate;
+            });
+
+            const dailyStats = {};
+            for (let i = 0; i < days; i++) {
+                const date = new Date(now.getTime() - (i * 24 * 60 * 60 * 1000));
+                const dateStr = date.toISOString().split('T')[0];
+                dailyStats[dateStr] = {
+                    created: 0,
+                    completed: 0,
+                    moved: 0
+                };
+            }
+
+            recentTasks.forEach(task => {
+                const createdDate = task.createdDate;
+                const completedDate = task.completedDate;
+                const lastModified = task.lastModified.split('T')[0];
+
+                if (dailyStats[createdDate]) {
+                    dailyStats[createdDate].created++;
+                }
+                if (completedDate && dailyStats[completedDate]) {
+                    dailyStats[completedDate].completed++;
+                }
+                if (dailyStats[lastModified]) {
+                    dailyStats[lastModified].moved++;
+                }
+            });
+
+            return {
+                boardId,
+                boardName: board.name,
+                period: days,
+                dailyStats,
+                totalCreated: recentTasks.length,
+                totalCompleted: recentTasks.filter(t => t.status === 'done').length,
+                trend: this.calculateTrend(dailyStats)
+            };
+        } catch (error) {
+            console.error('❌ Failed to get board trends:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Calculate average completion time for tasks
+     * @param {Array} tasks - Array of tasks
+     * @returns {number} Average completion time in days
+     */
+    calculateAverageCompletionTime(tasks) {
+        const completedTasks = tasks.filter(t => t.status === 'done' && t.completedDate);
+        if (completedTasks.length === 0) return 0;
+
+        const totalDays = completedTasks.reduce((sum, task) => {
+            const created = new Date(task.createdDate);
+            const completed = new Date(task.completedDate);
+            return sum + Math.ceil((completed - created) / (1000 * 60 * 60 * 24));
+        }, 0);
+
+        return Math.round((totalDays / completedTasks.length) * 10) / 10;
+    }
+
+    /**
+     * Get last activity date for tasks
+     * @param {Array} tasks - Array of tasks
+     * @returns {string|null} Last activity date or null
+     */
+    getLastActivityDate(tasks) {
+        if (tasks.length === 0) return null;
+        
+        const lastModified = tasks.reduce((latest, task) => {
+            const taskDate = new Date(task.lastModified);
+            return taskDate > latest ? taskDate : latest;
+        }, new Date(0));
+
+        return lastModified.getTime() > 0 ? lastModified.toISOString().split('T')[0] : null;
+    }
+
+    /**
+     * Calculate trend from daily stats
+     * @param {Object} dailyStats - Daily statistics
+     * @returns {string} Trend direction
+     */
+    calculateTrend(dailyStats) {
+        const dates = Object.keys(dailyStats).sort();
+        if (dates.length < 2) return 'stable';
+
+        const recent = dates.slice(-3);
+        const earlier = dates.slice(-6, -3);
+
+        const recentAvg = recent.reduce((sum, date) => 
+            sum + dailyStats[date].completed, 0) / recent.length;
+        const earlierAvg = earlier.reduce((sum, date) => 
+            sum + dailyStats[date].completed, 0) / earlier.length;
+
+        if (recentAvg > earlierAvg * 1.1) return 'increasing';
+        if (recentAvg < earlierAvg * 0.9) return 'decreasing';
+        return 'stable';
     }
 }
 

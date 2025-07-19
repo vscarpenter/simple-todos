@@ -3,293 +3,246 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacy Policy - Cascade Task Management</title>
-    <meta name="description" content="Privacy Policy for Cascade Task Management web application.">
+    <title>Privacy Policy - Cascade</title>
+    <meta name="description" content="Privacy Policy for Cascade Task Management application">
     
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap"
-        rel="stylesheet"
-    />
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    />
-    <link rel="stylesheet" href="styles/components.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/main.css">
     <link rel="icon" type="image/svg+xml" href="assets/cascade-icon.svg">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .document-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .document-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem 2rem 2rem;
+            text-align: center;
+        }
+        
+        .document-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0 0 0.5rem;
+        }
+        
+        .document-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+        
+        .document-content {
+            padding: 3rem 2rem;
+            line-height: 1.7;
+            color: #334155;
+        }
+        
+        .section {
+            margin-bottom: 2.5rem;
+        }
+        
+        .section h2 {
+            color: #1e293b;
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .section p {
+            margin-bottom: 1rem;
+        }
+        
+        .section ul {
+            padding-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .section li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.75rem 1.5rem;
+            background: #f1f5f9;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            margin-bottom: 2rem;
+        }
+        
+        .back-link:hover {
+            background: #e2e8f0;
+            color: #5a67d8;
+            transform: translateY(-1px);
+        }
+        
+        .effective-date {
+            background: #f8fafc;
+            border-left: 4px solid #667eea;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .highlight-box {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+        
+        .highlight-box h3 {
+            color: #065f46;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .highlight-box p {
+            color: #047857;
+            margin: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .document-container {
+                margin: 1rem;
+                border-radius: 12px;
+            }
+            
+            .document-header {
+                padding: 2rem 1.5rem 1.5rem;
+            }
+            
+            .document-header h1 {
+                font-size: 2rem;
+            }
+            
+            .document-content {
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <!-- Header -->
-    <header class="bg-white text-dark shadow-sm py-3">
-        <div class="container-fluid">
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="header-content">
-                    <div class="app-brand">
-                        <div class="brand-icon">
-                            <img src="assets/cascade-icon.svg" alt="Cascade App Icon" width="32" height="32">
-                        </div>
-                        <div class="brand-text">
-                            <h1 class="app-title mb-0">Cascade</h1>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <a href="index.html" class="btn btn-primary rounded-pill px-4 py-2">
-                        ← Back to App
-                    </a>
-                </div>
+    <div class="document-container">
+        <div class="document-header">
+            <h1>Privacy Policy</h1>
+            <p>Your privacy matters - here's how we protect it</p>
+        </div>
+        
+        <div class="document-content">
+            <a href="index.html" class="back-link">
+                ← Back to Cascade
+            </a>
+            
+            <div class="effective-date">
+                <strong>Effective Date:</strong> January 2025
+            </div>
+            
+            <div class="highlight-box">
+                <h3>🔒 The Simple Truth</h3>
+                <p>We don't collect, store, or track any of your personal data. Your tasks stay on your device, period.</p>
+            </div>
+            
+            <div class="section">
+                <h2>What We Don't Collect</h2>
+                <p>Unlike many applications, Cascade is designed with privacy at its core. We don't collect:</p>
+                <ul>
+                    <li>Your tasks or personal information</li>
+                    <li>Your email address or contact details</li>
+                    <li>Usage analytics or tracking data</li>
+                    <li>Device information or browser data</li>
+                    <li>Location data or personal preferences</li>
+                    <li>Cookies for tracking purposes</li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <h2>How Your Data Works</h2>
+                <p><strong>Local Storage Only:</strong> All your tasks are stored directly in your browser's local storage. This means:</p>
+                <ul>
+                    <li>Your data never leaves your device</li>
+                    <li>We can't see what tasks you create</li>
+                    <li>No servers store your personal information</li>
+                    <li>You have complete control over your data</li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <h2>What We Do Collect</h2>
+                <p>For basic functionality and security, our hosting service may collect:</p>
+                <ul>
+                    <li><strong>Basic server logs:</strong> IP addresses and request times (automatically deleted after 30 days)</li>
+                    <li><strong>Technical information:</strong> Only what's needed to serve the website (no personal data)</li>
+                </ul>
+                <p>This is standard for any website and is handled by our hosting provider, not by us directly.</p>
+            </div>
+            
+            <div class="section">
+                <h2>Data Export & Import</h2>
+                <p>You have full control over your data:</p>
+                <ul>
+                    <li><strong>Export:</strong> Download your tasks as a JSON file anytime</li>
+                    <li><strong>Import:</strong> Restore or transfer your tasks to another device</li>
+                    <li><strong>Delete:</strong> Clear all data through your browser settings</li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <h2>Third-Party Services</h2>
+                <p>Cascade uses minimal third-party services:</p>
+                <ul>
+                    <li><strong>Google Fonts:</strong> For typography (may set cookies per Google's policy)</li>
+                    <li><strong>CloudFront CDN:</strong> For fast, reliable delivery (AWS standard logging)</li>
+                </ul>
+                <p>These services have their own privacy policies, but they don't have access to your task data.</p>
+            </div>
+            
+            <div class="section">
+                <h2>Your Rights</h2>
+                <p>Since we don't collect personal data, there's not much to manage! But you can:</p>
+                <ul>
+                    <li>Use Cascade without creating an account</li>
+                    <li>Export your data at any time</li>
+                    <li>Delete your data by clearing browser storage</li>
+                    <li>Contact us with any privacy questions</li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <h2>Changes to This Policy</h2>
+                <p>If we ever change how we handle privacy (spoiler: we won't), we'll update this page and change the effective date above.</p>
+            </div>
+            
+            <div class="section">
+                <h2>Questions?</h2>
+                <p>If you have any questions about privacy or how your data is handled, feel free to reach out through our support channels.</p>
             </div>
         </div>
-    </header>
-
-    <!-- Privacy Policy Content -->
-    <main class="container mt-4">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <!-- Hero Section -->
-                <div class="bg-white rounded shadow-sm p-4 mb-4 text-center">
-                    <h1 class="mb-3">🔒 Privacy Policy</h1>
-                    <p class="lead text-muted">Your privacy is our priority - learn how we protect it</p>
-                    <div class="alert alert-info mb-0">
-                        <strong>Last updated:</strong> July 2025
-                    </div>
-                </div>
-
-                <!-- Introduction -->
-                <div class="bg-white rounded shadow-sm p-4 mb-4">
-                    <h2 class="d-flex align-items-center mb-3">
-                        <span class="me-2">🛡️</span> Privacy First Design
-                    </h2>
-                    <div class="alert alert-success">
-                        <strong>🔐 Complete Privacy:</strong> Cascade is designed to be completely private. We prioritize your privacy above all else.
-                    </div>
-                    <p>This Privacy Policy describes how Cascade Task Management handles your information. <strong>Spoiler alert: We don't handle any of your information because we never see it!</strong></p>
-                </div>
-
-                <!-- No Data Collection -->
-                <div class="bg-white rounded shadow-sm p-4 mb-4">
-                    <h2 class="d-flex align-items-center mb-3">
-                        <span class="me-2">🚫</span> Zero Data Collection
-                    </h2>
-                    <div class="alert alert-success mb-3">
-                        <strong>Cascade does not collect, store, or transmit any personal data.</strong>
-                    </div>
-                    <div class="row text-center">
-                        <div class="col-md-4 mb-3">
-                            <div class="border rounded p-3 h-100">
-                                <div class="h3 text-success">🏠</div>
-                                <strong>Local Only</strong>
-                                <p class="small text-muted mb-0">Runs entirely in your browser</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="border rounded p-3 h-100">
-                                <div class="h3 text-success">📱</div>
-                                <strong>Device Storage</strong>
-                                <p class="small text-muted mb-0">Data stays on your device</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="border rounded p-3 h-100">
-                                <div class="h3 text-success">🔐</div>
-                                <strong>Private</strong>
-                                <p class="small text-muted mb-0">Complete privacy guaranteed</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Local Storage Details -->
-                <div class="bg-white rounded shadow-sm p-4 mb-4">
-                    <h2 class="d-flex align-items-center mb-3">
-                        <span class="me-2">💾</span> Local Data Storage
-                    </h2>
-                    <p class="mb-3">All your task data is stored locally on your device in your browser's storage.</p>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h5 class="text-success">✓ What this guarantees:</h5>
-                            <ul class="list-unstyled">
-                                <li class="mb-2">🔒 <strong>Data never leaves your device</strong> - Tasks stored only in browser</li>
-                                <li class="mb-2">🚫 <strong>No server transmission</strong> - Task data never sent anywhere</li>
-                                <li class="mb-2">☁️ <strong>No cloud storage</strong> - We don't store information in the cloud</li>
-                                <li class="mb-2">👤 <strong>No user accounts</strong> - No registration or personal info needed</li>
-                                <li class="mb-2">🕵️ <strong>No tracking</strong> - We don't track usage or behavior</li>
-                            </ul>
-                        </div>
-                        <div class="col-md-6">
-                            <h5 class="text-info">💾 Browser Storage Details:</h5>
-                            <ul class="list-unstyled">
-                                <li class="mb-2">🖥️ <strong>Managed by your browser</strong> - You have full control</li>
-                                <li class="mb-2">🧹 <strong>You can clear anytime</strong> - Complete user control</li>
-                                <li class="mb-2">🛡️ <strong>Site-isolated</strong> - Not accessible to other websites</li>
-                                <li class="mb-2">📱 <strong>Device-specific</strong> - Not synchronized across devices</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- What We Don't Collect -->
-                <div class="bg-white rounded shadow-sm p-4 mb-4">
-                    <h2 class="d-flex align-items-center mb-3">
-                        <span class="me-2">🚯</span> What We Don't Collect
-                    </h2>
-                    <div class="alert alert-info mb-3">
-                        We do not collect, store, or transmit <strong>any</strong> information whatsoever.
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-6 col-lg-4 mb-3">
-                            <div class="d-flex align-items-center">
-                                <span class="badge bg-danger rounded-pill me-2">🚫</span>
-                                <div>
-                                    <strong>Personal Info</strong><br>
-                                    <small class="text-muted">Name, email, phone</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-sm-6 col-lg-4 mb-3">
-                            <div class="d-flex align-items-center">
-                                <span class="badge bg-danger rounded-pill me-2">🚫</span>
-                                <div>
-                                    <strong>Task Data</strong><br>
-                                    <small class="text-muted">Content or information</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-sm-6 col-lg-4 mb-3">
-                            <div class="d-flex align-items-center">
-                                <span class="badge bg-danger rounded-pill me-2">🚫</span>
-                                <div>
-                                    <strong>Location</strong><br>
-                                    <small class="text-muted">GPS or IP location</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-sm-6 col-lg-4 mb-3">
-                            <div class="d-flex align-items-center">
-                                <span class="badge bg-danger rounded-pill me-2">🚫</span>
-                                <div>
-                                    <strong>Device Info</strong><br>
-                                    <small class="text-muted">Hardware or software details</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-sm-6 col-lg-4 mb-3">
-                            <div class="d-flex align-items-center">
-                                <span class="badge bg-danger rounded-pill me-2">🚫</span>
-                                <div>
-                                    <strong>Analytics</strong><br>
-                                    <small class="text-muted">Usage patterns or behavior</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-sm-6 col-lg-4 mb-3">
-                            <div class="d-flex align-items-center">
-                                <span class="badge bg-danger rounded-pill me-2">🚫</span>
-                                <div>
-                                    <strong>Tracking</strong><br>
-                                    <small class="text-muted">Cookies, IPs, fingerprints</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Import/Export & Third-Party -->
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="bg-white rounded shadow-sm p-4 mb-4">
-                            <h2 class="d-flex align-items-center mb-3">
-                                <span class="me-2">📁</span> Import/Export
-                            </h2>
-                            <p class="small mb-3">The import/export feature creates JSON files locally:</p>
-                            <ul class="list-unstyled">
-                                <li class="mb-2">✓ Generated locally on your device</li>
-                                <li class="mb-2">✓ Contains only your task data</li>
-                                <li class="mb-2">✓ Never sent to our servers</li>
-                                <li class="mb-2">✓ Under your complete control</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="bg-white rounded shadow-sm p-4 mb-4">
-                            <h2 class="d-flex align-items-center mb-3">
-                                <span class="me-2">🔗</span> Third-Party Services
-                            </h2>
-                            <p class="small mb-3">We use these external services for basic functionality:</p>
-                            <ul class="small">
-                                <li><strong>Bootstrap CSS</strong> - Styling framework</li>
-                                <li><strong>Google Fonts</strong> - Typography</li>
-                                <li><strong>Web Hosting</strong> - Static file delivery</li>
-                            </ul>
-                            <p class="small text-muted">These may collect standard web data. See their privacy policies.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Security & Children -->
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="bg-white rounded shadow-sm p-4 mb-4">
-                            <h2 class="d-flex align-items-center mb-3">
-                                <span class="me-2">🔐</span> Data Security
-                            </h2>
-                            <p class="small mb-3">Since data never leaves your device, security depends on:</p>
-                            <ul class="small">
-                                <li>Your device's security settings</li>
-                                <li>Your browser's security features</li>
-                                <li>Regular backups using export</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="bg-white rounded shadow-sm p-4 mb-4">
-                            <h2 class="d-flex align-items-center mb-3">
-                                <span class="me-2">👶</span> Children's Privacy
-                            </h2>
-                            <div class="alert alert-success small">
-                                <strong>Safe for all ages!</strong>
-                            </div>
-                            <p class="small">Since we don't collect any personal information, there are no special considerations for children's privacy.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Contact & Changes -->
-                <div class="row">
-                    <div class="col-md-8">
-                        <div class="bg-white rounded shadow-sm p-4 mb-4">
-                            <h2 class="d-flex align-items-center mb-3">
-                                <span class="me-2">📞</span> Contact Us
-                            </h2>
-                            <p>Questions about this Privacy Policy? Contact us:</p>
-                            <ul class="list-unstyled">
-                                <li><strong>Developer:</strong> <a href="https://vinny.dev" target="_blank" rel="noopener noreferrer">Vinny Carpenter</a></li>
-                                <li><strong>Website:</strong> <a href="https://vinny.dev" target="_blank" rel="noopener noreferrer">vinny.dev</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="bg-white rounded shadow-sm p-4 mb-4">
-                            <h2 class="d-flex align-items-center mb-3">
-                                <span class="me-2">🔄</span> Policy Changes
-                            </h2>
-                            <p class="small">We may update this policy occasionally. Changes will be posted here with an updated date.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Back Button -->
-                <div class="text-center mb-4">
-                    <a href="index.html" class="btn btn-primary rounded-pill px-4 py-3">
-                        ← Back to Cascade
-                    </a>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-white text-muted py-3 text-center border-top mt-5">
-        <p class="mb-0">&copy; 2025 <a href="https://vinny.dev/" target="_blank" class="text-decoration-none">Vinny Carpenter</a></p>
-    </footer>
+    </div>
 </body>
-</html> 
+</html>

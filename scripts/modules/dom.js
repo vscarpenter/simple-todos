@@ -1,5 +1,6 @@
 import eventBus from './eventBus.js';
 import accessibility from './accessibility.js';
+import { debugLog } from './settings.js';
 
 /**
  * DOM manipulation and event delegation module
@@ -20,6 +21,7 @@ class DOMManager {
         this.cacheElements();
         this.setupEventDelegation();
         this.setupGlobalEventListeners();
+        this.initializeTooltips();
         
         this.initialized = true;
         eventBus.emit('dom:initialized');
@@ -65,8 +67,23 @@ class DOMManager {
             currentBoardName: document.getElementById('current-board-name'),
             boardSelectorMenu: document.getElementById('board-selector-menu'),
             activeBoardsList: document.getElementById('active-boards-list'),
-            newBoardBtn: document.getElementById('new-board-btn'),
-            manageBoardsBtn: document.getElementById('manage-boards-btn')
+            
+            // Menu panel elements
+            hamburgerMenuBtn: document.getElementById('hamburger-menu-btn'),
+            menuOverlay: document.getElementById('menu-overlay'),
+            menuPanel: document.getElementById('menu-panel'),
+            menuCloseBtn: document.getElementById('menu-close-btn'),
+            
+            // Menu action buttons
+            exportMenuBtn: document.getElementById('export-menu-btn'),
+            importMenuBtn: document.getElementById('import-menu-btn'),
+            newBoardMenuBtn: document.getElementById('new-board-menu-btn'),
+            manageBoardsMenuBtn: document.getElementById('manage-boards-menu-btn'),
+            preferencesBtn: document.getElementById('preferences-btn'),
+            
+            // Developer menu buttons
+            resetAppMenuBtn: document.getElementById('reset-app-menu-btn'),
+            toggleDebugBtn: document.getElementById('toggle-debug-btn')
         };
         
         // Remove null elements
@@ -86,6 +103,7 @@ class DOMManager {
             const action = element.dataset.action;
             const taskId = element.dataset.taskId;
             const targetStatus = element.dataset.targetStatus;
+            const priority = element.dataset.priority;
             
             event.preventDefault();
             
@@ -117,7 +135,7 @@ class DOMManager {
         // Delegate drag and drop events
         this.delegate('dragstart', '.task-card', (event, element) => {
             const taskId = element.dataset.taskId;
-            console.log('🎯 Drag started:', {
+            debugLog.log('🎯 Drag started:', {
                 taskId,
                 elementId: element.id,
                 taskText: element.querySelector('.task-card__text')?.textContent?.trim()
@@ -188,6 +206,7 @@ class DOMManager {
             });
         }
 
+
         // New task button
         if (this.elements.newTaskBtn) {
             this.elements.newTaskBtn.addEventListener('click', () => {
@@ -221,6 +240,9 @@ class DOMManager {
             }
         });
 
+        // Setup menu panel events
+        this.setupMenuPanelEvents();
+        
         // Setup drag and drop zones
         this.setupDropZones();
         
@@ -232,22 +254,6 @@ class DOMManager {
      * Setup board selector events
      */
     setupBoardSelectorEvents() {
-        // New board button
-        if (this.elements.newBoardBtn) {
-            this.elements.newBoardBtn.addEventListener('click', (event) => {
-                event.preventDefault();
-                this.handleNewBoard();
-            });
-        }
-
-        // Manage boards button
-        if (this.elements.manageBoardsBtn) {
-            this.elements.manageBoardsBtn.addEventListener('click', (event) => {
-                event.preventDefault();
-                this.handleManageBoards();
-            });
-        }
-
         // Delegate board selection clicks
         this.delegate('click', '[data-board-action]', (event, element) => {
             event.preventDefault();
@@ -271,6 +277,159 @@ class DOMManager {
                     break;
             }
         });
+
+    }
+
+    /**
+     * Setup menu panel events
+     */
+    setupMenuPanelEvents() {
+        // Hamburger menu button
+        if (this.elements.hamburgerMenuBtn) {
+            this.elements.hamburgerMenuBtn.addEventListener('click', (event) => {
+                event.preventDefault();
+                this.showMenuPanel();
+            });
+        }
+
+        // Menu close button
+        if (this.elements.menuCloseBtn) {
+            this.elements.menuCloseBtn.addEventListener('click', (event) => {
+                event.preventDefault();
+                this.hideMenuPanel();
+            });
+        }
+
+        // Menu overlay (click to close)
+        if (this.elements.menuOverlay) {
+            this.elements.menuOverlay.addEventListener('click', (event) => {
+                if (event.target === this.elements.menuOverlay) {
+                    this.hideMenuPanel();
+                }
+            });
+        }
+
+        // Menu action buttons
+        if (this.elements.exportMenuBtn) {
+            this.elements.exportMenuBtn.addEventListener('click', () => {
+                eventBus.emit('tasks:export');
+                this.hideMenuPanel();
+            });
+        }
+
+        if (this.elements.importMenuBtn) {
+            this.elements.importMenuBtn.addEventListener('click', () => {
+                this.elements.importFileInput?.click();
+                this.hideMenuPanel();
+            });
+        }
+
+        if (this.elements.newBoardMenuBtn) {
+            this.elements.newBoardMenuBtn.addEventListener('click', (event) => {
+                event.preventDefault();
+                this.handleNewBoard();
+                this.hideMenuPanel();
+            });
+        }
+
+        if (this.elements.manageBoardsMenuBtn) {
+            this.elements.manageBoardsMenuBtn.addEventListener('click', (event) => {
+                event.preventDefault();
+                this.handleManageBoards();
+                this.hideMenuPanel();
+            });
+        }
+
+        if (this.elements.preferencesBtn) {
+            this.elements.preferencesBtn.addEventListener('click', () => {
+                eventBus.emit('settings:show');
+                this.hideMenuPanel();
+            });
+        }
+
+        // Developer menu items
+        if (this.elements.resetAppMenuBtn) {
+            this.elements.resetAppMenuBtn.addEventListener('click', () => {
+                eventBus.emit('app:reset');
+                this.hideMenuPanel();
+            });
+        }
+
+        if (this.elements.toggleDebugBtn) {
+            this.elements.toggleDebugBtn.addEventListener('click', () => {
+                eventBus.emit('debug:toggle');
+                this.hideMenuPanel();
+            });
+            
+            // Update button text based on current debug mode
+            this.updateDebugButtonText();
+        }
+
+        // Escape key to close menu
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && this.isMenuPanelVisible()) {
+                this.hideMenuPanel();
+            }
+        });
+    }
+
+    /**
+     * Show the menu panel
+     */
+    showMenuPanel() {
+        if (this.elements.menuOverlay) {
+            this.elements.menuOverlay.classList.add('menu-overlay--visible');
+            document.body.style.overflow = 'hidden'; // Prevent scrolling
+            
+            // Focus the first menu item for accessibility
+            const firstMenuItem = this.elements.menuPanel?.querySelector('.menu-item');
+            if (firstMenuItem) {
+                setTimeout(() => firstMenuItem.focus(), 100);
+            }
+        }
+    }
+
+    /**
+     * Hide the menu panel
+     */
+    hideMenuPanel() {
+        if (this.elements.menuOverlay) {
+            this.elements.menuOverlay.classList.remove('menu-overlay--visible');
+            document.body.style.overflow = ''; // Restore scrolling
+            
+            // Return focus to hamburger button
+            if (this.elements.hamburgerMenuBtn) {
+                this.elements.hamburgerMenuBtn.focus();
+            }
+        }
+    }
+
+    /**
+     * Check if menu panel is visible
+     */
+    isMenuPanelVisible() {
+        return this.elements.menuOverlay?.classList.contains('menu-overlay--visible');
+    }
+
+    /**
+     * Update debug button text based on current debug mode
+     */
+    updateDebugButtonText() {
+        if (!this.elements.toggleDebugBtn) return;
+        
+        try {
+            // Import settingsManager dynamically to avoid circular dependencies
+            import('./settings.js').then(({ settingsManager }) => {
+                const isDebugMode = settingsManager.get('debugMode');
+                this.elements.toggleDebugBtn.textContent = isDebugMode ? 'Turn off Debug' : 'Turn on Debug';
+            }).catch(() => {
+                // Fallback if import fails
+                this.elements.toggleDebugBtn.textContent = 'Toggle Debug';
+            });
+        } catch (error) {
+            // Fallback text if anything fails
+            this.elements.toggleDebugBtn.textContent = 'Toggle Debug';
+        }
     }
 
     /**
@@ -356,6 +515,7 @@ class DOMManager {
             console.warn('⚠️ Removing existing task element with same ID:', task.id);
             existingElement.remove();
         }
+        
         
         const card = document.createElement('div');
         card.className = `task-card task-card--${task.status}`;
@@ -931,6 +1091,52 @@ class DOMManager {
         } catch (error) {
             return dateString;
         }
+    }
+
+    /**
+     * Initialize simple tooltips for elements with data-bs-toggle="tooltip"
+     */
+    initializeTooltips() {
+        const tooltipElements = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        
+        tooltipElements.forEach(element => {
+            element.addEventListener('mouseenter', (e) => {
+                const title = e.target.getAttribute('title');
+                if (title) {
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'simple-tooltip';
+                    tooltip.textContent = title;
+                    tooltip.style.cssText = `
+                        position: absolute;
+                        background: rgba(0, 0, 0, 0.8);
+                        color: white;
+                        padding: 4px 8px;
+                        border-radius: 4px;
+                        font-size: 12px;
+                        white-space: nowrap;
+                        z-index: 1070;
+                        pointer-events: none;
+                    `;
+                    
+                    document.body.appendChild(tooltip);
+                    
+                    const rect = e.target.getBoundingClientRect();
+                    const tooltipRect = tooltip.getBoundingClientRect();
+                    
+                    tooltip.style.left = (rect.left + rect.width / 2 - tooltipRect.width / 2) + 'px';
+                    tooltip.style.top = (rect.top - tooltipRect.height - 5) + 'px';
+                    
+                    e.target._tooltip = tooltip;
+                }
+            });
+            
+            element.addEventListener('mouseleave', (e) => {
+                if (e.target._tooltip) {
+                    document.body.removeChild(e.target._tooltip);
+                    e.target._tooltip = null;
+                }
+            });
+        });
     }
 }
 

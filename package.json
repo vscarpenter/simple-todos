@@ -1,0 +1,29 @@
+{
+  "name": "simple-todos",
+  "version": "1.0.0",
+  "description": "Cascade is a privacy-first, client-side task management application implementing a Kanban-style workflow with multi-board support. Built with modern web technologies, it provides comprehensive task organization that runs entirely in the user's browser without requiring server infrastructure or user accounts.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest tests/integration",
+    "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest tests/unit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vscarpenter/simple-todos.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vscarpenter/simple-todos/issues"
+  },
+  "homepage": "https://github.com/vscarpenter/simple-todos#readme",
+  "devDependencies": {
+    "jest": "^30.0.4",
+    "jest-environment-jsdom": "^30.0.4"
+  }
+}

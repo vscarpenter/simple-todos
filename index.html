@@ -20,7 +20,18 @@
                 <div
                     class="d-flex justify-content-between align-items-center mb-3"
                 >
-                    <div class="header__brand">
+                    <div class="header__brand d-flex align-items-center gap-3">
+                        <!-- Hamburger Menu Button -->
+                        <button 
+                            class="btn btn-outline-secondary hamburger-btn" 
+                            type="button" 
+                            id="hamburger-menu-btn"
+                            title="Open menu"
+                            aria-label="Open menu"
+                        >
+                            <span class="hamburger-icon">☰</span>
+                        </button>
+                        
                         <div class="brand">
                             <div class="brand__icon">
                                 <img src="assets/cascade-icon.svg" alt="Cascade App Icon" width="32" height="32">
@@ -50,82 +61,82 @@
                                     <span id="current-board-name">Main Board</span>
                                 </button>
                                 <ul class="dropdown-menu" id="board-selector-menu" aria-labelledby="board-selector-btn">
-                                    <li><h6 class="dropdown-header">Active Boards</h6></li>
+                                    <li><h6 class="dropdown-header">Switch Board</h6></li>
                                     <li id="active-boards-list">
                                         <!-- Active boards will be populated here -->
-                                    </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <a class="dropdown-item" href="#" id="new-board-btn">
-                                            <span class="me-2">➕</span> New Board
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" href="#" id="manage-boards-btn">
-                                            <span class="me-2">⚙️</span> Manage Boards
-                                        </a>
                                     </li>
                                 </ul>
                             </div>
                         </div>
                     </div>
                     <div class="header__actions d-flex gap-2">
-                        <button
-                            id="archive-button"
-                            class="btn btn-info rounded-pill px-3 py-2"
-                            title="Archive all completed tasks"
-                        >
-                            <span class="me-2">📦</span> Archive
-                        </button>
-                        <button
-                            id="settings-button"
-                            class="btn btn-secondary rounded-pill px-3 py-2"
-                            title="Archive settings"
-                        >
-                            <span class="me-2">⚙️</span> Settings
-                        </button>
-                        <button
-                            id="import-button"
-                            class="btn btn-success rounded-pill px-3 py-2"
-                        >
-                            <span class="me-2">↓</span> Import Tasks
-                        </button>
+                        <!-- Hidden file input for import -->
                         <input
                             type="file"
                             id="import-file"
                             accept=".json"
                             style="display: none"
                         />
-                        <button
-                            id="export-button"
-                            class="btn btn-warning rounded-pill px-3 py-2"
-                        >
-                            <span class="me-2">↑</span> Export Tasks
-                        </button>
-                        
-                        <!-- Help Dropdown -->
-                        <div class="dropdown">
-                            <button class="btn btn-outline-secondary rounded-pill px-3 py-2 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <span class="me-2">❓</span> Help
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="user-guide.html">📖 User Guide</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="terms.html">📋 Terms of Service</a></li>
-                                <li><a class="dropdown-item" href="privacy.html">🔒 Privacy Policy</a></li>
-                            </ul>
-                        </div>
-                        
-                        <button
-                            id="new-task-btn"
-                            class="btn btn-primary rounded-pill px-4 py-2"
-                        >
-                            <span class="me-2">+</span> New Task
-                        </button>
                     </div>
                 </div>
             </div>
         </header>
+
+        <!-- Sliding Menu Panel -->
+        <div id="menu-overlay" class="menu-overlay">
+            <div id="menu-panel" class="menu-panel">
+                <div class="menu-panel__header">
+                    <h2 class="menu-panel__title">Menu</h2>
+                    <button id="menu-close-btn" class="menu-panel__close" aria-label="Close menu">
+                        <span>✕</span>
+                    </button>
+                </div>
+                
+                <div class="menu-panel__content">
+                    <!-- Boards Section -->
+                    <div class="menu-section">
+                        <h3 class="menu-section__title">Boards</h3>
+                        <ul class="menu-section__list">
+                            <li><button class="menu-item" id="switch-board-btn">Switch Board</button></li>
+                            <li><button class="menu-item" id="new-board-menu-btn">Create New Board</button></li>
+                            <li><button class="menu-item" id="manage-boards-menu-btn">Manage Boards</button></li>
+                        </ul>
+                    </div>
+
+                    <!-- Data Section -->
+                    <div class="menu-section">
+                        <h3 class="menu-section__title">Data</h3>
+                        <ul class="menu-section__list">
+                            <li><button class="menu-item" id="export-menu-btn">Export Data</button></li>
+                            <li><button class="menu-item" id="import-menu-btn">Import Data</button></li>
+                            <li><button class="menu-item">Browse Archive</button></li>
+                        </ul>
+                    </div>
+
+                    <!-- Settings Section -->
+                    <div class="menu-section">
+                        <h3 class="menu-section__title">Settings</h3>
+                        <ul class="menu-section__list">
+                            <li><button class="menu-item" id="preferences-btn">Preferences</button></li>
+                            <li><button class="menu-item">Accessibility</button></li>
+                            <li><a class="menu-item" href="user-guide.html" target="_blank">Help & Support</a></li>
+                            <li><a class="menu-item" href="privacy.html" target="_blank">Privacy Policy</a></li>
+                            <li><a class="menu-item" href="terms.html" target="_blank">Terms of Service</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Developer Section -->
+                    <div class="menu-section">
+                        <h3 class="menu-section__title">Developer</h3>
+                        <ul class="menu-section__list">
+                            <li><button class="menu-item" id="reset-app-menu-btn">Reset App</button></li>
+                            <li><button class="menu-item" id="toggle-debug-btn">Turn on Debug</button></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <main id="main-content" class="container-fluid mt-4">
             <section id="todo-app">
                 <form
@@ -185,11 +196,22 @@
                             <div class="board-column__actions d-flex align-items-center gap-2">
                                 <span class="board-column__count" id="done-count">0</span>
                                 <button 
-                                    class="btn btn-sm btn-outline-secondary"
-                                    onclick="showArchivedTasks()"
-                                    title="View archived tasks"
+                                    id="archive-button"
+                                    class="btn btn-sm btn-outline-primary"
+                                    title="Archive all completed tasks in the Done column"
+                                    data-bs-toggle="tooltip"
+                                    data-bs-placement="top"
                                 >
                                     📦
+                                </button>
+                                <button 
+                                    class="btn btn-sm btn-outline-secondary"
+                                    onclick="showArchivedTasks()"
+                                    title="View history of all archived tasks"
+                                    data-bs-toggle="tooltip"
+                                    data-bs-placement="top"
+                                >
+                                    📋
                                 </button>
                             </div>
                         </div>
@@ -203,6 +225,7 @@
                     </div>
                 </div>
             </section>
+
         </main>
         <footer class="bg-white text-muted py-3 text-center border-top">
             <div class="container">
