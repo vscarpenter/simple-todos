@@ -3,6 +3,9 @@ node_modules/
 package-lock.json
 yarn.lock
 
+#exclude coverage files
+coverage/
+
 # Build and cache files
 dist/
 build/
