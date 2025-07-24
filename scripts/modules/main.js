@@ -5,6 +5,7 @@ import domManager from './dom.js';
 import accessibility from './accessibility.js';
 import { settingsManager, debugLog } from './settings.js';
 import { Board, Task, createBoard, createTask } from './models.js';
+import securityManager from './security.js';
 
 // Generate unique ID function (duplicated from models.js to avoid circular imports)
 function generateUniqueId() {
@@ -58,7 +59,7 @@ class CascadeApp {
             
         } catch (error) {
             console.error('Failed to initialize app:', error);
-            this.handleError('Initialization failed', error);
+            this.handleError('Initialization failed', error, 'default');
         }
     }
 
@@ -117,7 +118,7 @@ class CascadeApp {
             }
         } catch (error) {
             console.error('Failed to load data:', error);
-            this.handleError('Failed to load saved data', error);
+            this.handleError('Failed to load saved data', error, 'storage');
             // Fallback to default board
             this.createDefaultBoard();
         }
@@ -184,6 +185,10 @@ class CascadeApp {
 
         // Archive events
         eventBus.on('tasks:archiveCompleted', this.handleArchiveCompleted.bind(this));
+        eventBus.on('archive:browse', this.handleBrowseArchive.bind(this));
+        eventBus.on('archive:restore', this.handleRestoreTask.bind(this));
+        eventBus.on('archive:delete', this.handleDeleteArchivedTask.bind(this));
+        eventBus.on('archive:clearAll', this.handleClearAllArchived.bind(this));
 
         // Undo/Redo events
         eventBus.on('app:undo', this.handleUndo.bind(this));
@@ -239,7 +244,7 @@ class CascadeApp {
             this.storage.save(data);
         } catch (error) {
             console.error('Failed to save data:', error);
-            this.handleError('Failed to save data', error);
+            this.handleError('Failed to save data', error, 'storage');
         }
     }
 
@@ -416,7 +421,7 @@ class CascadeApp {
             
         } catch (error) {
             console.error('❌ Failed to create task:', error);
-            this.handleError('Failed to create task', error);
+            this.handleError('Failed to create task', error, 'validation');
         }
     }
 
@@ -462,7 +467,7 @@ class CascadeApp {
             }
         } catch (error) {
             console.error('Failed to edit task:', error);
-            this.handleError('Failed to edit task', error);
+            this.handleError('Failed to edit task', error, 'validation');
         }
     }
 
@@ -488,7 +493,7 @@ class CascadeApp {
             }
         } catch (error) {
             console.error('Failed to delete task:', error);
-            this.handleError('Failed to delete task', error);
+            this.handleError('Failed to delete task', error, 'default');
         }
     }
 
@@ -635,12 +640,12 @@ class CascadeApp {
             
         } catch (error) {
             console.error('❌ Failed to move task:', error);
-            this.handleError('Failed to move task', error);
+            this.handleError('Failed to move task', error, 'default');
         }
     }
 
     /**
-     * Handle archive task
+     * Handle archive task with confirmation dialog
      * @param {Object} data - Event data
      */
     async handleArchiveTask(data) {
@@ -651,17 +656,33 @@ class CascadeApp {
             
             if (!task) {
                 console.warn('Task not found for archiving:', taskId);
+                this.dom.showModal('Error', 'Task not found for archiving');
                 return;
             }
             
-            // Use the proper archiveTask method that marks as archived
-            this.archiveTask(taskId);
+            // Show confirmation dialog for individual task archiving
+            const confirmed = await this.dom.showModal(
+                'Archive Task',
+                `Archive task "${task.text}"?\n\nArchived tasks can be viewed and restored from the archive browser.`,
+                {
+                    confirmText: 'Archive',
+                    cancelText: 'Cancel'
+                }
+            );
             
-            eventBus.emit('task:archived', { taskId });
+            if (confirmed) {
+                // Archive the task with proper metadata
+                this.archiveTask(taskId);
+                
+                // Show success feedback
+                this.dom.showToast(`Task "${task.text}" has been archived`, 'success');
+                
+                eventBus.emit('task:archived', { taskId, task });
+            }
             
         } catch (error) {
             console.error('Failed to archive task:', error);
-            this.handleError('Failed to archive task', error);
+            this.handleError('Failed to archive task', error, 'default');
         }
     }
 
@@ -697,26 +718,62 @@ class CascadeApp {
         try {
             const { file } = data;
             
-            if (!file || file.type !== 'application/json') {
-                this.dom.showModal('Error', 'Please select a valid JSON file');
+            // Enhanced file validation using security manager
+            const fileValidation = securityManager.validateFile(file);
+            if (!fileValidation.isValid) {
+                const errorMessage = fileValidation.errors.join('. ');
+                this.dom.showModal('Error', errorMessage);
                 return;
             }
             
-            // Check file size limit (5MB)
-            const maxFileSize = 5 * 1024 * 1024; // 5MB in bytes
-            if (file.size > maxFileSize) {
-                this.dom.showModal('Error', 'File is too large. Maximum file size is 5MB.');
-                return;
+            // Show warnings if any
+            if (fileValidation.warnings.length > 0) {
+                debugLog.log('File validation warnings:', fileValidation.warnings);
             }
             
+            // Read file content safely
             const text = await this.readFile(file);
-            const importData = JSON.parse(text);
+            
+            // Check file size against current settings before parsing
+            const maxImportSize = settingsManager.getValue('maxImportFileSize') || 50000;
+            debugLog.log('Import size check:', {
+                fileSize: text.length,
+                maxAllowed: maxImportSize,
+                willPass: text.length <= maxImportSize
+            });
+            
+            if (text.length > maxImportSize) {
+                const actualSize = this.formatBytes(text.length);
+                const maxSize = this.formatBytes(maxImportSize);
+                this.dom.showModal('Error', 
+                    `Import file too large (${actualSize}). Maximum allowed size is ${maxSize}. You can increase this limit in Settings > Import/Export.`
+                );
+                return;
+            }
+            
+            // Parse JSON with security checks
+            const parseResult = securityManager.safeJsonParse(text);
+            if (!parseResult.success) {
+                this.dom.showModal('Error', securityManager.sanitizeErrorMessage(parseResult.error, 'import'));
+                return;
+            }
+            
+            // Validate and sanitize import content
+            const contentValidation = securityManager.validateImportContent(parseResult.data);
+            if (!contentValidation.isValid) {
+                const errorMessage = contentValidation.errors.join('. ');
+                this.dom.showModal('Error', securityManager.sanitizeErrorMessage(errorMessage, 'import'));
+                return;
+            }
+            
+            // Use sanitized data for further processing
+            const importData = contentValidation.sanitizedData;
             
             // Validate and process import data
             const validationResult = this.validateImportData(importData);
             
             if (!validationResult.isValid) {
-                this.dom.showModal('Error', validationResult.error || 'No valid data found in the import file');
+                this.dom.showModal('Error', securityManager.sanitizeErrorMessage(validationResult.error, 'validation'));
                 return;
             }
             
@@ -751,8 +808,8 @@ class CascadeApp {
             }
             
         } catch (error) {
-            console.error('Import failed:', error);
-            this.dom.showModal('Error', 'Failed to import data. Please check the file format.');
+            debugLog.error('Import failed:', error);
+            this.dom.showModal('Error', securityManager.sanitizeErrorMessage(error, 'import'));
         }
     }
 
@@ -836,12 +893,12 @@ class CascadeApp {
             
         } catch (error) {
             console.error('Export failed:', error);
-            this.handleError('Failed to export tasks', error);
+            this.handleError('Failed to export tasks', error, 'export');
         }
     }
 
     /**
-     * Handle archive completed tasks
+     * Handle archive completed tasks with enhanced confirmation and feedback
      */
     async handleArchiveCompleted() {
         try {
@@ -853,40 +910,279 @@ class CascadeApp {
                 return;
             }
             
+            // Enhanced confirmation dialog with task details
+            const taskList = completedTasks.slice(0, 5).map(task => `• ${task.text}`).join('\n');
+            const moreTasksText = completedTasks.length > 5 ? `\n... and ${completedTasks.length - 5} more tasks` : '';
+            
             const confirmed = await this.dom.showModal(
-                'Archive Completed',
-                `Archive ${completedTasks.length} completed tasks?`
+                'Archive Completed Tasks',
+                `Archive ${completedTasks.length} completed task${completedTasks.length === 1 ? '' : 's'}?\n\n${taskList}${moreTasksText}\n\nArchived tasks can be viewed and restored from the archive browser.`,
+                {
+                    confirmText: 'Archive All',
+                    cancelText: 'Cancel'
+                }
             );
             
             if (confirmed) {
-                // Mark completed tasks as archived before removing them
-                const currentBoard = appState.getCurrentBoard();
-                completedTasks.forEach(task => {
-                    task.archived = true;
-                    task.archivedDate = new Date().toISOString().split('T')[0];
-                });
+                let archivedCount = 0;
                 
-                // Update board to include archived tasks
-                appState.updateBoard(currentBoard.id, {
-                    ...currentBoard,
-                    tasks: tasks // Keep all tasks including newly archived ones
-                });
+                // Archive each completed task individually to ensure proper handling
+                for (const task of completedTasks) {
+                    try {
+                        this.archiveTask(task.id);
+                        archivedCount++;
+                    } catch (error) {
+                        console.error('Failed to archive task:', task.id, error);
+                        // Continue with other tasks even if one fails
+                    }
+                }
                 
-                // Filter out archived tasks from active view
-                const activeTasks = tasks.filter(task => !task.archived);
-                this.updateCurrentBoardTasks(activeTasks);
-                
-                this.dom.showModal('Success',
-                    `Successfully archived ${completedTasks.length} tasks!`,
-                    { showCancel: false }
-                );
-                
-                eventBus.emit('tasks:archived', { count: completedTasks.length });
+                // Show success feedback with count
+                if (archivedCount > 0) {
+                    this.dom.showToast(
+                        `Successfully archived ${archivedCount} task${archivedCount === 1 ? '' : 's'}!`,
+                        'success'
+                    );
+                    
+                    eventBus.emit('tasks:archived', { 
+                        count: archivedCount,
+                        type: 'bulk',
+                        tasks: completedTasks.slice(0, archivedCount)
+                    });
+                } else {
+                    this.dom.showModal('Error', 'Failed to archive tasks. Please try again.');
+                }
             }
             
         } catch (error) {
             console.error('Failed to archive completed tasks:', error);
-            this.handleError('Failed to archive tasks', error);
+            this.handleError('Failed to archive tasks', error, 'default');
+        }
+    }
+
+    /**
+     * Handle browse archive - show archived tasks modal
+     */
+    async handleBrowseArchive() {
+        try {
+            const currentBoard = this.state.getCurrentBoard();
+            if (!currentBoard) {
+                this.dom.showModal('Error', 'No board selected');
+                return;
+            }
+
+            const archivedTasks = currentBoard.archivedTasks || [];
+            
+            if (archivedTasks.length === 0) {
+                this.dom.showModal('Archive', 'No archived tasks found in this board.');
+                return;
+            }
+
+            // Show archive browser modal
+            this.dom.showArchiveBrowser(archivedTasks, currentBoard.name);
+            
+        } catch (error) {
+            console.error('Failed to browse archive:', error);
+            this.handleError('Failed to browse archive', error, 'default');
+        }
+    }
+
+    /**
+     * Handle restore archived task
+     * @param {Object} data - Event data
+     */
+    async handleRestoreTask(data) {
+        try {
+            const { taskId } = data;
+            const currentBoard = this.state.getCurrentBoard();
+            
+            if (!currentBoard || !currentBoard.archivedTasks) {
+                this.dom.showModal('Error', 'No archived tasks found');
+                return;
+            }
+
+            const archivedTask = currentBoard.archivedTasks.find(t => t.id === taskId);
+            if (!archivedTask) {
+                this.dom.showModal('Error', 'Archived task not found');
+                return;
+            }
+
+            const confirmed = await this.dom.showModal(
+                'Restore Task',
+                `Restore task "${archivedTask.text}" to active tasks?`,
+                {
+                    confirmText: 'Restore',
+                    cancelText: 'Cancel'
+                }
+            );
+
+            if (confirmed) {
+                // Remove from archived tasks
+                const updatedArchivedTasks = currentBoard.archivedTasks.filter(t => t.id !== taskId);
+                
+                // Create restored task (remove archive metadata)
+                const restoredTask = new Task({
+                    id: archivedTask.id,
+                    text: archivedTask.text,
+                    status: archivedTask.status,
+                    createdDate: archivedTask.createdDate,
+                    lastModified: new Date().toISOString()
+                });
+
+                // Update board with removed archived task
+                const boards = this.state.get('boards');
+                const updatedBoards = boards.map(board => {
+                    if (board.id === currentBoard.id) {
+                        return new Board({
+                            ...board.toJSON(),
+                            archivedTasks: updatedArchivedTasks,
+                            lastModified: new Date().toISOString()
+                        });
+                    }
+                    return board;
+                });
+
+                // Add restored task to active tasks
+                const currentTasks = this.state.get('tasks');
+                const updatedTasks = [...currentTasks, restoredTask];
+
+                this.state.setState({
+                    boards: updatedBoards,
+                    tasks: updatedTasks
+                });
+
+                this.dom.showToast(`Task "${archivedTask.text}" has been restored`, 'success');
+                
+                // Close archive modal and refresh it
+                if (window.closeArchiveModal) {
+                    window.closeArchiveModal();
+                }
+                
+                eventBus.emit('task:restored', { taskId, task: restoredTask });
+            }
+
+        } catch (error) {
+            console.error('Failed to restore task:', error);
+            this.handleError('Failed to restore task', error, 'default');
+        }
+    }
+
+    /**
+     * Handle delete archived task permanently
+     * @param {Object} data - Event data
+     */
+    async handleDeleteArchivedTask(data) {
+        try {
+            const { taskId } = data;
+            const currentBoard = this.state.getCurrentBoard();
+            
+            if (!currentBoard || !currentBoard.archivedTasks) {
+                this.dom.showModal('Error', 'No archived tasks found');
+                return;
+            }
+
+            const archivedTask = currentBoard.archivedTasks.find(t => t.id === taskId);
+            if (!archivedTask) {
+                this.dom.showModal('Error', 'Archived task not found');
+                return;
+            }
+
+            const confirmed = await this.dom.showModal(
+                'Delete Permanently',
+                `Permanently delete task "${archivedTask.text}"?\n\nThis action cannot be undone.`,
+                {
+                    confirmText: 'Delete Forever',
+                    cancelText: 'Cancel'
+                }
+            );
+
+            if (confirmed) {
+                // Remove from archived tasks
+                const updatedArchivedTasks = currentBoard.archivedTasks.filter(t => t.id !== taskId);
+                
+                // Update board
+                const boards = this.state.get('boards');
+                const updatedBoards = boards.map(board => {
+                    if (board.id === currentBoard.id) {
+                        return new Board({
+                            ...board.toJSON(),
+                            archivedTasks: updatedArchivedTasks,
+                            lastModified: new Date().toISOString()
+                        });
+                    }
+                    return board;
+                });
+
+                this.state.setState({ boards: updatedBoards });
+
+                this.dom.showToast(`Task "${archivedTask.text}" has been permanently deleted`, 'info');
+                
+                // Close archive modal and refresh it
+                if (window.closeArchiveModal) {
+                    window.closeArchiveModal();
+                }
+                
+                eventBus.emit('task:deletedPermanently', { taskId, task: archivedTask });
+            }
+
+        } catch (error) {
+            console.error('Failed to delete archived task:', error);
+            this.handleError('Failed to delete archived task', error, 'default');
+        }
+    }
+
+    /**
+     * Handle clear all archived tasks
+     */
+    async handleClearAllArchived() {
+        try {
+            const currentBoard = this.state.getCurrentBoard();
+            
+            if (!currentBoard || !currentBoard.archivedTasks || currentBoard.archivedTasks.length === 0) {
+                this.dom.showModal('Info', 'No archived tasks to clear');
+                return;
+            }
+
+            const confirmed = await this.dom.showModal(
+                'Clear All Archived',
+                `Permanently delete all ${currentBoard.archivedTasks.length} archived tasks?\n\nThis action cannot be undone.`,
+                {
+                    confirmText: 'Clear All',
+                    cancelText: 'Cancel'
+                }
+            );
+
+            if (confirmed) {
+                const clearedCount = currentBoard.archivedTasks.length;
+                
+                // Update board with empty archived tasks
+                const boards = this.state.get('boards');
+                const updatedBoards = boards.map(board => {
+                    if (board.id === currentBoard.id) {
+                        return new Board({
+                            ...board.toJSON(),
+                            archivedTasks: [],
+                            lastModified: new Date().toISOString()
+                        });
+                    }
+                    return board;
+                });
+
+                this.state.setState({ boards: updatedBoards });
+
+                this.dom.showToast(`Cleared ${clearedCount} archived tasks`, 'info');
+                
+                // Close archive modal
+                if (window.closeArchiveModal) {
+                    window.closeArchiveModal();
+                }
+                
+                eventBus.emit('archive:cleared', { count: clearedCount });
+            }
+
+        } catch (error) {
+            console.error('Failed to clear archived tasks:', error);
+            this.handleError('Failed to clear archived tasks', error, 'default');
         }
     }
 
@@ -1060,7 +1356,7 @@ class CascadeApp {
      */
     handleStorageError(data) {
         console.error('Storage error:', data);
-        this.handleError('Storage operation failed', data.error);
+        this.handleError('Storage operation failed', data.error, 'storage');
     }
 
     /**
@@ -1074,7 +1370,7 @@ class CascadeApp {
             this.renderBoardSelector();
         } catch (error) {
             console.error('Failed to reload data after import:', error);
-            this.handleError('Failed to apply imported data', error);
+            this.handleError('Failed to apply imported data', error, 'import');
         }
     }
 
@@ -1089,7 +1385,7 @@ class CascadeApp {
             this.renderBoardSelector();
         } catch (error) {
             console.error('Failed to reload data after migration:', error);
-            this.handleError('Failed to apply migrated data', error);
+            this.handleError('Failed to apply migrated data', error, 'storage');
         }
     }
 
@@ -1233,7 +1529,7 @@ class CascadeApp {
             
         } catch (error) {
             console.error('Failed to create board:', error);
-            this.handleError('Failed to create board', error);
+            this.handleError('Failed to create board', error, 'validation');
         }
     }
 
@@ -1771,7 +2067,7 @@ class CascadeApp {
             
         } catch (error) {
             console.error('Failed to import multi-board data:', error);
-            this.handleError('Failed to import boards', error);
+            this.handleError('Failed to import boards', error, 'import');
         }
     }
 
@@ -1826,7 +2122,7 @@ class CascadeApp {
             
         } catch (error) {
             console.error('Failed to import legacy data:', error);
-            this.handleError('Failed to import tasks', error);
+            this.handleError('Failed to import tasks', error, 'import');
         }
     }
 
@@ -1848,18 +2144,25 @@ class CascadeApp {
      * Handle application errors
      * @param {string} message - Error message
      * @param {Error} error - Error object
+     * @param {string} context - Error context for sanitization
      */
-    handleError(message, error) {
-        // Log error for debugging (only in development)
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            console.error(message, error);
-        }
+    handleError(message, error, context = 'default') {
+        // Log detailed error for debugging (only in development)
+        debugLog.error(message, error);
+        
+        // Sanitize error message for user display
+        const sanitizedMessage = securityManager.sanitizeErrorMessage(error || message, context);
         
         if (this.dom && this.dom.showModal) {
-            this.dom.showModal('Error', message, { showCancel: false });
+            this.dom.showModal('Error', sanitizedMessage, { showCancel: false });
         }
         
-        eventBus.emit('app:error', { message, error });
+        // Emit sanitized error for event handlers
+        eventBus.emit('app:error', { 
+            message: sanitizedMessage, 
+            originalMessage: message,
+            context 
+        });
     }
 
     // Public API
@@ -1956,21 +2259,58 @@ class CascadeApp {
         const tasks = this.state.get('tasks');
         const task = tasks.find(t => t.id === taskId);
         
-        if (!task) return;
+        if (!task) {
+            console.warn('Task not found for archiving:', taskId);
+            return;
+        }
 
-        // Mark task as archived and remove from active tasks
+        // Create archived task with metadata
+        const archivedTask = {
+            ...task.toJSON ? task.toJSON() : task,
+            archived: true,
+            archivedDate: new Date().toISOString().split('T')[0],
+            archivedTimestamp: new Date().toISOString(),
+            originalBoardId: this.state.get('currentBoardId')
+        };
+
+        // Store archived task in board's archived tasks
+        const currentBoardId = this.state.get('currentBoardId');
+        const boards = this.state.get('boards');
+        const updatedBoards = boards.map(board => {
+            if (board.id === currentBoardId) {
+                const boardData = board.toJSON ? board.toJSON() : board;
+                const archivedTasks = boardData.archivedTasks || [];
+                
+                return new Board({
+                    ...boardData,
+                    archivedTasks: [...archivedTasks, archivedTask],
+                    lastModified: new Date().toISOString()
+                });
+            }
+            return board;
+        });
+
+        // Remove task from active tasks
         const updatedTasks = tasks.filter(t => t.id !== taskId);
         
-        // Update current board tasks
-        this.updateCurrentBoardTasks(updatedTasks);
-
-        // Update state and storage
-        appState.saveState();
+        // Update state with both active tasks and updated boards
+        this.state.setState({
+            boards: updatedBoards,
+            tasks: updatedTasks
+        });
         
-        eventBus.emit('task:archived', { taskId });
+        debugLog.log('Task archived successfully:', {
+            taskId,
+            taskText: task.text,
+            boardId: currentBoardId,
+            archivedDate: archivedTask.archivedDate
+        });
         
-        // Re-render UI
-        this.render();
+        eventBus.emit('task:archived', { 
+            taskId, 
+            task: archivedTask,
+            boardId: currentBoardId
+        });
     }
 
     /**
@@ -1984,6 +2324,19 @@ class CascadeApp {
         setInterval(() => {
             this.performAutoArchive();
         }, 6 * 60 * 60 * 1000);
+    }
+
+    /**
+     * Format bytes to human readable string
+     * @param {number} bytes - Number of bytes
+     * @returns {string} Formatted string
+     */
+    formatBytes(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
     /**

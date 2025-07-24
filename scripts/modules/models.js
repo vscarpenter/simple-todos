@@ -21,6 +21,7 @@ export class Board {
         this.description = data.description || '';
         this.color = data.color || '#6750a4';
         this.tasks = data.tasks || [];
+        this.archivedTasks = data.archivedTasks || [];
         this.createdDate = data.createdDate || new Date().toISOString();
         this.lastModified = data.lastModified || new Date().toISOString();
         this.isArchived = data.isArchived || false;
@@ -105,6 +106,7 @@ export class Board {
             description: this.description,
             color: this.color,
             tasks: this.tasks,
+            archivedTasks: this.archivedTasks,
             createdDate: this.createdDate,
             lastModified: this.lastModified,
             isArchived: this.isArchived,
@@ -123,6 +125,7 @@ export class Board {
             id: generateUniqueId(),
             name: newName || `${this.name} (Copy)`,
             tasks: [...this.tasks], // Create a copy of tasks array
+            archivedTasks: [], // Don't copy archived tasks to new board
             createdDate: new Date().toISOString(),
             lastModified: new Date().toISOString(),
             isDefault: false

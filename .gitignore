@@ -30,6 +30,9 @@ Thumbs.db
 # Generated files
 todos.json
 
+# Test coverage
+coverage/
+
 # Claude Code documentation
 CLAUDE.md
 

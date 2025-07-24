@@ -198,6 +198,25 @@
   }
   
   .setting-item {
+    gap: var(--spacing-2);
+  }
+  
+  .setting-input-group .form-control {
+    max-width: 80px;
+  }
+}
+
+/* Setting help text */
+.setting-help {
+  font-size: var(--font-size-xs);
+  color: var(--color-on-surface-variant);
+  line-height: var(--line-height-relaxed);
+  margin-top: var(--spacing-1);
+  padding: var(--spacing-2);
+  background-color: var(--color-surface-container-low);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--color-primary-40);
+}
     gap: var(--spacing-1);
   }
   

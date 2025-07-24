@@ -80,6 +80,7 @@ class DOMManager {
             newBoardMenuBtn: document.getElementById('new-board-menu-btn'),
             manageBoardsMenuBtn: document.getElementById('manage-boards-menu-btn'),
             preferencesBtn: document.getElementById('preferences-btn'),
+            browseArchiveBtn: document.getElementById('browse-archive-btn'),
             
             // Developer menu buttons
             resetAppMenuBtn: document.getElementById('reset-app-menu-btn'),
@@ -343,6 +344,13 @@ class DOMManager {
         if (this.elements.preferencesBtn) {
             this.elements.preferencesBtn.addEventListener('click', () => {
                 eventBus.emit('settings:show');
+                this.hideMenuPanel();
+            });
+        }
+
+        if (this.elements.browseArchiveBtn) {
+            this.elements.browseArchiveBtn.addEventListener('click', () => {
+                eventBus.emit('archive:browse');
                 this.hideMenuPanel();
             });
         }
@@ -1091,6 +1099,114 @@ class DOMManager {
         } catch (error) {
             return dateString;
         }
+    }
+
+    /**
+     * Show archive browser modal with archived tasks
+     * @param {Array} archivedTasks - Array of archived tasks
+     * @param {string} boardName - Name of the board
+     */
+    showArchiveBrowser(archivedTasks, boardName) {
+        // Create archive modal HTML
+        const archiveModal = document.createElement('div');
+        archiveModal.className = 'modal-overlay archive-modal';
+        archiveModal.id = 'archive-modal';
+        
+        // Sort archived tasks by archived date (newest first)
+        const sortedTasks = [...archivedTasks].sort((a, b) => 
+            new Date(b.archivedTimestamp || b.archivedDate) - new Date(a.archivedTimestamp || a.archivedDate)
+        );
+        
+        const tasksList = sortedTasks.map(task => `
+            <div class="archive-task-item" data-task-id="${task.id}">
+                <div class="archive-task-content">
+                    <div class="archive-task-text">${this.sanitizeHTML(task.text)}</div>
+                    <div class="archive-task-meta">
+                        <span class="archive-task-status">Status: ${task.status}</span>
+                        <span class="archive-task-date">Archived: ${this.formatDate(task.archivedDate)}</span>
+                        <span class="archive-task-id">#${task.id.slice(-6)}</span>
+                    </div>
+                </div>
+                <div class="archive-task-actions">
+                    <button class="btn btn-sm btn-outline-primary" 
+                            onclick="restoreArchivedTask('${task.id}')"
+                            title="Restore task">
+                        ↩️ Restore
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" 
+                            onclick="deleteArchivedTask('${task.id}')"
+                            title="Permanently delete task">
+                        🗑️ Delete
+                    </button>
+                </div>
+            </div>
+        `).join('');
+        
+        archiveModal.innerHTML = `
+            <div class="modal-box archive-modal-box">
+                <div class="archive-modal-header">
+                    <h3>Archive Browser - ${this.sanitizeHTML(boardName)}</h3>
+                    <button class="archive-modal-close" onclick="closeArchiveModal()" aria-label="Close archive">
+                        ✕
+                    </button>
+                </div>
+                <div class="archive-modal-content">
+                    <div class="archive-stats">
+                        <p>${archivedTasks.length} archived task${archivedTasks.length === 1 ? '' : 's'}</p>
+                    </div>
+                    <div class="archive-tasks-list">
+                        ${tasksList}
+                    </div>
+                </div>
+                <div class="archive-modal-footer">
+                    <button class="btn btn-secondary" onclick="closeArchiveModal()">Close</button>
+                    <button class="btn btn-outline-warning" onclick="clearAllArchived()">Clear All Archived</button>
+                </div>
+            </div>
+        `;
+        
+        // Add to DOM
+        document.body.appendChild(archiveModal);
+        
+        // Add global functions for archive actions
+        window.closeArchiveModal = () => {
+            const modal = document.getElementById('archive-modal');
+            if (modal) {
+                document.body.removeChild(modal);
+            }
+            // Clean up global functions
+            delete window.closeArchiveModal;
+            delete window.restoreArchivedTask;
+            delete window.deleteArchivedTask;
+            delete window.clearAllArchived;
+        };
+        
+        window.restoreArchivedTask = (taskId) => {
+            eventBus.emit('archive:restore', { taskId });
+        };
+        
+        window.deleteArchivedTask = (taskId) => {
+            eventBus.emit('archive:delete', { taskId });
+        };
+        
+        window.clearAllArchived = () => {
+            eventBus.emit('archive:clearAll');
+        };
+        
+        // Focus the close button for accessibility
+        setTimeout(() => {
+            const closeBtn = archiveModal.querySelector('.archive-modal-close');
+            if (closeBtn) closeBtn.focus();
+        }, 100);
+        
+        // Close on escape key
+        const handleEscape = (event) => {
+            if (event.key === 'Escape') {
+                window.closeArchiveModal();
+                document.removeEventListener('keydown', handleEscape);
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
     }
 
     /**

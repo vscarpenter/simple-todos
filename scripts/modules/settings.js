@@ -20,7 +20,8 @@ export class Settings {
             autoSave: true,
             showTaskCounts: true,
             enableKeyboardShortcuts: true,
-            debugMode: false // Enable verbose logging
+            debugMode: false, // Enable verbose logging
+            maxImportFileSize: 50000 // Maximum import file size in characters
         };
         
         this.currentSettings = null;
@@ -91,6 +92,7 @@ export class Settings {
             };
             
             // Validate before saving
+            console.log('About to validate settings:', newSettings);
             if (!this.validateSettings(newSettings)) {
                 throw new Error('Invalid settings provided');
             }
@@ -117,6 +119,7 @@ export class Settings {
      */
     validateSettings(settings = this.currentSettings) {
         if (!settings || typeof settings !== 'object') {
+            console.error('Settings validation failed: not an object', settings);
             return false;
         }
 
@@ -124,6 +127,7 @@ export class Settings {
         if (settings.autoArchiveDays !== undefined) {
             const days = parseInt(settings.autoArchiveDays);
             if (isNaN(days) || days < 1 || days > 365) {
+                console.error('Settings validation failed: invalid autoArchiveDays', settings.autoArchiveDays);
                 return false;
             }
         }
@@ -132,6 +136,22 @@ export class Settings {
         if (settings.theme !== undefined) {
             const validThemes = ['light', 'dark', 'auto'];
             if (!validThemes.includes(settings.theme)) {
+                console.error('Settings validation failed: invalid theme', settings.theme);
+                return false;
+            }
+        }
+
+        // Validate max import file size
+        if (settings.maxImportFileSize !== undefined) {
+            const size = parseInt(settings.maxImportFileSize);
+            if (isNaN(size) || size < 1000 || size > 1000000) { // 1KB to 1MB
+                console.error('Settings validation failed: invalid maxImportFileSize', {
+                    original: settings.maxImportFileSize,
+                    parsed: size,
+                    isNaN: isNaN(size),
+                    tooSmall: size < 1000,
+                    tooLarge: size > 1000000
+                });
                 return false;
             }
         }
@@ -139,11 +159,16 @@ export class Settings {
         // Validate boolean settings
         const booleanSettings = [
             'enableAutoArchive', 'animations', 'soundEnabled', 
-            'compactMode', 'autoSave', 'showTaskCounts', 'enableKeyboardShortcuts'
+            'compactMode', 'autoSave', 'showTaskCounts', 'enableKeyboardShortcuts', 'debugMode'
         ];
         
         for (const key of booleanSettings) {
             if (settings[key] !== undefined && typeof settings[key] !== 'boolean') {
+                console.error('Settings validation failed: invalid boolean setting', {
+                    key: key,
+                    value: settings[key],
+                    type: typeof settings[key]
+                });
                 return false;
             }
         }
@@ -421,6 +446,29 @@ export class Settings {
                     </div>
                 </div>
 
+                <!-- Import/Export Settings -->
+                <div class="settings-section">
+                    <h4 class="settings-section__title">Import/Export</h4>
+                    <div class="setting-item">
+                        <label for="max-import-file-size" class="setting-label">
+                            Maximum import file size:
+                        </label>
+                        <div class="setting-input-group">
+                            <input type="number" 
+                                   id="max-import-file-size" 
+                                   class="form-control" 
+                                   min="1000" 
+                                   max="1000000" 
+                                   step="1000"
+                                   value="${settings.maxImportFileSize}">
+                            <span class="setting-suffix">characters</span>
+                        </div>
+                        <div class="setting-help">
+                            Larger files take more time to process. Recommended: 50,000 characters.
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Actions -->
                 <div class="settings-actions">
                     <button type="button" class="btn btn-outline-secondary" id="reset-settings-btn">
@@ -453,6 +501,19 @@ export class Settings {
                 throw new Error('Invalid auto-archive days value');
             }
 
+            const maxImportFileSizeElement = getElement('max-import-file-size');
+            const maxImportFileSize = parseInt(maxImportFileSizeElement.value);
+            
+            console.log('Parsing maxImportFileSize from form:', {
+                rawValue: maxImportFileSizeElement.value,
+                parsedValue: maxImportFileSize,
+                isNaN: isNaN(maxImportFileSize)
+            });
+            
+            if (isNaN(maxImportFileSize)) {
+                throw new Error('Invalid max import file size value');
+            }
+
             return {
                 autoArchiveDays: autoArchiveDays,
                 enableAutoArchive: getElement('enable-auto-archive').checked,
@@ -461,7 +522,8 @@ export class Settings {
                 compactMode: getElement('compact-mode').checked,
                 autoSave: getElement('auto-save').checked,
                 showTaskCounts: getElement('show-task-counts').checked,
-                enableKeyboardShortcuts: getElement('keyboard-shortcuts').checked
+                enableKeyboardShortcuts: getElement('keyboard-shortcuts').checked,
+                maxImportFileSize: maxImportFileSize
             };
         } catch (error) {
             console.error('Error parsing settings from form:', error);
@@ -472,6 +534,9 @@ export class Settings {
 
 // Create and export singleton instance
 export const settingsManager = new Settings();
+
+// Make settings manager globally available for security manager
+globalThis.settingsManager = settingsManager;
 
 /**
  * Debug logging utility

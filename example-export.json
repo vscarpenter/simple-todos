@@ -1,0 +1,284 @@
+{
+  "version": "2.0",
+  "exportDate": "2025-01-24T00:50:00.000Z",
+  "appName": "Cascade Tasks",
+  "settings": {
+    "autoArchiveDays": 30,
+    "enableAutoArchive": true,
+    "theme": "auto",
+    "animations": true,
+    "soundEnabled": false,
+    "compactMode": false,
+    "defaultBoard": "main",
+    "autoSave": true,
+    "showTaskCounts": true,
+    "enableKeyboardShortcuts": true,
+    "maxImportFileSize": 50000
+  },
+  "data": {
+    "version": "2.0",
+    "currentBoardId": "board-main",
+    "filter": "all",
+    "lastSaved": "2025-01-24T00:50:00.000Z",
+    "boards": [
+      {
+        "id": "board-main",
+        "name": "Main Board",
+        "description": "Your main task board for general activities",
+        "color": "#6366f1",
+        "isDefault": true,
+        "isArchived": false,
+        "createdDate": "2025-01-01T00:00:00.000Z",
+        "lastModified": "2025-01-24T00:50:00.000Z",
+        "archivedTasks": [
+          {
+            "id": "task-main-archived-1",
+            "text": "Complete year-end performance review",
+            "status": "done",
+            "createdDate": "2024-12-15",
+            "lastModified": "2024-12-30T16:00:00.000Z",
+            "completedDate": "2024-12-30",
+            "archived": true,
+            "archivedDate": "2025-01-02",
+            "archivedTimestamp": "2025-01-02T10:30:00.000Z",
+            "originalBoardId": "board-main"
+          },
+          {
+            "id": "task-main-archived-2",
+            "text": "Submit expense reports for December",
+            "status": "done",
+            "createdDate": "2024-12-20",
+            "lastModified": "2024-12-31T14:30:00.000Z",
+            "completedDate": "2024-12-31",
+            "archived": true,
+            "archivedDate": "2025-01-03",
+            "archivedTimestamp": "2025-01-03T09:15:00.000Z",
+            "originalBoardId": "board-main"
+          }
+        ],
+        "tasks": [
+          {
+            "id": "task-main-1",
+            "text": "Review quarterly goals and objectives",
+            "status": "todo",
+            "createdDate": "2025-01-10",
+            "lastModified": "2025-01-10T09:00:00.000Z"
+          },
+          {
+            "id": "task-main-2",
+            "text": "Schedule team meeting for project planning",
+            "status": "doing",
+            "createdDate": "2025-01-11",
+            "lastModified": "2025-01-11T14:30:00.000Z"
+          },
+          {
+            "id": "task-main-3",
+            "text": "Update LinkedIn profile with recent achievements",
+            "status": "todo",
+            "createdDate": "2025-01-12",
+            "lastModified": "2025-01-12T16:45:00.000Z"
+          },
+          {
+            "id": "task-main-4",
+            "text": "Research new productivity tools and apps",
+            "status": "doing",
+            "createdDate": "2025-01-08",
+            "lastModified": "2025-01-13T11:20:00.000Z"
+          },
+          {
+            "id": "task-main-5",
+            "text": "Book dentist appointment for next month",
+            "status": "todo",
+            "createdDate": "2025-01-13",
+            "lastModified": "2025-01-13T20:15:00.000Z"
+          },
+          {
+            "id": "task-main-6",
+            "text": "Organize digital files and cloud storage",
+            "status": "todo",
+            "createdDate": "2025-01-09",
+            "lastModified": "2025-01-09T13:45:00.000Z"
+          },
+          {
+            "id": "task-main-7",
+            "text": "Read industry newsletter and take notes",
+            "status": "done",
+            "createdDate": "2025-01-06",
+            "lastModified": "2025-01-07T08:30:00.000Z",
+            "completedDate": "2025-01-07"
+          },
+          {
+            "id": "task-main-8",
+            "text": "Plan weekend activities and outings",
+            "status": "todo",
+            "createdDate": "2025-01-12",
+            "lastModified": "2025-01-12T19:00:00.000Z"
+          },
+          {
+            "id": "task-main-9",
+            "text": "Review and update budget spreadsheet",
+            "status": "doing",
+            "createdDate": "2025-01-05",
+            "lastModified": "2025-01-10T15:30:00.000Z"
+          },
+          {
+            "id": "task-main-10",
+            "text": "Call insurance company about policy renewal",
+            "status": "todo",
+            "createdDate": "2025-01-11",
+            "lastModified": "2025-01-11T10:20:00.000Z"
+          },
+          {
+            "id": "task-main-11",
+            "text": "Backup important files to external drive",
+            "status": "done",
+            "createdDate": "2025-01-03",
+            "lastModified": "2025-01-04T12:15:00.000Z",
+            "completedDate": "2025-01-04"
+          },
+          {
+            "id": "task-main-12",
+            "text": "Research vacation destinations for summer",
+            "status": "todo",
+            "createdDate": "2025-01-07",
+            "lastModified": "2025-01-07T21:30:00.000Z"
+          }
+        ]
+      },
+      {
+        "id": "board-personal",
+        "name": "Personal Board",
+        "description": "Personal development and self-care tasks",
+        "color": "#10b981",
+        "isDefault": false,
+        "isArchived": false,
+        "createdDate": "2025-01-15T00:00:00.000Z",
+        "lastModified": "2025-01-23T18:20:00.000Z",
+        "archivedTasks": [],
+        "tasks": [
+          {
+            "id": "task-personal-1",
+            "text": "Complete online course on time management",
+            "status": "doing",
+            "createdDate": "2025-01-20",
+            "lastModified": "2025-01-10T14:00:00.000Z"
+          },
+          {
+            "id": "task-personal-2",
+            "text": "Write in gratitude journal for 30 days",
+            "status": "doing",
+            "createdDate": "2025-01-25",
+            "lastModified": "2025-01-13T07:30:00.000Z"
+          },
+          {
+            "id": "task-personal-3",
+            "text": "Learn 10 new vocabulary words this week",
+            "status": "todo",
+            "createdDate": "2025-01-08",
+            "lastModified": "2025-01-08T09:15:00.000Z"
+          },
+          {
+            "id": "task-personal-4",
+            "text": "Meditate for 15 minutes daily",
+            "status": "doing",
+            "createdDate": "2025-01-01",
+            "lastModified": "2025-01-13T06:45:00.000Z"
+          },
+          {
+            "id": "task-personal-5",
+            "text": "Read one chapter of self-help book",
+            "status": "done",
+            "createdDate": "2025-01-12",
+            "lastModified": "2025-01-12T22:30:00.000Z",
+            "completedDate": "2025-01-12"
+          },
+          {
+            "id": "task-personal-6",
+            "text": "Practice deep breathing exercises",
+            "status": "todo",
+            "createdDate": "2025-01-11",
+            "lastModified": "2025-01-11T18:20:00.000Z"
+          },
+          {
+            "id": "task-personal-7",
+            "text": "Update personal vision board",
+            "status": "todo",
+            "createdDate": "2025-01-05",
+            "lastModified": "2025-01-05T16:40:00.000Z"
+          },
+          {
+            "id": "task-personal-8",
+            "text": "Schedule monthly self-reflection session",
+            "status": "todo",
+            "createdDate": "2025-01-09",
+            "lastModified": "2025-01-09T11:50:00.000Z"
+          }
+        ]
+      },
+      {
+        "id": "board-workout",
+        "name": "Workout Board",
+        "description": "Fitness goals, exercise routines, and health tracking",
+        "color": "#ef4444",
+        "isDefault": false,
+        "isArchived": false,
+        "createdDate": "2025-01-01T00:00:00.000Z",
+        "lastModified": "2025-01-23T22:30:00.000Z",
+        "archivedTasks": [],
+        "tasks": [
+          {
+            "id": "task-workout-1",
+            "text": "Complete 30-minute cardio workout",
+            "status": "done",
+            "createdDate": "2025-01-13",
+            "lastModified": "2025-01-13T07:45:00.000Z",
+            "completedDate": "2025-01-13"
+          },
+          {
+            "id": "task-workout-2",
+            "text": "Do strength training - upper body",
+            "status": "doing",
+            "createdDate": "2025-01-12",
+            "lastModified": "2025-01-13T18:20:00.000Z"
+          },
+          {
+            "id": "task-workout-3",
+            "text": "Track daily water intake (8 glasses)",
+            "status": "doing",
+            "createdDate": "2025-01-01",
+            "lastModified": "2025-01-13T14:30:00.000Z"
+          },
+          {
+            "id": "task-workout-4",
+            "text": "Plan weekly workout schedule",
+            "status": "todo",
+            "createdDate": "2025-01-11",
+            "lastModified": "2025-01-11T19:15:00.000Z"
+          },
+          {
+            "id": "task-workout-5",
+            "text": "Try new yoga routine from app",
+            "status": "todo",
+            "createdDate": "2025-01-10",
+            "lastModified": "2025-01-10T16:40:00.000Z"
+          },
+          {
+            "id": "task-workout-6",
+            "text": "Go for 5-mile nature hike",
+            "status": "todo",
+            "createdDate": "2025-01-09",
+            "lastModified": "2025-01-09T08:20:00.000Z"
+          },
+          {
+            "id": "task-workout-7",
+            "text": "Update fitness tracker goals",
+            "status": "done",
+            "createdDate": "2025-01-05",
+            "lastModified": "2025-01-06T09:15:00.000Z",
+            "completedDate": "2025-01-06"
+          }
+        ]
+      }
+    ]
+  }
+}

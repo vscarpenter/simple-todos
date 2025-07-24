@@ -52,6 +52,176 @@
 /* Import utility classes last */
 @import 'modules/_utilities.css';
 
+/* Archive Modal Styles */
+.archive-modal .modal-box {
+  max-width: 800px;
+  width: 90vw;
+  max-height: 80vh;
+}
+
+.archive-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: var(--spacing-4);
+  border-bottom: 1px solid var(--color-outline-variant);
+  margin-bottom: var(--spacing-4);
+}
+
+.archive-modal-header h3 {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-on-surface);
+}
+
+.archive-modal-close {
+  background: none;
+  border: none;
+  font-size: var(--font-size-xl);
+  color: var(--color-on-surface-variant);
+  cursor: pointer;
+  padding: var(--spacing-2);
+  border-radius: var(--radius-md);
+  transition: var(--task-transition);
+}
+
+.archive-modal-close:hover {
+  background-color: var(--color-surface-container-high);
+  color: var(--color-on-surface);
+}
+
+.archive-modal-content {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: var(--spacing-4);
+}
+
+.archive-stats {
+  padding: var(--spacing-3);
+  background-color: var(--color-surface-container-low);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-4);
+}
+
+.archive-stats p {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.archive-tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.archive-task-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: var(--spacing-4);
+  background-color: var(--color-surface-container-low);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-outline-variant);
+  transition: var(--task-transition);
+}
+
+.archive-task-item:hover {
+  background-color: var(--color-surface-container);
+  border-color: var(--color-outline);
+}
+
+.archive-task-content {
+  flex: 1;
+  margin-right: var(--spacing-4);
+}
+
+.archive-task-text {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-on-surface);
+  margin-bottom: var(--spacing-2);
+  line-height: var(--line-height-normal);
+}
+
+.archive-task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+  font-size: var(--font-size-xs);
+  color: var(--color-on-surface-variant);
+}
+
+.archive-task-actions {
+  display: flex;
+  gap: var(--spacing-2);
+  flex-shrink: 0;
+}
+
+.archive-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: var(--spacing-4);
+  border-top: 1px solid var(--color-outline-variant);
+}
+
+.btn-outline-warning {
+  background-color: transparent;
+  border: 1px solid #ffc107;
+  color: #ffc107;
+}
+
+.btn-outline-warning:hover {
+  background-color: #ffc107;
+  color: #000;
+}
+
+.btn-outline-danger {
+  background-color: transparent;
+  border: 1px solid #dc3545;
+  color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+@media (max-width: 768px) {
+  .archive-modal .modal-box {
+    width: 95vw;
+    max-height: 85vh;
+  }
+  
+  .archive-task-item {
+    flex-direction: column;
+    gap: var(--spacing-3);
+  }
+  
+  .archive-task-content {
+    margin-right: 0;
+  }
+  
+  .archive-task-actions {
+    align-self: stretch;
+  }
+  
+  .archive-task-actions .btn {
+    flex: 1;
+  }
+  
+  .archive-modal-footer {
+    flex-direction: column;
+    gap: var(--spacing-3);
+  }
+  
+  .archive-modal-footer .btn {
+    width: 100%;
+  }
+}
+
 /**
  * Legacy Bootstrap overrides and compatibility
  * These styles bridge the gap between our new design system
