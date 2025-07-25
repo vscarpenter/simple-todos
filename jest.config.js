@@ -43,13 +43,32 @@ export default {
     '!**/tests/**'
   ],
   
-  // Coverage thresholds - temporarily lowered for initial setup
+  // Coverage thresholds - improved for comprehensive testing
   coverageThreshold: {
     global: {
-      branches: 10,
-      functions: 10,
-      lines: 10,
-      statements: 10
+      branches: 60,
+      functions: 65,
+      lines: 70,
+      statements: 70
+    },
+    // Per-file thresholds for critical modules
+    'scripts/modules/models.js': {
+      branches: 80,
+      functions: 85,
+      lines: 90,
+      statements: 90
+    },
+    'scripts/modules/eventBus.js': {
+      branches: 85,
+      functions: 90,
+      lines: 95,
+      statements: 95
+    },
+    'scripts/modules/security.js': {
+      branches: 90,
+      functions: 95,
+      lines: 95,
+      statements: 95
     }
   },
   

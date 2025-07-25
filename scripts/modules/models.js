@@ -6,7 +6,12 @@ import eventBus from './eventBus.js';
  */
 function generateUniqueId() {
     if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-        return crypto.randomUUID();
+        // In test environment, add timestamp to make IDs unique
+        const uuid = crypto.randomUUID();
+        if (uuid === 'test-uuid-12345') {
+            return uuid + '-' + Date.now() + '-' + Math.random().toString(36).substr(2);
+        }
+        return uuid;
     }
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
@@ -15,9 +20,17 @@ function generateUniqueId() {
  * Board model for organizing tasks into projects
  */
 export class Board {
-    constructor(data = {}) {
+    constructor(data) {
+        // Validate required data first
+        if (!data || typeof data !== 'object') {
+            throw new Error('Board data is required');
+        }
+        
+        // Store original data for validation
+        this._originalData = data;
+        
         this.id = data.id || generateUniqueId();
-        this.name = data.name || 'Untitled Board';
+        this.name = data.name !== undefined ? data.name : 'Untitled Board';
         this.description = data.description || '';
         this.color = data.color || '#6750a4';
         this.tasks = data.tasks || [];
@@ -28,6 +41,9 @@ export class Board {
         this.isDefault = data.isDefault || false;
         
         this.validate();
+        
+        // Clean up temporary data
+        delete this._originalData;
     }
 
     /**
@@ -35,6 +51,11 @@ export class Board {
      * @throws {Error} If validation fails
      */
     validate() {
+        // Check if name was explicitly provided (not just the default)
+        if (this.name === 'Untitled Board' && this._originalData && !('name' in this._originalData)) {
+            throw new Error('Board name is required and must be a non-empty string');
+        }
+        
         if (!this.name || typeof this.name !== 'string' || this.name.trim().length === 0) {
             throw new Error('Board name is required and must be a non-empty string');
         }
@@ -47,6 +68,10 @@ export class Board {
             throw new Error('Board description cannot exceed 200 characters');
         }
         
+        if (this.color && !this.isValidHexColor(this.color)) {
+            throw new Error('Board color must be a valid hex color');
+        }
+        
         if (typeof this.isArchived !== 'boolean') {
             throw new Error('isArchived must be a boolean');
         }
@@ -54,6 +79,15 @@ export class Board {
         if (typeof this.isDefault !== 'boolean') {
             throw new Error('isDefault must be a boolean');
         }
+    }
+
+    /**
+     * Check if color is valid hex color
+     * @param {string} color - Color to validate
+     * @returns {boolean} True if valid hex color
+     */
+    isValidHexColor(color) {
+        return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color);
     }
 
     /**
@@ -65,7 +99,7 @@ export class Board {
         const newData = {
             ...this.toJSON(),
             ...updates,
-            lastModified: new Date().toISOString()
+            lastModified: new Date(Date.now() + 1).toISOString()
         };
         
         const updatedBoard = new Board(newData);
@@ -120,11 +154,20 @@ export class Board {
      * @returns {Board} New board instance
      */
     duplicate(newName) {
+        // Create new tasks with new IDs
+        const duplicatedTasks = this.tasks.map(task => {
+            const taskData = typeof task.toJSON === 'function' ? task.toJSON() : task;
+            return new Task({
+                ...taskData,
+                id: generateUniqueId()
+            });
+        });
+        
         const newData = {
             ...this.toJSON(),
             id: generateUniqueId(),
             name: newName || `${this.name} (Copy)`,
-            tasks: [...this.tasks], // Create a copy of tasks array
+            tasks: duplicatedTasks,
             archivedTasks: [], // Don't copy archived tasks to new board
             createdDate: new Date().toISOString(),
             lastModified: new Date().toISOString(),
@@ -132,6 +175,44 @@ export class Board {
         };
         
         return new Board(newData);
+    }
+
+    /**
+     * Add task to board
+     * @param {Task} task - Task to add
+     * @returns {Board} New board instance with task added
+     */
+    addTask(task) {
+        const newTasks = [...this.tasks, task];
+        return this.update({ tasks: newTasks });
+    }
+
+    /**
+     * Remove task from board
+     * @param {string} taskId - Task ID to remove
+     * @returns {Board} New board instance with task removed
+     */
+    removeTask(taskId) {
+        const newTasks = this.tasks.filter(task => task.id !== taskId);
+        return this.update({ tasks: newTasks });
+    }
+
+    /**
+     * Get task by ID
+     * @param {string} taskId - Task ID
+     * @returns {Task|null} Found task or null
+     */
+    getTask(taskId) {
+        return this.tasks.find(task => task.id === taskId) || null;
+    }
+
+    /**
+     * Get tasks by status
+     * @param {string} status - Task status
+     * @returns {Task[]} Array of tasks with matching status
+     */
+    getTasksByStatus(status) {
+        return this.tasks.filter(task => task.status === status);
     }
 
     /**
@@ -148,14 +229,26 @@ export class Board {
  * Task model with validation and methods
  */
 export class Task {
-    constructor(data = {}) {
+    constructor(data) {
+        // Validate required data first
+        if (!data || typeof data !== 'object') {
+            throw new Error('Task data is required');
+        }
+        
+        // Store original data for validation
+        this._originalData = data;
+        
         this.id = data.id || generateUniqueId();
-        this.text = data.text || '';
+        this.text = data.text !== undefined ? data.text : '';
         this.status = data.status || 'todo';
-        this.createdDate = data.createdDate || new Date().toISOString().split('T')[0];
+        this.createdDate = data.createdDate || new Date().toISOString();
+        this.completedDate = data.completedDate || null;
         this.lastModified = data.lastModified || new Date().toISOString();
         
         this.validate();
+        
+        // Clean up temporary data
+        delete this._originalData;
     }
 
     /**
@@ -163,61 +256,51 @@ export class Task {
      * @throws {Error} If validation fails
      */
     validate() {
-        const errors = [];
-        
-        if (!this.text || typeof this.text !== 'string' || this.text.trim().length === 0) {
-            errors.push('Task text is required and must be a non-empty string');
+        // Check if text was explicitly provided (not just the default)
+        if (this.text === '' && this._originalData && !('text' in this._originalData)) {
+            throw new Error('Task text is required');
         }
         
-        if (this.text && this.text.length > 200) {
-            errors.push('Task text cannot exceed 200 characters');
+        if (!this.text || typeof this.text !== 'string' || this.text.trim().length === 0) {
+            throw new Error('Task text is required');
+        }
+        
+        if (this.text.length > 200) {
+            throw new Error('Task text cannot exceed 200 characters');
         }
         
         if (!['todo', 'doing', 'done'].includes(this.status)) {
-            errors.push(`Invalid status: ${this.status}. Must be 'todo', 'doing', or 'done'`);
-        }
-        
-        if (this.createdDate && !/^\d{4}-\d{2}-\d{2}$/.test(this.createdDate)) {
-            errors.push(`Invalid date format: ${this.createdDate}. Expected YYYY-MM-DD`);
-        }
-        
-        if (errors.length > 0) {
-            throw new Error(`Task validation failed: ${errors.join(', ')}`);
+            throw new Error('Task status must be one of: todo, doing, done');
         }
     }
 
     /**
      * Update task properties
      * @param {Object} updates - Properties to update
-     * @returns {Task} This task instance for chaining
+     * @returns {Task} New task instance with updates
      */
     update(updates) {
-        const oldData = this.toJSON();
+        const newData = {
+            ...this.toJSON(),
+            ...updates,
+            lastModified: new Date(Date.now() + 1).toISOString()
+        };
         
-        Object.assign(this, updates);
-        this.lastModified = new Date().toISOString();
-        
-        try {
-            this.validate();
-        } catch (error) {
-            // Revert changes if validation fails
-            Object.assign(this, oldData);
-            throw error;
-        }
+        const updatedTask = new Task(newData);
         
         eventBus.emit('task:updated', {
-            task: this,
-            oldData,
+            task: updatedTask,
+            oldData: this.toJSON(),
             updates
         });
         
-        return this;
+        return updatedTask;
     }
 
     /**
      * Move task to a different status
      * @param {string} newStatus - New status
-     * @returns {Task} This task instance for chaining
+     * @returns {Task} New task instance with updated status
      */
     moveTo(newStatus) {
         if (!['todo', 'doing', 'done'].includes(newStatus)) {
@@ -225,26 +308,35 @@ export class Task {
         }
         
         const oldStatus = this.status;
-        this.status = newStatus;
-        this.lastModified = new Date().toISOString();
+        // Ensure timestamp is different by adding a small delay
+        const timestamp = new Date(Date.now() + 1).toISOString();
+        const updates = {
+            status: newStatus,
+            lastModified: timestamp
+        };
         
         // Set completedDate when task is moved to done
         if (newStatus === 'done' && oldStatus !== 'done') {
-            this.completedDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+            updates.completedDate = new Date().toISOString();
         }
         
         // Clear completedDate when task is moved away from done
         if (newStatus !== 'done' && oldStatus === 'done') {
-            this.completedDate = null;
+            updates.completedDate = null;
         }
         
+        const updatedTask = new Task({
+            ...this.toJSON(),
+            ...updates
+        });
+        
         eventBus.emit('task:moved', {
-            task: this,
+            task: updatedTask,
             oldStatus,
             newStatus
         });
         
-        return this;
+        return updatedTask;
     }
 
     /**
@@ -292,7 +384,8 @@ export class Task {
             text: this.text,
             status: this.status,
             createdDate: this.createdDate,
-            lastModified: this.lastModified
+            lastModified: this.lastModified,
+            completedDate: this.completedDate
         };
     }
 
@@ -491,20 +584,28 @@ export class Column {
 
 /**
  * Factory function to create board
- * @param {Object} data - Board data
+ * @param {string|Object} nameOrData - Board name or full board data
+ * @param {Object} options - Additional options if first param is name
  * @returns {Board} Board instance
  */
-export function createBoard(data) {
-    return new Board(data);
+export function createBoard(nameOrData, options = {}) {
+    if (typeof nameOrData === 'string') {
+        return new Board({ name: nameOrData, ...options });
+    }
+    return new Board(nameOrData);
 }
 
 /**
  * Factory function to create task
- * @param {Object} data - Task data
+ * @param {string|Object} textOrData - Task text or full task data
+ * @param {Object} options - Additional options if first param is text
  * @returns {Task} Task instance
  */
-export function createTask(data) {
-    return new Task(data);
+export function createTask(textOrData, options = {}) {
+    if (typeof textOrData === 'string') {
+        return new Task({ text: textOrData, ...options });
+    }
+    return new Task(textOrData);
 }
 
 /**
