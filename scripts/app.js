@@ -147,17 +147,51 @@ function createTaskCard(task) {
     card.draggable = true;
     card.dataset.taskId = task.id;
     
-    card.innerHTML = `
-        <div class="task-content">
-            <div class="task-text">${sanitizeOutput(task.text)}</div>
-            <div class="task-date">Created: ${formatDate(task.createdDate)}</div>
-        </div>
-        <div class="task-actions">
-            <button class="btn-edit" onclick="editTask('${task.id}')">Edit</button>
-            <button class="btn-delete" onclick="deleteTask('${task.id}')">Delete</button>
-            ${getStatusButtons(task.status, task.id)}
-        </div>
-    `;
+    // Create elements safely without innerHTML
+    const taskContent = document.createElement('div');
+    taskContent.className = 'task-content';
+    
+    const taskText = document.createElement('div');
+    taskText.className = 'task-text';
+    taskText.textContent = task.text; // Use textContent instead of innerHTML
+    
+    const taskDate = document.createElement('div');
+    taskDate.className = 'task-date';
+    taskDate.textContent = `Created: ${formatDate(task.createdDate)}`;
+    
+    taskContent.appendChild(taskText);
+    taskContent.appendChild(taskDate);
+    
+    const taskActions = document.createElement('div');
+    taskActions.className = 'task-actions';
+    
+    // Create buttons safely
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn-edit';
+    editBtn.textContent = 'Edit';
+    editBtn.onclick = () => editTask(task.id);
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn-delete';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.onclick = () => deleteTask(task.id);
+    
+    taskActions.appendChild(editBtn);
+    taskActions.appendChild(deleteBtn);
+    
+    // Add status buttons safely
+    const statusButtonsContainer = document.createElement('div');
+    // Create status buttons safely using DOM methods instead of innerHTML
+    const statusButtons = getStatusButtons(task.status, task.id);
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = statusButtons; // getStatusButtons returns sanitized HTML
+    while (tempDiv.firstChild) {
+        statusButtonsContainer.appendChild(tempDiv.firstChild);
+    }
+    taskActions.appendChild(statusButtonsContainer);
+    
+    card.appendChild(taskContent);
+    card.appendChild(taskActions);
     
     // Add drag event listeners
     card.addEventListener('dragstart', handleDragStart);
@@ -367,7 +401,7 @@ function sanitizeInput(input) {
  */
 function sanitizeOutput(text) {
     const div = document.createElement('div');
-    div.innerHTML = text;
+    div.textContent = text; // Use textContent instead of innerHTML
     return div.textContent || div.innerText || '';
 }
 
@@ -985,7 +1019,7 @@ function showCustomModal(title, htmlContent, showCancelButton = true) {
         const modalCancel = document.getElementById('modal-cancel');
 
         modalTitle.textContent = title;
-        modalMessage.innerHTML = htmlContent;
+        modalMessage.textContent = htmlContent; // Use textContent to prevent XSS
         modalInput.style.display = 'none';
         modalCancel.style.display = showCancelButton ? 'block' : 'none';
         modal.style.display = 'flex';

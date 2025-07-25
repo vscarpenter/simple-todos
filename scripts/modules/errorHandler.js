@@ -167,19 +167,27 @@ export class ErrorHandler {
   static createErrorElement(message, severity) {
     const errorDiv = document.createElement('div');
     errorDiv.className = `error-toast error-toast--${severity}`;
-    errorDiv.innerHTML = `
-      <div class="error-toast__content">
-        <div class="error-toast__icon">
-          ${this.getErrorIcon(severity)}
-        </div>
-        <div class="error-toast__message">
-          ${message}
-        </div>
-        <button class="error-toast__close" aria-label="Close error message">
-          ×
-        </button>
-      </div>
-    `;
+    // Create error elements safely
+    const errorContent = document.createElement('div');
+    errorContent.className = 'error-toast__content';
+    
+    const errorIcon = document.createElement('div');
+    errorIcon.className = 'error-toast__icon';
+    errorIcon.textContent = this.getErrorIcon(severity);
+    
+    const errorMessage = document.createElement('div');
+    errorMessage.className = 'error-toast__message';
+    errorMessage.textContent = message; // Use textContent for safety
+    
+    const errorClose = document.createElement('button');
+    errorClose.className = 'error-toast__close';
+    errorClose.setAttribute('aria-label', 'Close error message');
+    errorClose.textContent = '×';
+    
+    errorContent.appendChild(errorIcon);
+    errorContent.appendChild(errorMessage);
+    errorContent.appendChild(errorClose);
+    errorDiv.appendChild(errorContent);
 
     // Add close functionality
     const closeBtn = errorDiv.querySelector('.error-toast__close');

@@ -81,14 +81,28 @@ document.addEventListener('DOMContentLoaded', () => {
         // Fallback error display for critical failures
         const errorDiv = document.createElement('div');
         errorDiv.className = 'alert alert-danger m-3';
-        errorDiv.innerHTML = `
-            <h4>⚠️ Application Error</h4>
-            <p>Failed to initialize the application. Please refresh the page.</p>
-            <details>
-                <summary>Technical Details</summary>
-                <pre>${error.message}</pre>
-            </details>
-        `;
+        
+        // Create elements safely without innerHTML
+        const title = document.createElement('h4');
+        title.textContent = '⚠️ Application Error';
+        
+        const message = document.createElement('p');
+        message.textContent = 'Failed to initialize the application. Please refresh the page.';
+        
+        const details = document.createElement('details');
+        const summary = document.createElement('summary');
+        summary.textContent = 'Technical Details';
+        
+        const pre = document.createElement('pre');
+        pre.textContent = error.message;
+        
+        details.appendChild(summary);
+        details.appendChild(pre);
+        
+        errorDiv.appendChild(title);
+        errorDiv.appendChild(message);
+        errorDiv.appendChild(details);
+        
         document.body.insertBefore(errorDiv, document.body.firstChild);
     }
 });

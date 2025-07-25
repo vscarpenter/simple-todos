@@ -481,6 +481,11 @@ class SecurityManager {
         // Remove null bytes and control characters
         let sanitized = str.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
         
+        // Remove potential XSS patterns
+        sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+        sanitized = sanitized.replace(/javascript:/gi, '');
+        sanitized = sanitized.replace(/on\w+\s*=/gi, '');
+        
         // Limit length
         const maxLength = this.getMaxStringLength();
         if (sanitized.length > maxLength) {
@@ -488,6 +493,22 @@ class SecurityManager {
         }
 
         return sanitized.trim();
+    }
+
+    /**
+     * Sanitize HTML content for safe display
+     * @param {string} html - HTML content to sanitize
+     * @returns {string} Sanitized HTML
+     */
+    sanitizeHTML(html) {
+        if (typeof html !== 'string') {
+            return '';
+        }
+        
+        // Create a temporary element to escape HTML
+        const div = document.createElement('div');
+        div.textContent = html;
+        return div.innerHTML;
     }
 
     /**

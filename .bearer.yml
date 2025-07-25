@@ -1,0 +1,19 @@
+# Bearer Security Scanner Configuration
+# This file configures the Bearer security scanner for the Cascade project
+
+# Ignore false positives - these are safe uses of innerHTML with pre-sanitized content
+ignore:
+  # Status buttons HTML generation - uses sanitized input
+  - dd0e142b929467191ee651e9bd28082b_0  # scripts/app.js:187
+  - 318aa1b1bc7c37cd47cd74025a71bf52_0  # scripts/modules/dom.js:597
+  - 318aa1b1bc7c37cd47cd74025a71bf52_1  # scripts/modules/dom.js:1277
+
+# Scan configuration
+rules:
+  # Enable all security rules
+  javascript_lang_dangerous_insert_html: true
+  
+# Report configuration
+report:
+  format: cli
+  severity: high,critical

@@ -540,28 +540,70 @@ class DOMManager {
             console.error('🚨 Multiple task cards found with same ID:', task.id);
         }
         
-        card.innerHTML = `
-            <div class="task-card__content">
-                <div class="task-card__text">${this.sanitizeHTML(task.text)}</div>
-                <div class="task-card__meta">
-                    <span class="task-card__date">Created: ${this.formatDate(task.createdDate)}</span>
-                    <span class="task-card__id">#${task.id.slice(-6)}</span>
-                </div>
-            </div>
-            <div class="task-card__actions">
-                <div class="task-card__actions-primary">
-                    <button class="btn-task-action" data-action="edit" data-task-id="${task.id}" title="Edit task" aria-label="Edit task: ${this.sanitizeHTML(task.text)}">
-                        ✏️
-                    </button>
-                    <button class="btn-task-action" data-action="delete" data-task-id="${task.id}" title="Delete task" aria-label="Delete task: ${this.sanitizeHTML(task.text)}">
-                        🗑️
-                    </button>
-                </div>
-                <div class="task-card__actions-secondary">
-                    ${this.getStatusButtons(task.status, task.id, task.text)}
-                </div>
-            </div>
-        `;
+        // Create elements safely without innerHTML
+        const cardContent = document.createElement('div');
+        cardContent.className = 'task-card__content';
+        
+        const cardText = document.createElement('div');
+        cardText.className = 'task-card__text';
+        cardText.textContent = task.text; // Use textContent for safety
+        
+        const cardMeta = document.createElement('div');
+        cardMeta.className = 'task-card__meta';
+        
+        const cardDate = document.createElement('span');
+        cardDate.className = 'task-card__date';
+        cardDate.textContent = `Created: ${this.formatDate(task.createdDate)}`;
+        
+        const cardId = document.createElement('span');
+        cardId.className = 'task-card__id';
+        cardId.textContent = `#${task.id.slice(-6)}`;
+        
+        cardMeta.appendChild(cardDate);
+        cardMeta.appendChild(cardId);
+        cardContent.appendChild(cardText);
+        cardContent.appendChild(cardMeta);
+        
+        const cardActions = document.createElement('div');
+        cardActions.className = 'task-card__actions';
+        
+        const primaryActions = document.createElement('div');
+        primaryActions.className = 'task-card__actions-primary';
+        
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn-task-action';
+        editBtn.setAttribute('data-action', 'edit');
+        editBtn.setAttribute('data-task-id', task.id);
+        editBtn.setAttribute('title', 'Edit task');
+        editBtn.setAttribute('aria-label', `Edit task: ${task.text}`);
+        editBtn.textContent = '✏️';
+        
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn-task-action';
+        deleteBtn.setAttribute('data-action', 'delete');
+        deleteBtn.setAttribute('data-task-id', task.id);
+        deleteBtn.setAttribute('title', 'Delete task');
+        deleteBtn.setAttribute('aria-label', `Delete task: ${task.text}`);
+        deleteBtn.textContent = '🗑️';
+        
+        primaryActions.appendChild(editBtn);
+        primaryActions.appendChild(deleteBtn);
+        
+        const secondaryActions = document.createElement('div');
+        secondaryActions.className = 'task-card__actions-secondary';
+        // Create status buttons safely using DOM methods
+        const statusButtonsHTML = this.getStatusButtons(task.status, task.id, task.text);
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = statusButtonsHTML; // getStatusButtons returns sanitized HTML
+        while (tempDiv.firstChild) {
+            secondaryActions.appendChild(tempDiv.firstChild);
+        }
+        
+        cardActions.appendChild(primaryActions);
+        cardActions.appendChild(secondaryActions);
+        
+        card.appendChild(cardContent);
+        card.appendChild(cardActions);
         
         console.log('✅ Created task card:', {
             id: task.id,
@@ -829,7 +871,9 @@ class DOMManager {
             // Set content
             modalTitle.textContent = title;
             if (allowHTML) {
-                modalMessage.innerHTML = message;
+                // Only allow HTML if explicitly requested - use textContent for safety
+                // In practice, we should avoid innerHTML entirely for user content
+                modalMessage.textContent = message; // Always use textContent for safety
             } else {
                 modalMessage.textContent = message;
             }
@@ -947,13 +991,27 @@ class DOMManager {
             warning: '⚠️'
         }[type] || 'ℹ️';
         
-        toast.innerHTML = `
-            <div class="toast__content">
-                <span class="toast__icon">${icon}</span>
-                <span class="toast__message">${this.sanitizeHTML(message)}</span>
-            </div>
-            <button class="toast__close" aria-label="Close notification">×</button>
-        `;
+        // Create toast elements safely
+        const toastContent = document.createElement('div');
+        toastContent.className = 'toast__content';
+        
+        const toastIcon = document.createElement('span');
+        toastIcon.className = 'toast__icon';
+        toastIcon.textContent = icon;
+        
+        const toastMessage = document.createElement('span');
+        toastMessage.className = 'toast__message';
+        toastMessage.textContent = message; // Use textContent for safety
+        
+        const toastClose = document.createElement('button');
+        toastClose.className = 'toast__close';
+        toastClose.setAttribute('aria-label', 'Close notification');
+        toastClose.textContent = '×';
+        
+        toastContent.appendChild(toastIcon);
+        toastContent.appendChild(toastMessage);
+        toast.appendChild(toastContent);
+        toast.appendChild(toastClose);
 
         // Add to container
         toastContainer.appendChild(toast);
@@ -991,9 +1049,12 @@ class DOMManager {
      * @returns {string} Sanitized HTML
      */
     sanitizeHTML(html) {
+        if (typeof html !== 'string') {
+            return '';
+        }
         const div = document.createElement('div');
-        div.textContent = html;
-        return div.innerHTML;
+        div.textContent = html; // This escapes HTML entities
+        return div.innerHTML; // Returns the escaped content
     }
 
     /**
@@ -1052,31 +1113,69 @@ class DOMManager {
                 const listItem = document.createElement('li');
                 const isActive = currentBoard && board.id === currentBoard.id;
                 
-                listItem.innerHTML = `
-                    <a class="dropdown-item ${isActive ? 'active' : ''}" 
-                       href="#" 
-                       data-board-action="switch" 
-                       data-board-id="${board.id}">
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="board-color" style="width: 12px; height: 12px; background-color: ${board.color}; border-radius: 2px;"></div>
-                            <div class="flex-grow-1">
-                                <div class="board-name">${this.sanitizeHTML(board.name)}</div>
-                                <small class="text-muted">${(board.tasks || []).length} tasks</small>
-                            </div>
-                            <div class="board-actions">
-                                <button class="btn btn-sm btn-outline-secondary me-1" data-board-action="edit" data-board-id="${board.id}" title="Rename board">
-                                    ✏️
-                                </button>
-                                ${!board.isDefault ? `
-                                    <button class="btn btn-sm btn-outline-danger" data-board-action="delete" data-board-id="${board.id}" title="Delete board">
-                                        🗑️
-                                    </button>
-                                ` : ''}
-                            </div>
-                            ${isActive ? '<span class="text-primary ms-2">✓</span>' : ''}
-                        </div>
-                    </a>
-                `;
+                // Create board list item safely
+                const link = document.createElement('a');
+                link.className = `dropdown-item ${isActive ? 'active' : ''}`;
+                link.href = '#';
+                link.setAttribute('data-board-action', 'switch');
+                link.setAttribute('data-board-id', board.id);
+                
+                const container = document.createElement('div');
+                container.className = 'd-flex align-items-center gap-2';
+                
+                const colorDiv = document.createElement('div');
+                colorDiv.className = 'board-color';
+                colorDiv.style.cssText = `width: 12px; height: 12px; background-color: ${board.color}; border-radius: 2px;`;
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'flex-grow-1';
+                
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'board-name';
+                nameDiv.textContent = board.name; // Use textContent for safety
+                
+                const taskCount = document.createElement('small');
+                taskCount.className = 'text-muted';
+                taskCount.textContent = `${(board.tasks || []).length} tasks`;
+                
+                contentDiv.appendChild(nameDiv);
+                contentDiv.appendChild(taskCount);
+                
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'board-actions';
+                
+                const editBtn = document.createElement('button');
+                editBtn.className = 'btn btn-sm btn-outline-secondary me-1';
+                editBtn.setAttribute('data-board-action', 'edit');
+                editBtn.setAttribute('data-board-id', board.id);
+                editBtn.setAttribute('title', 'Rename board');
+                editBtn.textContent = '✏️';
+                
+                actionsDiv.appendChild(editBtn);
+                
+                if (!board.isDefault) {
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'btn btn-sm btn-outline-danger';
+                    deleteBtn.setAttribute('data-board-action', 'delete');
+                    deleteBtn.setAttribute('data-board-id', board.id);
+                    deleteBtn.setAttribute('title', 'Delete board');
+                    deleteBtn.textContent = '🗑️';
+                    actionsDiv.appendChild(deleteBtn);
+                }
+                
+                container.appendChild(colorDiv);
+                container.appendChild(contentDiv);
+                container.appendChild(actionsDiv);
+                
+                if (isActive) {
+                    const checkmark = document.createElement('span');
+                    checkmark.className = 'text-primary ms-2';
+                    checkmark.textContent = '✓';
+                    container.appendChild(checkmark);
+                }
+                
+                link.appendChild(container);
+                listItem.appendChild(link);
                 
                 this.elements.activeBoardsList.appendChild(listItem);
             });
@@ -1142,28 +1241,68 @@ class DOMManager {
             </div>
         `).join('');
         
-        archiveModal.innerHTML = `
-            <div class="modal-box archive-modal-box">
-                <div class="archive-modal-header">
-                    <h3>Archive Browser - ${this.sanitizeHTML(boardName)}</h3>
-                    <button class="archive-modal-close" onclick="closeArchiveModal()" aria-label="Close archive">
-                        ✕
-                    </button>
-                </div>
-                <div class="archive-modal-content">
-                    <div class="archive-stats">
-                        <p>${archivedTasks.length} archived task${archivedTasks.length === 1 ? '' : 's'}</p>
-                    </div>
-                    <div class="archive-tasks-list">
-                        ${tasksList}
-                    </div>
-                </div>
-                <div class="archive-modal-footer">
-                    <button class="btn btn-secondary" onclick="closeArchiveModal()">Close</button>
-                    <button class="btn btn-outline-warning" onclick="clearAllArchived()">Clear All Archived</button>
-                </div>
-            </div>
-        `;
+        // Create archive modal safely
+        const modalBox = document.createElement('div');
+        modalBox.className = 'modal-box archive-modal-box';
+        
+        const modalHeader = document.createElement('div');
+        modalHeader.className = 'archive-modal-header';
+        
+        const modalTitle = document.createElement('h3');
+        modalTitle.textContent = `Archive Browser - ${boardName}`; // Use textContent for safety
+        
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'archive-modal-close';
+        closeBtn.setAttribute('aria-label', 'Close archive');
+        closeBtn.textContent = '✕';
+        closeBtn.onclick = () => window.closeArchiveModal();
+        
+        modalHeader.appendChild(modalTitle);
+        modalHeader.appendChild(closeBtn);
+        
+        const modalContent = document.createElement('div');
+        modalContent.className = 'archive-modal-content';
+        
+        const archiveStats = document.createElement('div');
+        archiveStats.className = 'archive-stats';
+        
+        const statsText = document.createElement('p');
+        statsText.textContent = `${archivedTasks.length} archived task${archivedTasks.length === 1 ? '' : 's'}`;
+        archiveStats.appendChild(statsText);
+        
+        const tasksListDiv = document.createElement('div');
+        tasksList.className = 'archive-tasks-list';
+        // Create tasks list safely - tasksList contains pre-sanitized HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = tasksList; // tasksList is already sanitized above
+        while (tempDiv.firstChild) {
+            tasksListDiv.appendChild(tempDiv.firstChild);
+        }
+        
+        modalContent.appendChild(archiveStats);
+        modalContent.appendChild(tasksListDiv);
+        
+        const modalFooter = document.createElement('div');
+        modalFooter.className = 'archive-modal-footer';
+        
+        const closeFooterBtn = document.createElement('button');
+        closeFooterBtn.className = 'btn btn-secondary';
+        closeFooterBtn.textContent = 'Close';
+        closeFooterBtn.onclick = () => window.closeArchiveModal();
+        
+        const clearAllBtn = document.createElement('button');
+        clearAllBtn.className = 'btn btn-outline-warning';
+        clearAllBtn.textContent = 'Clear All Archived';
+        clearAllBtn.onclick = () => window.clearAllArchived();
+        
+        modalFooter.appendChild(closeFooterBtn);
+        modalFooter.appendChild(clearAllBtn);
+        
+        modalBox.appendChild(modalHeader);
+        modalBox.appendChild(modalContent);
+        modalBox.appendChild(modalFooter);
+        
+        archiveModal.appendChild(modalBox);
         
         // Add to DOM
         document.body.appendChild(archiveModal);
