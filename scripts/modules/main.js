@@ -201,10 +201,13 @@ class CascadeApp {
 
         // Board management events
         eventBus.on('board:create', this.handleCreateBoard.bind(this));
+        eventBus.on('board:create:request', this.handleCreateBoardRequest.bind(this));
         eventBus.on('board:switch', this.handleSwitchBoard.bind(this));
         eventBus.on('board:edit', this.handleEditBoard.bind(this));
         eventBus.on('board:delete', this.handleDeleteBoard.bind(this));
         eventBus.on('board:duplicate', this.handleDuplicateBoard.bind(this));
+        eventBus.on('board:archive', this.handleArchiveBoard.bind(this));
+        eventBus.on('board:unarchive', this.handleUnarchiveBoard.bind(this));
         eventBus.on('boards:manage', this.handleManageBoards.bind(this));
         
         // Board organization events
@@ -965,13 +968,17 @@ class CascadeApp {
      */
     async handleBrowseArchive() {
         try {
+            console.log('[DEBUG] Browse Archive clicked');
             const currentBoard = this.state.getCurrentBoard();
+            console.log('[DEBUG] Current board:', currentBoard);
+            
             if (!currentBoard) {
                 this.dom.showModal('Error', 'No board selected');
                 return;
             }
 
             const archivedTasks = currentBoard.archivedTasks || [];
+            console.log('[DEBUG] Archived tasks found:', archivedTasks.length, archivedTasks);
             
             if (archivedTasks.length === 0) {
                 this.dom.showModal('Archive', 'No archived tasks found in this board.');
@@ -979,6 +986,7 @@ class CascadeApp {
             }
 
             // Show archive browser modal
+            console.log('[DEBUG] Calling showArchiveBrowser with:', archivedTasks.length, 'tasks');
             this.dom.showArchiveBrowser(archivedTasks, currentBoard.name);
             
         } catch (error) {
@@ -993,6 +1001,7 @@ class CascadeApp {
      */
     async handleRestoreTask(data) {
         try {
+            console.log('[DEBUG] handleRestoreTask called with:', data);
             const { taskId } = data;
             const currentBoard = this.state.getCurrentBoard();
             
@@ -1073,6 +1082,7 @@ class CascadeApp {
      */
     async handleDeleteArchivedTask(data) {
         try {
+            console.log('[DEBUG] handleDeleteArchivedTask called with:', data);
             const { taskId } = data;
             const currentBoard = this.state.getCurrentBoard();
             
@@ -1136,6 +1146,7 @@ class CascadeApp {
      */
     async handleClearAllArchived() {
         try {
+            console.log('[DEBUG] handleClearAllArchived called');
             const currentBoard = this.state.getCurrentBoard();
             
             if (!currentBoard || !currentBoard.archivedTasks || currentBoard.archivedTasks.length === 0) {
@@ -1534,6 +1545,31 @@ class CascadeApp {
     }
 
     /**
+     * Handle create board request - Show modal to get board details
+     */
+    async handleCreateBoardRequest() {
+        try {
+            const boardName = await this.dom.showModal('New Board', 'Enter board name:', {
+                showInput: true,
+                inputValue: '',
+                confirmText: 'Create Board'
+            });
+            
+            if (boardName && boardName.trim().length > 0) {
+                // Emit the actual board creation event with the data
+                eventBus.emit('board:create', { 
+                    name: boardName.trim(),
+                    description: '',
+                    color: '#6750a4'
+                });
+            }
+        } catch (error) {
+            console.error('Failed to handle board creation request:', error);
+            this.handleError('Failed to create board', error, 'ui');
+        }
+    }
+
+    /**
      * Handle switch board
      * @param {Object} data - Event data
      */
@@ -1693,12 +1729,237 @@ class CascadeApp {
     }
 
     /**
-     * Handle manage boards - Modern simplified approach
+     * Handle manage boards - Show comprehensive board management modal
      */
     handleManageBoards() {
-        // With the new inline editing system, board management is handled
-        // directly in the board selector dropdown. No separate modal needed.
-        this.dom.showToast('Use the edit (✏️) and delete (🗑️) buttons in the board selector to manage your boards', 'info', 5000);
+        try {
+            const allBoards = [...this.state.getActiveBoards(), ...this.state.getArchivedBoards()];
+            const currentBoard = this.state.getCurrentBoard();
+            
+            this.dom.showBoardManagementModal(allBoards, currentBoard);
+            
+            debugLog.log('📋 Board management modal opened', {
+                totalBoards: allBoards.length,
+                activeBoards: this.state.getActiveBoards().length,
+                archivedBoards: this.state.getArchivedBoards().length,
+                currentBoard: currentBoard?.name
+            });
+        } catch (error) {
+            console.error('❌ Error opening board management modal:', error);
+            this.errorHandler.handleError(error, 'Failed to open board management');
+        }
+    }
+
+    /**
+     * Handle board archiving
+     * @param {Object} data - Event data containing boardId
+     */
+    async handleArchiveBoard(data) {
+        try {
+            const { boardId } = data;
+            
+            if (!boardId) {
+                throw new Error('Board ID is required for archiving');
+            }
+            
+            const board = this.state.get('boards').find(b => b.id === boardId);
+            if (!board) {
+                throw new Error('Board not found');
+            }
+            
+            // Prevent archiving default board
+            if (board.isDefault) {
+                this.dom.showToast('Cannot archive the default board', 'error');
+                return;
+            }
+            
+            // Prevent archiving current board
+            const currentBoard = this.state.getCurrentBoard();
+            if (currentBoard && board.id === currentBoard.id) {
+                this.dom.showToast('Cannot archive the currently active board. Switch to another board first.', 'error');
+                return;
+            }
+            
+            // Show confirmation dialog
+            const confirmed = await this.dom.showModal(
+                'Archive Board',
+                `Are you sure you want to archive "${board.name}"? The board and all its tasks will be moved to the archive.`,
+                {
+                    showInput: false,
+                    showCancel: true,
+                    confirmText: 'Archive',
+                    cancelText: 'Cancel'
+                }
+            );
+            
+            if (confirmed) {
+                // Update board to archived status
+                const updatedBoard = { ...board, isArchived: true, lastModified: new Date().toISOString() };
+                this.state.updateBoard(boardId, updatedBoard);
+                this.saveData();
+                
+                // Update UI
+                this.updateBoardSelector();
+                
+                // Refresh board management modal if open
+                const modal = document.getElementById('board-management-modal');
+                if (modal) {
+                    const allBoards = [...this.state.getActiveBoards(), ...this.state.getArchivedBoards()];
+                    const currentBoard = this.state.getCurrentBoard();
+                    
+                    // Update the boards list in the modal
+                    const boardsList = modal.querySelector('#boards-management-list');
+                    if (boardsList) {
+                        // Clear and repopulate the boards list
+                        boardsList.innerHTML = '';
+                        
+                        // Separate active and archived boards
+                        const activeBoards = allBoards.filter(board => !board.isArchived);
+                        const archivedBoards = allBoards.filter(board => board.isArchived);
+                        
+                        // Active boards
+                        if (activeBoards.length > 0) {
+                            const activeHeader = document.createElement('div');
+                            activeHeader.className = 'boards-section-header mb-2';
+                            activeHeader.textContent = 'Active Boards';
+                            boardsList.appendChild(activeHeader);
+                            
+                            activeBoards.forEach(board => {
+                                const boardItem = this.dom.createBoardManagementItem(board, currentBoard);
+                                boardsList.appendChild(boardItem);
+                            });
+                        }
+                        
+                        // Archived boards
+                        if (archivedBoards.length > 0) {
+                            const archivedHeader = document.createElement('div');
+                            archivedHeader.className = 'boards-section-header mb-2 mt-4';
+                            archivedHeader.textContent = 'Archived Boards';
+                            boardsList.appendChild(archivedHeader);
+                            
+                            archivedBoards.forEach(board => {
+                                const boardItem = this.dom.createBoardManagementItem(board, currentBoard);
+                                boardsList.appendChild(boardItem);
+                            });
+                        }
+                    }
+                }
+                
+                this.dom.showToast(`Board "${board.name}" archived successfully`, 'success');
+                eventBus.emit('board:archived', { boardId, board: updatedBoard });
+                
+                debugLog.log('📦 Board archived:', {
+                    boardId,
+                    boardName: board.name,
+                    taskCount: (board.tasks || []).length
+                });
+            }
+        } catch (error) {
+            console.error('❌ Failed to archive board:', error);
+            this.errorHandler.handleError(error, 'Failed to archive board');
+        }
+    }
+
+    /**
+     * Handle board unarchiving
+     * @param {Object} data - Event data containing boardId
+     */
+    async handleUnarchiveBoard(data) {
+        try {
+            const { boardId } = data;
+            
+            if (!boardId) {
+                throw new Error('Board ID is required for unarchiving');
+            }
+            
+            const board = this.state.get('boards').find(b => b.id === boardId);
+            if (!board) {
+                throw new Error('Board not found');
+            }
+            
+            if (!board.isArchived) {
+                this.dom.showToast('Board is not archived', 'error');
+                return;
+            }
+            
+            // Show confirmation dialog
+            const confirmed = await this.dom.showModal(
+                'Unarchive Board',
+                `Are you sure you want to unarchive "${board.name}"? The board will be restored to active status.`,
+                {
+                    showInput: false,
+                    showCancel: true,
+                    confirmText: 'Unarchive',
+                    cancelText: 'Cancel'
+                }
+            );
+            
+            if (confirmed) {
+                // Update board to active status
+                const updatedBoard = { ...board, isArchived: false, lastModified: new Date().toISOString() };
+                this.state.updateBoard(boardId, updatedBoard);
+                this.saveData();
+                
+                // Update UI
+                this.updateBoardSelector();
+                
+                // Refresh board management modal if open
+                const modal = document.getElementById('board-management-modal');
+                if (modal) {
+                    const allBoards = [...this.state.getActiveBoards(), ...this.state.getArchivedBoards()];
+                    const currentBoard = this.state.getCurrentBoard();
+                    
+                    // Update the boards list in the modal
+                    const boardsList = modal.querySelector('#boards-management-list');
+                    if (boardsList) {
+                        // Clear and repopulate the boards list
+                        boardsList.innerHTML = '';
+                        
+                        // Separate active and archived boards
+                        const activeBoards = allBoards.filter(board => !board.isArchived);
+                        const archivedBoards = allBoards.filter(board => board.isArchived);
+                        
+                        // Active boards
+                        if (activeBoards.length > 0) {
+                            const activeHeader = document.createElement('div');
+                            activeHeader.className = 'boards-section-header mb-2';
+                            activeHeader.textContent = 'Active Boards';
+                            boardsList.appendChild(activeHeader);
+                            
+                            activeBoards.forEach(board => {
+                                const boardItem = this.dom.createBoardManagementItem(board, currentBoard);
+                                boardsList.appendChild(boardItem);
+                            });
+                        }
+                        
+                        // Archived boards
+                        if (archivedBoards.length > 0) {
+                            const archivedHeader = document.createElement('div');
+                            archivedHeader.className = 'boards-section-header mb-2 mt-4';
+                            archivedHeader.textContent = 'Archived Boards';
+                            boardsList.appendChild(archivedHeader);
+                            
+                            archivedBoards.forEach(board => {
+                                const boardItem = this.dom.createBoardManagementItem(board, currentBoard);
+                                boardsList.appendChild(boardItem);
+                            });
+                        }
+                    }
+                }
+                
+                this.dom.showToast(`Board "${board.name}" unarchived successfully`, 'success');
+                eventBus.emit('board:unarchived', { boardId, board: updatedBoard });
+                
+                debugLog.log('📤 Board unarchived:', {
+                    boardId,
+                    boardName: board.name,
+                    taskCount: (board.tasks || []).length
+                });
+            }
+        } catch (error) {
+            console.error('❌ Failed to unarchive board:', error);
+            this.errorHandler.handleError(error, 'Failed to unarchive board');
+        }
     }
 
 

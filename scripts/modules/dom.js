@@ -258,7 +258,6 @@ class DOMManager {
         // Delegate board selection clicks
         this.delegate('click', '[data-board-action]', (event, element) => {
             event.preventDefault();
-            event.stopPropagation(); // Prevent dropdown from closing
             
             const action = element.dataset.boardAction;
             const boardId = element.dataset.boardId;
@@ -266,6 +265,18 @@ class DOMManager {
             switch (action) {
                 case 'switch':
                     eventBus.emit('board:switch', { boardId });
+                    // Close dropdown after switching
+                    this.closeBoardSelectorDropdown();
+                    break;
+                case 'create':
+                    eventBus.emit('board:create:request');
+                    // Close dropdown after action
+                    this.closeBoardSelectorDropdown();
+                    break;
+                case 'manage':
+                    eventBus.emit('boards:manage');
+                    // Close dropdown after action
+                    this.closeBoardSelectorDropdown();
                     break;
                 case 'edit':
                     eventBus.emit('board:edit', { boardId });
@@ -278,7 +289,23 @@ class DOMManager {
                     break;
             }
         });
+    }
 
+    /**
+     * Close the board selector dropdown
+     */
+    closeBoardSelectorDropdown() {
+        const dropdown = this.elements.boardSelectorMenu;
+        if (dropdown && dropdown.classList.contains('show')) {
+            dropdown.classList.remove('show');
+            dropdown.style.display = 'none';
+            
+            // Update aria-expanded on trigger button
+            const trigger = this.elements.boardSelectorBtn;
+            if (trigger) {
+                trigger.setAttribute('aria-expanded', 'false');
+            }
+        }
     }
 
     /**
@@ -871,9 +898,8 @@ class DOMManager {
             // Set content
             modalTitle.textContent = title;
             if (allowHTML) {
-                // Only allow HTML if explicitly requested - use textContent for safety
-                // In practice, we should avoid innerHTML entirely for user content
-                modalMessage.textContent = message; // Always use textContent for safety
+                // Only allow HTML if explicitly requested and content is trusted (like settings form)
+                modalMessage.innerHTML = message;
             } else {
                 modalMessage.textContent = message;
             }
@@ -885,6 +911,9 @@ class DOMManager {
 
             const cleanup = () => {
                 modal.classList.remove('modal-overlay--visible');
+                
+                // Reset z-index
+                modal.style.zIndex = '';
                 
                 // Remove event listeners
                 modalConfirm.removeEventListener('click', confirmHandler);
@@ -940,6 +969,12 @@ class DOMManager {
             
             // Add delay before making visible to ensure handlers are ready
             setTimeout(() => {
+                // Check if archive modal or board management modal is open and adjust z-index to appear above it
+                const archiveModal = document.getElementById('archive-modal');
+                const boardManagementModal = document.getElementById('board-management-modal');
+                if (archiveModal || boardManagementModal) {
+                    modal.style.zIndex = 'calc(var(--z-modal) + 10)';
+                }
                 modal.classList.add('modal-overlay--visible');
             }, 10);
 
@@ -1088,6 +1123,640 @@ class DOMManager {
     }
 
     /**
+     * Show board management modal
+     * @param {Array} boards - All boards (active and archived)
+     * @param {Object} currentBoard - Currently selected board
+     */
+    showBoardManagementModal(boards, currentBoard) {
+        const modal = this.createBoardManagementModal(boards, currentBoard);
+        document.body.appendChild(modal);
+        
+        // Show modal with animation
+        requestAnimationFrame(() => {
+            modal.classList.add('modal-overlay--visible');
+        });
+        
+        // Focus first interactive element
+        const firstButton = modal.querySelector('button, input, select');
+        if (firstButton) {
+            setTimeout(() => firstButton.focus(), 100);
+        }
+        
+        // Prevent body scroll
+        document.body.style.overflow = 'hidden';
+        
+        // Setup modal event listeners
+        this.setupBoardManagementModalEvents(modal);
+    }
+
+    /**
+     * Create board management modal element
+     * @param {Array} boards - All boards
+     * @param {Object} currentBoard - Currently selected board
+     * @returns {HTMLElement} Modal element
+     */
+    createBoardManagementModal(boards, currentBoard) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay board-management-modal';
+        modal.id = 'board-management-modal';
+        
+        const modalBox = document.createElement('div');
+        modalBox.className = 'modal-box';
+        
+        // Modal header
+        const header = document.createElement('div');
+        header.className = 'modal-header d-flex justify-content-between align-items-center mb-3';
+        
+        const title = document.createElement('h5');
+        title.className = 'modal-title mb-0';
+        title.textContent = '📋 Manage Boards';
+        
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'btn btn-sm btn-outline-secondary';
+        closeBtn.setAttribute('data-action', 'close');
+        closeBtn.setAttribute('aria-label', 'Close board management');
+        closeBtn.textContent = '✕';
+        
+        header.appendChild(title);
+        header.appendChild(closeBtn);
+        
+        // Modal content
+        const content = document.createElement('div');
+        content.className = 'modal-content';
+        
+        // Create new board section
+        const createSection = this.createNewBoardSection();
+        content.appendChild(createSection);
+        
+        // Boards list section
+        const boardsSection = this.createBoardsListSection(boards, currentBoard);
+        content.appendChild(boardsSection);
+        
+        modalBox.appendChild(header);
+        modalBox.appendChild(content);
+        modal.appendChild(modalBox);
+        
+        return modal;
+    }
+
+    /**
+     * Create new board section
+     * @returns {HTMLElement} New board section
+     */
+    createNewBoardSection() {
+        const section = document.createElement('div');
+        section.className = 'new-board-section mb-4 p-3 border rounded';
+        
+        const sectionTitle = document.createElement('h6');
+        sectionTitle.className = 'mb-3';
+        sectionTitle.textContent = '➕ Create New Board';
+        
+        const form = document.createElement('form');
+        form.className = 'new-board-form';
+        form.setAttribute('data-action', 'create-board');
+        
+        // Board name input
+        const nameGroup = document.createElement('div');
+        nameGroup.className = 'mb-3';
+        
+        const nameLabel = document.createElement('label');
+        nameLabel.className = 'form-label';
+        nameLabel.textContent = 'Board Name';
+        nameLabel.setAttribute('for', 'new-board-name');
+        
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.className = 'form-control';
+        nameInput.id = 'new-board-name';
+        nameInput.placeholder = 'Enter board name (1-50 characters)';
+        nameInput.maxLength = 50;
+        nameInput.required = true;
+        
+        nameGroup.appendChild(nameLabel);
+        nameGroup.appendChild(nameInput);
+        
+        // Board description input
+        const descGroup = document.createElement('div');
+        descGroup.className = 'mb-3';
+        
+        const descLabel = document.createElement('label');
+        descLabel.className = 'form-label';
+        descLabel.textContent = 'Description (Optional)';
+        descLabel.setAttribute('for', 'new-board-description');
+        
+        const descInput = document.createElement('textarea');
+        descInput.className = 'form-control';
+        descInput.id = 'new-board-description';
+        descInput.placeholder = 'Enter board description (max 200 characters)';
+        descInput.maxLength = 200;
+        descInput.rows = 2;
+        
+        descGroup.appendChild(descLabel);
+        descGroup.appendChild(descInput);
+        
+        // Board color picker
+        const colorGroup = document.createElement('div');
+        colorGroup.className = 'mb-3';
+        
+        const colorLabel = document.createElement('label');
+        colorLabel.className = 'form-label';
+        colorLabel.textContent = 'Board Color';
+        
+        const colorPicker = this.createColorPicker();
+        
+        colorGroup.appendChild(colorLabel);
+        colorGroup.appendChild(colorPicker);
+        
+        // Submit button
+        const submitBtn = document.createElement('button');
+        submitBtn.type = 'submit';
+        submitBtn.className = 'btn btn-primary';
+        submitBtn.textContent = 'Create Board';
+        
+        form.appendChild(nameGroup);
+        form.appendChild(descGroup);
+        form.appendChild(colorGroup);
+        form.appendChild(submitBtn);
+        
+        section.appendChild(sectionTitle);
+        section.appendChild(form);
+        
+        return section;
+    }
+
+    /**
+     * Create color picker for board colors
+     * @returns {HTMLElement} Color picker element
+     */
+    createColorPicker() {
+        const colorPicker = document.createElement('div');
+        colorPicker.className = 'color-picker d-flex flex-wrap gap-2';
+        
+        // Material Design 3 color palette
+        const colors = [
+            '#6750a4', '#7c4dff', '#3f51b5', '#2196f3', '#03a9f4',
+            '#00bcd4', '#009688', '#4caf50', '#8bc34a', '#cddc39',
+            '#ffeb3b', '#ffc107', '#ff9800', '#ff5722', '#f44336',
+            '#e91e63', '#9c27b0', '#673ab7', '#607d8b', '#795548'
+        ];
+        
+        colors.forEach((color, index) => {
+            const colorOption = document.createElement('button');
+            colorOption.type = 'button';
+            colorOption.className = 'color-option';
+            colorOption.style.cssText = `
+                width: 32px;
+                height: 32px;
+                background-color: ${color};
+                border: 2px solid transparent;
+                border-radius: 50%;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            `;
+            colorOption.setAttribute('data-color', color);
+            colorOption.setAttribute('title', `Color ${index + 1}`);
+            colorOption.setAttribute('aria-label', `Select color ${color}`);
+            
+            // Set first color as default
+            if (index === 0) {
+                colorOption.style.borderColor = '#000';
+                colorOption.classList.add('selected');
+            }
+            
+            colorPicker.appendChild(colorOption);
+        });
+        
+        return colorPicker;
+    }
+
+    /**
+     * Create boards list section
+     * @param {Array} boards - All boards
+     * @param {Object} currentBoard - Currently selected board
+     * @returns {HTMLElement} Boards list section
+     */
+    createBoardsListSection(boards, currentBoard) {
+        const section = document.createElement('div');
+        section.className = 'boards-list-section';
+        
+        const sectionTitle = document.createElement('h6');
+        sectionTitle.className = 'mb-3';
+        sectionTitle.textContent = '📋 All Boards';
+        
+        const boardsList = document.createElement('div');
+        boardsList.className = 'boards-list';
+        boardsList.id = 'boards-management-list';
+        
+        if (boards.length === 0) {
+            const emptyState = document.createElement('div');
+            emptyState.className = 'empty-state text-center text-muted py-4';
+            emptyState.textContent = 'No boards available';
+            boardsList.appendChild(emptyState);
+        } else {
+            // Separate active and archived boards
+            const activeBoards = boards.filter(board => !board.isArchived);
+            const archivedBoards = boards.filter(board => board.isArchived);
+            
+            // Active boards
+            if (activeBoards.length > 0) {
+                const activeHeader = document.createElement('div');
+                activeHeader.className = 'boards-section-header mb-2';
+                activeHeader.textContent = 'Active Boards';
+                boardsList.appendChild(activeHeader);
+                
+                activeBoards.forEach(board => {
+                    const boardItem = this.createBoardManagementItem(board, currentBoard);
+                    boardsList.appendChild(boardItem);
+                });
+            }
+            
+            // Archived boards
+            if (archivedBoards.length > 0) {
+                const archivedHeader = document.createElement('div');
+                archivedHeader.className = 'boards-section-header mb-2 mt-4';
+                archivedHeader.textContent = 'Archived Boards';
+                boardsList.appendChild(archivedHeader);
+                
+                archivedBoards.forEach(board => {
+                    const boardItem = this.createBoardManagementItem(board, currentBoard);
+                    boardsList.appendChild(boardItem);
+                });
+            }
+        }
+        
+        section.appendChild(sectionTitle);
+        section.appendChild(boardsList);
+        
+        return section;
+    }
+
+    /**
+     * Create individual board management item
+     * @param {Object} board - Board data
+     * @param {Object} currentBoard - Currently selected board
+     * @returns {HTMLElement} Board item element
+     */
+    createBoardManagementItem(board, currentBoard) {
+        const item = document.createElement('div');
+        item.className = `board-management-item ${board.isArchived ? 'archived' : ''} ${currentBoard && board.id === currentBoard.id ? 'current' : ''}`;
+        item.setAttribute('data-board-id', board.id);
+        
+        const itemContent = document.createElement('div');
+        itemContent.className = 'board-item-content d-flex align-items-center gap-3 p-3 border rounded mb-2';
+        
+        // Board color indicator
+        const colorIndicator = document.createElement('div');
+        colorIndicator.className = 'board-color-indicator';
+        colorIndicator.style.cssText = `
+            width: 16px;
+            height: 16px;
+            background-color: ${board.color};
+            border-radius: 50%;
+            flex-shrink: 0;
+        `;
+        
+        // Board info
+        const boardInfo = document.createElement('div');
+        boardInfo.className = 'board-info flex-grow-1';
+        
+        const boardName = document.createElement('div');
+        boardName.className = 'board-name fw-semibold';
+        boardName.textContent = board.name;
+        
+        const boardMeta = document.createElement('div');
+        boardMeta.className = 'board-meta text-muted small';
+        
+        const taskCount = (board.tasks || []).length;
+        const statusText = board.isArchived ? 'Archived' : 'Active';
+        const defaultText = board.isDefault ? ' • Default' : '';
+        const currentText = currentBoard && board.id === currentBoard.id ? ' • Current' : '';
+        
+        boardMeta.textContent = `${taskCount} tasks • ${statusText}${defaultText}${currentText}`;
+        
+        if (board.description) {
+            const boardDesc = document.createElement('div');
+            boardDesc.className = 'board-description text-muted small mt-1';
+            boardDesc.textContent = board.description;
+            boardInfo.appendChild(boardName);
+            boardInfo.appendChild(boardDesc);
+            boardInfo.appendChild(boardMeta);
+        } else {
+            boardInfo.appendChild(boardName);
+            boardInfo.appendChild(boardMeta);
+        }
+        
+        // Board actions
+        const boardActions = document.createElement('div');
+        boardActions.className = 'board-actions d-flex gap-2';
+        
+        // Switch button (only for active boards)
+        if (!board.isArchived && (!currentBoard || board.id !== currentBoard.id)) {
+            const switchBtn = document.createElement('button');
+            switchBtn.className = 'btn btn-sm btn-outline-primary';
+            switchBtn.setAttribute('data-action', 'switch');
+            switchBtn.setAttribute('data-board-id', board.id);
+            switchBtn.setAttribute('title', 'Switch to this board');
+            switchBtn.textContent = '🔄';
+            boardActions.appendChild(switchBtn);
+        }
+        
+        // Edit button
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn btn-sm btn-outline-secondary';
+        editBtn.setAttribute('data-action', 'edit');
+        editBtn.setAttribute('data-board-id', board.id);
+        editBtn.setAttribute('title', 'Edit board');
+        editBtn.textContent = '✏️';
+        boardActions.appendChild(editBtn);
+        
+        // Duplicate button
+        const duplicateBtn = document.createElement('button');
+        duplicateBtn.className = 'btn btn-sm btn-outline-info';
+        duplicateBtn.setAttribute('data-action', 'duplicate');
+        duplicateBtn.setAttribute('data-board-id', board.id);
+        duplicateBtn.setAttribute('title', 'Duplicate board');
+        duplicateBtn.textContent = '📋';
+        boardActions.appendChild(duplicateBtn);
+        
+        // Archive/Unarchive button
+        const archiveBtn = document.createElement('button');
+        archiveBtn.className = `btn btn-sm ${board.isArchived ? 'btn-outline-success' : 'btn-outline-warning'}`;
+        archiveBtn.setAttribute('data-action', board.isArchived ? 'unarchive' : 'archive');
+        archiveBtn.setAttribute('data-board-id', board.id);
+        archiveBtn.setAttribute('title', board.isArchived ? 'Unarchive board' : 'Archive board');
+        archiveBtn.textContent = board.isArchived ? '📤' : '📦';
+        boardActions.appendChild(archiveBtn);
+        
+        // Delete button (not for default boards)
+        if (!board.isDefault) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn btn-sm btn-outline-danger';
+            deleteBtn.setAttribute('data-action', 'delete');
+            deleteBtn.setAttribute('data-board-id', board.id);
+            deleteBtn.setAttribute('title', 'Delete board');
+            deleteBtn.textContent = '🗑️';
+            boardActions.appendChild(deleteBtn);
+        }
+        
+        itemContent.appendChild(colorIndicator);
+        itemContent.appendChild(boardInfo);
+        itemContent.appendChild(boardActions);
+        
+        item.appendChild(itemContent);
+        
+        return item;
+    }
+
+    /**
+     * Setup board management modal event listeners
+     * @param {HTMLElement} modal - Modal element
+     */
+    setupBoardManagementModalEvents(modal) {
+        // Close modal events
+        const closeModal = () => {
+            modal.classList.remove('modal-overlay--visible');
+            document.body.style.overflow = '';
+            setTimeout(() => {
+                if (modal.parentNode) {
+                    modal.parentNode.removeChild(modal);
+                }
+            }, 300);
+        };
+        
+        // Close button
+        modal.addEventListener('click', (event) => {
+            if (event.target.getAttribute('data-action') === 'close') {
+                closeModal();
+            }
+        });
+        
+        // Click outside to close
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+        
+        // Escape key to close
+        const escapeHandler = (event) => {
+            if (event.key === 'Escape') {
+                closeModal();
+                document.removeEventListener('keydown', escapeHandler);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+        
+        // Color picker events
+        modal.addEventListener('click', (event) => {
+            if (event.target.classList.contains('color-option')) {
+                // Remove previous selection
+                modal.querySelectorAll('.color-option').forEach(option => {
+                    option.classList.remove('selected');
+                    option.style.borderColor = 'transparent';
+                });
+                
+                // Select new color
+                event.target.classList.add('selected');
+                event.target.style.borderColor = '#000';
+            }
+        });
+        
+        // New board form submission
+        modal.addEventListener('submit', (event) => {
+            if (event.target.getAttribute('data-action') === 'create-board') {
+                event.preventDefault();
+                this.handleNewBoardSubmission(event.target, closeModal);
+            }
+        });
+        
+        // Board action buttons
+        modal.addEventListener('click', (event) => {
+            const action = event.target.getAttribute('data-action');
+            const boardId = event.target.getAttribute('data-board-id');
+            
+            if (action && boardId) {
+                event.preventDefault();
+                
+                switch (action) {
+                    case 'switch':
+                        eventBus.emit('board:switch', { boardId });
+                        closeModal();
+                        break;
+                    case 'edit':
+                        this.handleBoardEditInModal(boardId, event.target);
+                        break;
+                    case 'duplicate':
+                        eventBus.emit('board:duplicate', { boardId });
+                        break;
+                    case 'archive':
+                        eventBus.emit('board:archive', { boardId });
+                        break;
+                    case 'unarchive':
+                        eventBus.emit('board:unarchive', { boardId });
+                        break;
+                    case 'delete':
+                        eventBus.emit('board:delete', { boardId });
+                        break;
+                }
+            }
+        });
+    }
+
+    /**
+     * Handle new board form submission
+     * @param {HTMLFormElement} form - Form element
+     * @param {Function} closeModal - Function to close modal
+     */
+    handleNewBoardSubmission(form, closeModal) {
+        const nameInput = form.querySelector('#new-board-name');
+        const descInput = form.querySelector('#new-board-description');
+        const selectedColor = form.querySelector('.color-option.selected');
+        
+        const name = nameInput.value.trim();
+        const description = descInput.value.trim();
+        const color = selectedColor ? selectedColor.getAttribute('data-color') : '#6750a4';
+        
+        if (!name) {
+            nameInput.focus();
+            this.showToast('Board name is required', 'error');
+            return;
+        }
+        
+        if (name.length > 50) {
+            nameInput.focus();
+            this.showToast('Board name must be 50 characters or less', 'error');
+            return;
+        }
+        
+        if (description.length > 200) {
+            descInput.focus();
+            this.showToast('Board description must be 200 characters or less', 'error');
+            return;
+        }
+        
+        // Emit board creation event
+        eventBus.emit('board:create', {
+            name,
+            description,
+            color
+        });
+        
+        // Reset form
+        form.reset();
+        
+        // Reset color selection to first color
+        form.querySelectorAll('.color-option').forEach((option, index) => {
+            option.classList.remove('selected');
+            option.style.borderColor = 'transparent';
+            if (index === 0) {
+                option.classList.add('selected');
+                option.style.borderColor = '#000';
+            }
+        });
+        
+        closeModal();
+    }
+
+    /**
+     * Handle board editing within the modal
+     * @param {string} boardId - Board ID to edit
+     * @param {HTMLElement} editButton - Edit button element
+     */
+    handleBoardEditInModal(boardId, editButton) {
+        // Find the board item
+        const boardItem = editButton.closest('.board-management-item');
+        const boardInfo = boardItem.querySelector('.board-info');
+        const boardName = boardInfo.querySelector('.board-name');
+        const boardDesc = boardInfo.querySelector('.board-description');
+        
+        // Create inline edit form
+        const editForm = document.createElement('form');
+        editForm.className = 'inline-edit-form';
+        
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.className = 'form-control form-control-sm mb-2';
+        nameInput.value = boardName.textContent;
+        nameInput.maxLength = 50;
+        nameInput.required = true;
+        
+        const descInput = document.createElement('textarea');
+        descInput.className = 'form-control form-control-sm mb-2';
+        descInput.value = boardDesc ? boardDesc.textContent : '';
+        descInput.maxLength = 200;
+        descInput.rows = 2;
+        descInput.placeholder = 'Board description (optional)';
+        
+        const buttonGroup = document.createElement('div');
+        buttonGroup.className = 'd-flex gap-2';
+        
+        const saveBtn = document.createElement('button');
+        saveBtn.type = 'submit';
+        saveBtn.className = 'btn btn-sm btn-primary';
+        saveBtn.textContent = 'Save';
+        
+        const cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.className = 'btn btn-sm btn-secondary';
+        cancelBtn.textContent = 'Cancel';
+        
+        buttonGroup.appendChild(saveBtn);
+        buttonGroup.appendChild(cancelBtn);
+        
+        editForm.appendChild(nameInput);
+        editForm.appendChild(descInput);
+        editForm.appendChild(buttonGroup);
+        
+        // Replace board info with edit form
+        boardInfo.style.display = 'none';
+        boardItem.appendChild(editForm);
+        
+        // Focus name input
+        nameInput.focus();
+        nameInput.select();
+        
+        // Handle form submission
+        editForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            
+            const newName = nameInput.value.trim();
+            const newDescription = descInput.value.trim();
+            
+            if (!newName) {
+                nameInput.focus();
+                return;
+            }
+            
+            // Emit board edit event
+            eventBus.emit('board:edit', {
+                boardId,
+                name: newName,
+                description: newDescription
+            });
+            
+            // Restore original display
+            boardInfo.style.display = '';
+            editForm.remove();
+        });
+        
+        // Handle cancel
+        cancelBtn.addEventListener('click', () => {
+            boardInfo.style.display = '';
+            editForm.remove();
+        });
+        
+        // Handle escape key
+        const escapeHandler = (event) => {
+            if (event.key === 'Escape') {
+                boardInfo.style.display = '';
+                editForm.remove();
+                document.removeEventListener('keydown', escapeHandler);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+    }
+
+    /**
      * Render board selector
      * @param {Array} boards - Available boards
      * @param {Object} currentBoard - Currently selected board
@@ -1102,84 +1771,204 @@ class DOMManager {
         if (this.elements.activeBoardsList) {
             this.elements.activeBoardsList.innerHTML = '';
             
+            // Add boards section header
+            const boardsHeader = document.createElement('li');
+            boardsHeader.innerHTML = '<h6 class="dropdown-header">Switch Board</h6>';
+            this.elements.activeBoardsList.appendChild(boardsHeader);
+            
             if (boards.length === 0) {
                 const emptyItem = document.createElement('li');
                 emptyItem.innerHTML = '<span class="dropdown-item text-muted">No boards available</span>';
                 this.elements.activeBoardsList.appendChild(emptyItem);
-                return;
+            } else {
+                // Render each board with enhanced information
+                boards.forEach(board => {
+                    const listItem = this.createBoardSelectorItem(board, currentBoard);
+                    this.elements.activeBoardsList.appendChild(listItem);
+                });
             }
             
-            boards.forEach(board => {
-                const listItem = document.createElement('li');
-                const isActive = currentBoard && board.id === currentBoard.id;
-                
-                // Create board list item safely
-                const link = document.createElement('a');
-                link.className = `dropdown-item ${isActive ? 'active' : ''}`;
-                link.href = '#';
-                link.setAttribute('data-board-action', 'switch');
-                link.setAttribute('data-board-id', board.id);
-                
-                const container = document.createElement('div');
-                container.className = 'd-flex align-items-center gap-2';
-                
-                const colorDiv = document.createElement('div');
-                colorDiv.className = 'board-color';
-                colorDiv.style.cssText = `width: 12px; height: 12px; background-color: ${board.color}; border-radius: 2px;`;
-                
-                const contentDiv = document.createElement('div');
-                contentDiv.className = 'flex-grow-1';
-                
-                const nameDiv = document.createElement('div');
-                nameDiv.className = 'board-name';
-                nameDiv.textContent = board.name; // Use textContent for safety
-                
-                const taskCount = document.createElement('small');
-                taskCount.className = 'text-muted';
-                taskCount.textContent = `${(board.tasks || []).length} tasks`;
-                
-                contentDiv.appendChild(nameDiv);
-                contentDiv.appendChild(taskCount);
-                
-                const actionsDiv = document.createElement('div');
-                actionsDiv.className = 'board-actions';
-                
-                const editBtn = document.createElement('button');
-                editBtn.className = 'btn btn-sm btn-outline-secondary me-1';
-                editBtn.setAttribute('data-board-action', 'edit');
-                editBtn.setAttribute('data-board-id', board.id);
-                editBtn.setAttribute('title', 'Rename board');
-                editBtn.textContent = '✏️';
-                
-                actionsDiv.appendChild(editBtn);
-                
-                if (!board.isDefault) {
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'btn btn-sm btn-outline-danger';
-                    deleteBtn.setAttribute('data-board-action', 'delete');
-                    deleteBtn.setAttribute('data-board-id', board.id);
-                    deleteBtn.setAttribute('title', 'Delete board');
-                    deleteBtn.textContent = '🗑️';
-                    actionsDiv.appendChild(deleteBtn);
-                }
-                
-                container.appendChild(colorDiv);
-                container.appendChild(contentDiv);
-                container.appendChild(actionsDiv);
-                
-                if (isActive) {
-                    const checkmark = document.createElement('span');
-                    checkmark.className = 'text-primary ms-2';
-                    checkmark.textContent = '✓';
-                    container.appendChild(checkmark);
-                }
-                
-                link.appendChild(container);
-                listItem.appendChild(link);
-                
-                this.elements.activeBoardsList.appendChild(listItem);
-            });
+            // Add divider
+            const divider = document.createElement('li');
+            divider.innerHTML = '<hr class="dropdown-divider">';
+            this.elements.activeBoardsList.appendChild(divider);
+            
+            // Add "Create New Board" option
+            const createBoardItem = document.createElement('li');
+            const createBoardLink = document.createElement('a');
+            createBoardLink.className = 'dropdown-item';
+            createBoardLink.href = '#';
+            createBoardLink.setAttribute('data-board-action', 'create');
+            
+            const createContainer = document.createElement('div');
+            createContainer.className = 'd-flex align-items-center gap-2';
+            
+            const createIcon = document.createElement('span');
+            createIcon.textContent = '➕';
+            createIcon.style.cssText = 'width: 16px; text-align: center;';
+            
+            const createText = document.createElement('span');
+            createText.textContent = 'Create New Board';
+            createText.className = 'fw-medium';
+            
+            createContainer.appendChild(createIcon);
+            createContainer.appendChild(createText);
+            createBoardLink.appendChild(createContainer);
+            createBoardItem.appendChild(createBoardLink);
+            this.elements.activeBoardsList.appendChild(createBoardItem);
+            
+            // Add "Manage Boards" option
+            const manageBoardsItem = document.createElement('li');
+            const manageBoardsLink = document.createElement('a');
+            manageBoardsLink.className = 'dropdown-item';
+            manageBoardsLink.href = '#';
+            manageBoardsLink.setAttribute('data-board-action', 'manage');
+            
+            const manageContainer = document.createElement('div');
+            manageContainer.className = 'd-flex align-items-center gap-2';
+            
+            const manageIcon = document.createElement('span');
+            manageIcon.textContent = '⚙️';
+            manageIcon.style.cssText = 'width: 16px; text-align: center;';
+            
+            const manageText = document.createElement('span');
+            manageText.textContent = 'Manage Boards';
+            manageText.className = 'fw-medium';
+            
+            manageContainer.appendChild(manageIcon);
+            manageContainer.appendChild(manageText);
+            manageBoardsLink.appendChild(manageContainer);
+            manageBoardsItem.appendChild(manageBoardsLink);
+            this.elements.activeBoardsList.appendChild(manageBoardsItem);
         }
+    }
+
+    /**
+     * Create individual board selector item with statistics and visual indicators
+     * @param {Object} board - Board data
+     * @param {Object} currentBoard - Currently selected board
+     * @returns {HTMLElement} Board selector item
+     */
+    createBoardSelectorItem(board, currentBoard) {
+        const listItem = document.createElement('li');
+        const isActive = currentBoard && board.id === currentBoard.id;
+        
+        // Create board list item
+        const link = document.createElement('a');
+        link.className = `dropdown-item board-selector-item ${isActive ? 'active' : ''}`;
+        link.href = '#';
+        link.setAttribute('data-board-action', 'switch');
+        link.setAttribute('data-board-id', board.id);
+        link.setAttribute('title', `Switch to ${board.name}`);
+        
+        const container = document.createElement('div');
+        container.className = 'd-flex align-items-center gap-3 py-1';
+        
+        // Board color indicator with enhanced visual
+        const colorIndicator = document.createElement('div');
+        colorIndicator.className = 'board-color-indicator';
+        colorIndicator.style.cssText = `
+            width: 16px; 
+            height: 16px; 
+            background-color: ${board.color}; 
+            border-radius: 3px;
+            border: 1px solid rgba(0,0,0,0.1);
+            flex-shrink: 0;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        `;
+        
+        // Board content with name and description
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'board-content flex-grow-1';
+        
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'board-name fw-medium';
+        nameDiv.textContent = board.name;
+        
+        // Add description if available
+        if (board.description && board.description.trim()) {
+            const descDiv = document.createElement('div');
+            descDiv.className = 'board-description text-muted small';
+            descDiv.textContent = board.description;
+            descDiv.style.cssText = 'font-size: 0.75rem; line-height: 1.2;';
+            contentDiv.appendChild(nameDiv);
+            contentDiv.appendChild(descDiv);
+        } else {
+            contentDiv.appendChild(nameDiv);
+        }
+        
+        // Board statistics with task counts by status
+        const statsDiv = document.createElement('div');
+        statsDiv.className = 'board-stats';
+        
+        const tasks = board.tasks || [];
+        const todoCount = tasks.filter(task => task.status === 'todo').length;
+        const doingCount = tasks.filter(task => task.status === 'doing').length;
+        const doneCount = tasks.filter(task => task.status === 'done').length;
+        const totalCount = tasks.length;
+        
+        // Create compact statistics display
+        const statsContainer = document.createElement('div');
+        statsContainer.className = 'stats-container d-flex flex-column align-items-end';
+        
+        // Total tasks count
+        const totalStats = document.createElement('div');
+        totalStats.className = 'total-stats text-muted small fw-medium';
+        totalStats.textContent = `${totalCount} task${totalCount === 1 ? '' : 's'}`;
+        
+        // Status breakdown (only show if there are tasks)
+        if (totalCount > 0) {
+            const statusStats = document.createElement('div');
+            statusStats.className = 'status-stats d-flex gap-2 small';
+            statusStats.style.cssText = 'font-size: 0.7rem;';
+            
+            if (todoCount > 0) {
+                const todoStat = document.createElement('span');
+                todoStat.className = 'status-stat status-stat--todo';
+                todoStat.textContent = `📋${todoCount}`;
+                todoStat.setAttribute('title', `${todoCount} To-Do tasks`);
+                statusStats.appendChild(todoStat);
+            }
+            
+            if (doingCount > 0) {
+                const doingStat = document.createElement('span');
+                doingStat.className = 'status-stat status-stat--doing';
+                doingStat.textContent = `⚡${doingCount}`;
+                doingStat.setAttribute('title', `${doingCount} In Progress tasks`);
+                statusStats.appendChild(doingStat);
+            }
+            
+            if (doneCount > 0) {
+                const doneStat = document.createElement('span');
+                doneStat.className = 'status-stat status-stat--done';
+                doneStat.textContent = `✅${doneCount}`;
+                doneStat.setAttribute('title', `${doneCount} Done tasks`);
+                statusStats.appendChild(doneStat);
+            }
+            
+            statsContainer.appendChild(totalStats);
+            statsContainer.appendChild(statusStats);
+        } else {
+            statsContainer.appendChild(totalStats);
+        }
+        
+        // Active board indicator
+        if (isActive) {
+            const activeIndicator = document.createElement('div');
+            activeIndicator.className = 'active-indicator text-primary ms-2';
+            activeIndicator.textContent = '✓';
+            activeIndicator.setAttribute('title', 'Currently active board');
+            statsContainer.appendChild(activeIndicator);
+        }
+        
+        container.appendChild(colorIndicator);
+        container.appendChild(contentDiv);
+        container.appendChild(statsContainer);
+        
+        link.appendChild(container);
+        listItem.appendChild(link);
+        
+        return listItem;
     }
 
     /**
@@ -1206,10 +1995,13 @@ class DOMManager {
      * @param {string} boardName - Name of the board
      */
     showArchiveBrowser(archivedTasks, boardName) {
+        console.log('[DEBUG] showArchiveBrowser called with:', archivedTasks.length, 'tasks, board:', boardName);
+        
         // Create archive modal HTML
         const archiveModal = document.createElement('div');
         archiveModal.className = 'modal-overlay archive-modal';
         archiveModal.id = 'archive-modal';
+        console.log('[DEBUG] Archive modal element created:', archiveModal);
         
         // Sort archived tasks by archived date (newest first)
         const sortedTasks = [...archivedTasks].sort((a, b) => 
@@ -1271,7 +2063,7 @@ class DOMManager {
         archiveStats.appendChild(statsText);
         
         const tasksListDiv = document.createElement('div');
-        tasksList.className = 'archive-tasks-list';
+        tasksListDiv.className = 'archive-tasks-list';
         // Create tasks list safely - tasksList contains pre-sanitized HTML
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = tasksList; // tasksList is already sanitized above
@@ -1306,6 +2098,11 @@ class DOMManager {
         
         // Add to DOM
         document.body.appendChild(archiveModal);
+        console.log('[DEBUG] Archive modal added to DOM. Modal element:', archiveModal);
+        
+        // Make modal visible by adding the --visible class
+        archiveModal.classList.add('modal-overlay--visible');
+        console.log('[DEBUG] Modal visibility class added. Modal should now be visible.');
         
         // Add global functions for archive actions
         window.closeArchiveModal = () => {
@@ -1321,14 +2118,17 @@ class DOMManager {
         };
         
         window.restoreArchivedTask = (taskId) => {
+            console.log('[DEBUG] Restore clicked for task:', taskId);
             eventBus.emit('archive:restore', { taskId });
         };
         
         window.deleteArchivedTask = (taskId) => {
+            console.log('[DEBUG] Delete clicked for task:', taskId);
             eventBus.emit('archive:delete', { taskId });
         };
         
         window.clearAllArchived = () => {
+            console.log('[DEBUG] Clear All Archived clicked');
             eventBus.emit('archive:clearAll');
         };
         
