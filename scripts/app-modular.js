@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Initialize error handling first
         ErrorHandler.init();
         
+        // Force debug mode to false on application start unless explicitly enabled
+        settingsManager.setDebugMode(false);
+        
         // Expose models globally for cross-module access
         window.cascadeModels = { Task, Board, createTask, createBoard };
         
@@ -138,10 +141,12 @@ Debug mode is currently: ${settingsManager.get('debugMode') ? 'ON' : 'OFF'}
         }
     };
     
-    // Show available debug commands on first load (only in debug mode)
-    setTimeout(() => {
-        if (settingsManager.get('debugMode')) {
-            console.log('🔧 Debug mode is active! Type cascadeDebug.help() for available commands.');
-        }
-    }, 500);
+    // // Show available debug commands on first load (only in debug mode)
+     setTimeout(() => {
+         // Ensure debug mode is explicitly disabled on fresh start
+         const currentDebugMode = settingsManager.get('debugMode');
+         if (currentDebugMode) {
+             console.log('🔧 Debug mode is active! Type cascadeDebug.help() for available commands.');
+         }
+     }, 500);
 }
