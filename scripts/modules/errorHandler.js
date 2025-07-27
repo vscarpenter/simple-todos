@@ -96,6 +96,29 @@ export class ErrorHandler {
   }
 
   /**
+   * Show error message to user
+   * @param {Error} error - The error object
+   * @param {string} context - Context where error occurred
+   * @param {Object} options - Display options
+   */
+  static showErrorToUser(error, context, options = {}) {
+    const { severity = 'error', autoHide = true, duration = 5000 } = options;
+    
+    const message = this.getUserFriendlyMessage(error, context);
+    const errorElement = this.createErrorElement(message, severity);
+    
+    if (this.errorContainer) {
+      this.errorContainer.appendChild(errorElement);
+      
+      if (autoHide) {
+        setTimeout(() => {
+          this.hideError(errorElement);
+        }, duration);
+      }
+    }
+  }
+
+  /**
    * Show success message to user
    * @param {string} message - Success message
    * @param {Object} options - Display options

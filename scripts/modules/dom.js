@@ -1,6 +1,7 @@
 import eventBus from './eventBus.js';
 import accessibility from './accessibility.js';
 import { debugLog } from './settings.js';
+import performanceOptimizer from './performance.js';
 
 /**
  * DOM manipulation and event delegation module
@@ -81,6 +82,7 @@ class DOMManager {
             manageBoardsMenuBtn: document.getElementById('manage-boards-menu-btn'),
             preferencesBtn: document.getElementById('preferences-btn'),
             browseArchiveBtn: document.getElementById('browse-archive-btn'),
+            demoModeMenuBtn: document.getElementById('demo-mode-menu-btn'),
             
             // Developer menu buttons
             resetAppMenuBtn: document.getElementById('reset-app-menu-btn'),
@@ -110,13 +112,14 @@ class DOMManager {
             
             switch (action) {
                 case 'edit':
-                    eventBus.emit('task:edit', { taskId });
+                    const currentText = element.closest('.task-card').querySelector('.task-text')?.textContent;
+                    eventBus.emit('task:edit:requested', { taskId, currentText });
                     break;
                 case 'delete':
-                    eventBus.emit('task:delete', { taskId });
+                    eventBus.emit('task:delete:requested', { taskId });
                     break;
                 case 'move':
-                    eventBus.emit('task:move', { taskId, targetStatus });
+                    eventBus.emit('task:moved', { taskId, targetStatus });
                     break;
                 case 'archive':
                     eventBus.emit('task:archive', { taskId });
@@ -154,6 +157,9 @@ class DOMManager {
             element.classList.remove('dragging');
             eventBus.emit('drag:end', { element });
         });
+
+        // Setup drop zone event listeners for columns
+        this.setupDropZones();
     }
 
     /**
@@ -246,6 +252,25 @@ class DOMManager {
         
         // Setup drag and drop zones
         this.setupDropZones();
+        
+        // Setup event bus listeners for DOM updates
+        eventBus.on('tasks:changed', (data) => {
+            if (data && data.tasksByStatus) {
+                this.renderTasks(data.tasksByStatus);
+            }
+        });
+        
+        eventBus.on('boards:changed', (data) => {
+            if (data && data.boards && data.currentBoardId) {
+                this.renderBoardSelector(data.boards, data.currentBoardId);
+            }
+        });
+        
+        eventBus.on('theme:changed', (data) => {
+            if (data && data.theme) {
+                document.body.className = `theme-${data.theme}`;
+            }
+        });
         
         // Setup board selector events
         this.setupBoardSelectorEvents();
@@ -382,6 +407,13 @@ class DOMManager {
             });
         }
 
+        if (this.elements.demoModeMenuBtn) {
+            this.elements.demoModeMenuBtn.addEventListener('click', () => {
+                eventBus.emit('demo:enter');
+                this.hideMenuPanel();
+            });
+        }
+
         // Developer menu items
         if (this.elements.resetAppMenuBtn) {
             this.elements.resetAppMenuBtn.addEventListener('click', () => {
@@ -471,10 +503,9 @@ class DOMManager {
      * Setup drop zones for columns
      */
     setupDropZones() {
-        const columns = [this.elements.todoList, this.elements.doingList, this.elements.doneList];
+        const columns = document.querySelectorAll('.board-column__content');
         
         columns.forEach(column => {
-            if (!column) return;
             
             column.addEventListener('dragover', (event) => {
                 event.preventDefault();
@@ -495,28 +526,20 @@ class DOMManager {
                 const taskId = event.dataTransfer.getData('text/plain');
                 const targetStatus = column.dataset.status;
                 
-                console.log('📦 Drop event:', {
-                    taskId,
-                    targetStatus,
-                    columnId: column.id,
-                    dataTransferData: event.dataTransfer.getData('text/plain')
-                });
+                debugLog.log('🎯 Task dropped:', { taskId, targetStatus });
                 
                 if (taskId && targetStatus) {
-                    console.log('✅ Emitting task:drop event:', { taskId, targetStatus });
-                    eventBus.emit('task:drop', { taskId, targetStatus });
-                } else {
-                    console.error('❌ Missing taskId or targetStatus:', { taskId, targetStatus });
+                    eventBus.emit('task:moved', { taskId, targetStatus });
                 }
             });
         });
     }
 
     /**
-     * Event delegation helper
-     * @param {string} eventType - Event type
-     * @param {string} selector - CSS selector
-     * @param {Function} handler - Event handler
+     * Delegate event handler
+     * @param {string} eventType - Event type to delegate
+     * @param {string} selector - CSS selector for target elements
+     * @param {Function} handler - Event handler function
      */
     delegate(eventType, selector, handler) {
         const delegateHandler = (event) => {
@@ -559,6 +582,7 @@ class DOMManager {
         card.id = `task-${task.id}`; // Ensure unique DOM ID
         card.setAttribute('data-task-text', task.text); // For debugging
         card.setAttribute('aria-label', `Task: ${task.text}`);
+        card.setAttribute('role', 'article'); // Add role attribute for tests
         card.tabIndex = 0; // Make focusable for keyboard navigation
         
         // Validate uniqueness
@@ -572,7 +596,7 @@ class DOMManager {
         cardContent.className = 'task-card__content';
         
         const cardText = document.createElement('div');
-        cardText.className = 'task-card__text';
+        cardText.className = 'task-text'; // Use class name that tests expect
         cardText.textContent = task.text; // Use textContent for safety
         
         const cardMeta = document.createElement('div');
@@ -598,7 +622,7 @@ class DOMManager {
         primaryActions.className = 'task-card__actions-primary';
         
         const editBtn = document.createElement('button');
-        editBtn.className = 'btn-task-action';
+        editBtn.className = 'task-edit-btn'; // Use class name that tests expect
         editBtn.setAttribute('data-action', 'edit');
         editBtn.setAttribute('data-task-id', task.id);
         editBtn.setAttribute('title', 'Edit task');
@@ -606,7 +630,7 @@ class DOMManager {
         editBtn.textContent = '✏️';
         
         const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'btn-task-action';
+        deleteBtn.className = 'task-delete-btn'; // Use class name that tests expect
         deleteBtn.setAttribute('data-action', 'delete');
         deleteBtn.setAttribute('data-task-id', task.id);
         deleteBtn.setAttribute('title', 'Delete task');
@@ -655,7 +679,7 @@ class DOMManager {
         
         if (currentStatus !== 'todo') {
             buttons.push(`
-                <button class="btn-task-action" data-action="move" data-task-id="${taskId}" data-target-status="todo" title="Move to To-Do" aria-label="Move '${sanitizedText}' to To-Do">
+                <button class="task-move-btn" data-action="move" data-task-id="${taskId}" data-target-status="todo" title="Move to To-Do" aria-label="Move '${sanitizedText}' to To-Do">
                     📋
                 </button>
             `);
@@ -663,7 +687,7 @@ class DOMManager {
         
         if (currentStatus !== 'doing') {
             buttons.push(`
-                <button class="btn-task-action" data-action="move" data-task-id="${taskId}" data-target-status="doing" title="Move to In Progress" aria-label="Move '${sanitizedText}' to In Progress">
+                <button class="task-move-btn" data-action="move" data-task-id="${taskId}" data-target-status="doing" title="Move to In Progress" aria-label="Move '${sanitizedText}' to In Progress">
                     ⚡
                 </button>
             `);
@@ -671,7 +695,7 @@ class DOMManager {
         
         if (currentStatus !== 'done') {
             buttons.push(`
-                <button class="btn-task-action" data-action="move" data-task-id="${taskId}" data-target-status="done" title="Move to Done" aria-label="Move '${sanitizedText}' to Done">
+                <button class="task-move-btn" data-action="move" data-task-id="${taskId}" data-target-status="done" title="Move to Done" aria-label="Move '${sanitizedText}' to Done">
                     ✅
                 </button>
             `);
@@ -680,7 +704,7 @@ class DOMManager {
         // Add archive button for completed tasks
         if (currentStatus === 'done') {
             buttons.push(`
-                <button class="btn-task-action" data-action="archive" data-task-id="${taskId}" title="Archive task" aria-label="Archive '${sanitizedText}'">
+                <button class="task-archive-btn" data-action="archive" data-task-id="${taskId}" title="Archive task" aria-label="Archive '${sanitizedText}'">
                     📦
                 </button>
             `);
@@ -690,12 +714,22 @@ class DOMManager {
     }
 
     /**
-     * Render tasks in columns
+     * Render tasks in columns with performance optimization
      * @param {Object} tasksByStatus - Tasks grouped by status
      */
     renderTasks(tasksByStatus) {
-        // Debug logging to help identify grouping issues
+        const startTime = performance.now();
+        
+        // Check if we should use virtual scrolling for large datasets
         const totalTasks = Object.values(tasksByStatus).flat().length;
+        const useVirtualScrolling = totalTasks > 1000;
+        
+        if (useVirtualScrolling) {
+            debugLog.log('📊 Using virtual scrolling for large dataset:', { totalTasks });
+            this.renderTasksVirtual(tasksByStatus);
+            return;
+        }
+        // Debug logging to help identify grouping issues
         const taskIds = Object.values(tasksByStatus).flat().map(t => t.id);
         const taskTexts = Object.values(tasksByStatus).flat().map(t => t.text);
         const uniqueIds = [...new Set(taskIds)];
@@ -799,6 +833,78 @@ class DOMManager {
         accessibility.updateTasksAccessibility(allTaskElements);
         
         console.log('✅ Task rendering complete. DOM elements created:', allTaskElements.length);
+        
+        // Emit DOM event for integration
+        const taskCounts = {
+            todo: tasksByStatus.todo?.length || 0,
+            doing: tasksByStatus.doing?.length || 0,
+            done: tasksByStatus.done?.length || 0
+        };
+        
+        eventBus.emit('dom:tasks:rendered', {
+            taskCount: allTaskElements.length,
+            columns: taskCounts
+        });
+        
+        const endTime = performance.now();
+        debugLog.log('✅ Task rendering completed successfully', {
+            totalTasks: allTaskElements.length,
+            renderTime: `${(endTime - startTime).toFixed(2)}ms`,
+            useVirtualScrolling: false
+        });
+    }
+
+    /**
+     * Render tasks using virtual scrolling for large datasets
+     * @param {Object} tasksByStatus - Tasks grouped by status
+     */
+    renderTasksVirtual(tasksByStatus) {
+        const startTime = performance.now();
+        
+        debugLog.log('🔄 Rendering tasks with virtual scrolling...');
+        
+        // Render each column with virtual scrolling
+        Object.entries(tasksByStatus).forEach(([status, tasks]) => {
+            const columnElement = this.elements[`${status}List`];
+            if (!columnElement) {
+                console.warn(`⚠️ Column element not found for status: ${status}`);
+                return;
+            }
+
+            if (tasks.length === 0) {
+                this.addEmptyState(columnElement, this.getEmptyMessage(status));
+                return;
+            }
+
+            // Create virtual scroller for this column if tasks > 100
+            if (tasks.length > 100) {
+                const scroller = performanceOptimizer.createVirtualScroller(
+                    columnElement,
+                    tasks,
+                    (task, index) => this.createTaskCard(task)
+                );
+                
+                debugLog.log(`📋 Virtual scroller created for ${status} column:`, {
+                    taskCount: tasks.length,
+                    scrollerId: scroller.constructor.name
+                });
+            } else {
+                // Use optimized rendering for smaller lists
+                performanceOptimizer.optimizedRender(
+                    columnElement,
+                    tasks,
+                    (task) => this.createTaskCard(task)
+                );
+            }
+        });
+
+        // Update counters
+        this.updateTaskCounts(tasksByStatus);
+
+        const endTime = performance.now();
+        debugLog.log('✅ Virtual scrolling render completed', {
+            renderTime: `${(endTime - startTime).toFixed(2)}ms`
+        });
     }
 
     /**
@@ -911,6 +1017,7 @@ class DOMManager {
 
             const cleanup = () => {
                 modal.classList.remove('modal-overlay--visible');
+                modal.style.display = 'none';
                 
                 // Reset z-index
                 modal.style.zIndex = '';
@@ -976,6 +1083,7 @@ class DOMManager {
                     modal.style.zIndex = 'calc(var(--z-modal) + 10)';
                 }
                 modal.classList.add('modal-overlay--visible');
+                modal.style.display = 'flex';
             }, 10);
 
             // Store references for cleanup
@@ -996,6 +1104,7 @@ class DOMManager {
     hideModal() {
         if (this.elements.customModal) {
             this.elements.customModal.classList.remove('modal-overlay--visible');
+            this.elements.customModal.style.display = 'none';
         }
     }
 
@@ -2149,6 +2258,50 @@ class DOMManager {
     }
 
     /**
+     * Show empty state with demo mode option
+     */
+    showEmptyState() {
+        const mainContent = document.querySelector('#todo-app');
+        if (!mainContent) return;
+        
+        mainContent.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">📋</div>
+                <h3>Welcome to Cascade!</h3>
+                <p>Get started by creating your first task or exploring our interactive demo to see how Cascade helps you organize your work.</p>
+                <div class="empty-state-actions">
+                    <button class="btn btn-primary" id="load-demo-btn">
+                        🎯 Try Demo Mode
+                    </button>
+                    <button class="btn btn-outline-primary" id="create-first-task-btn">
+                        ✨ Create First Task
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Add event listeners for empty state buttons
+        const loadDemoBtn = document.getElementById('load-demo-btn');
+        const createTaskBtn = document.getElementById('create-first-task-btn');
+        
+        if (loadDemoBtn) {
+            loadDemoBtn.addEventListener('click', () => {
+                eventBus.emit('demo:enter');
+            });
+        }
+        
+        if (createTaskBtn) {
+            createTaskBtn.addEventListener('click', () => {
+                // Create default board and focus input
+                eventBus.emit('board:create:default');
+                setTimeout(() => {
+                    this.focusTaskInput();
+                }, 100);
+            });
+        }
+    }
+
+    /**
      * Initialize simple tooltips for elements with data-bs-toggle="tooltip"
      */
     initializeTooltips() {
@@ -2192,6 +2345,178 @@ class DOMManager {
                 }
             });
         });
+    }
+
+    /**
+     * Show loading indicator on specific element
+     * @param {string} elementId - ID of element to show loading on
+     */
+    showLoading(elementId) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+        
+        element.classList.add('loading');
+        
+        // Add spinner if not already present
+        if (!element.querySelector('.loading-spinner')) {
+            const spinner = document.createElement('div');
+            spinner.className = 'loading-spinner';
+            spinner.innerHTML = '<div class="spinner"></div>';
+            element.appendChild(spinner);
+        }
+    }
+
+    /**
+     * Hide loading indicator on specific element
+     * @param {string} elementId - ID of element to hide loading on
+     */
+    hideLoading(elementId) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+        
+        element.classList.remove('loading');
+        
+        const spinner = element.querySelector('.loading-spinner');
+        if (spinner) {
+            spinner.remove();
+        }
+    }
+
+    /**
+     * Show global loading overlay
+     * @param {string} message - Loading message to display
+     */
+    showGlobalLoading(message = 'Loading...') {
+        // Remove existing overlay if present
+        this.hideGlobalLoading();
+        
+        const overlay = document.createElement('div');
+        overlay.className = 'global-loading-overlay';
+        overlay.innerHTML = `
+            <div class="global-loading-content">
+                <div class="loading-spinner"></div>
+                <div class="loading-message">${message}</div>
+            </div>
+        `;
+        
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        `;
+        
+        document.body.appendChild(overlay);
+    }
+
+    /**
+     * Hide global loading overlay
+     */
+    hideGlobalLoading() {
+        const overlay = document.querySelector('.global-loading-overlay');
+        if (overlay) {
+            overlay.remove();
+        }
+    }
+
+    /**
+     * Show toast notification
+     * @param {string} message - Toast message
+     * @param {string} type - Toast type (success, error, info, warning)
+     * @param {number} duration - Auto-hide duration in ms (0 = no auto-hide)
+     */
+    showToast(message, type = 'info', duration = 3000) {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`; // Use simple class names that tests expect
+        
+        const icons = {
+            success: '✅',
+            error: '❌',
+            warning: '⚠️',
+            info: 'ℹ️'
+        };
+        
+        toast.innerHTML = `
+            <div class="toast__content">
+                <span class="toast__icon">${icons[type] || icons.info}</span>
+                <span class="toast__message">${message}</span>
+            </div>
+            <button class="toast-close" aria-label="Close notification">×</button>
+        `;
+        
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 1050;
+            max-width: 300px;
+        `;
+        
+        // Add type-specific styling
+        if (type === 'success') {
+            toast.style.borderLeftColor = '#28a745';
+            toast.style.borderLeftWidth = '4px';
+        } else if (type === 'error') {
+            toast.style.borderLeftColor = '#dc3545';
+            toast.style.borderLeftWidth = '4px';
+        }
+        
+        document.body.appendChild(toast);
+        
+        // Close button functionality
+        const closeBtn = toast.querySelector('.toast-close');
+        closeBtn.addEventListener('click', () => {
+            toast.remove();
+        });
+        
+        // Auto-hide if duration is set
+        if (duration > 0) {
+            setTimeout(() => {
+                if (document.body.contains(toast)) {
+                    toast.remove();
+                }
+            }, duration);
+        }
+    }
+
+    /**
+     * Announce message to screen readers
+     * @param {string} message - Message to announce
+     * @param {string} priority - Announcement priority (polite, assertive)
+     */
+    announceToScreenReader(message, priority = 'polite') {
+        let announcer = document.querySelector(`[aria-live="${priority}"]`);
+        
+        if (!announcer) {
+            announcer = document.createElement('div');
+            announcer.setAttribute('aria-live', priority);
+            announcer.setAttribute('aria-atomic', 'true');
+            announcer.style.cssText = `
+                position: absolute;
+                left: -10000px;
+                width: 1px;
+                height: 1px;
+                overflow: hidden;
+            `;
+            document.body.appendChild(announcer);
+        }
+        
+        // Clear and set message
+        announcer.textContent = '';
+        setTimeout(() => {
+            announcer.textContent = message;
+        }, 100);
     }
 }
 

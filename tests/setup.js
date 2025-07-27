@@ -32,6 +32,31 @@ Object.defineProperty(global, 'crypto', {
   writable: true
 });
 
+// Mock DragEvent and DataTransfer for drag and drop tests
+class MockDataTransfer {
+  constructor() {
+    this.data = {};
+  }
+  
+  setData(format, data) {
+    this.data[format] = data;
+  }
+  
+  getData(format) {
+    return this.data[format] || '';
+  }
+}
+
+class MockDragEvent extends Event {
+  constructor(type, options = {}) {
+    super(type, options);
+    this.dataTransfer = options.dataTransfer || new MockDataTransfer();
+  }
+}
+
+global.DataTransfer = MockDataTransfer;
+global.DragEvent = MockDragEvent;
+
 // Mock window.matchMedia for responsive design
 Object.defineProperty(window, 'matchMedia', {
   writable: true,

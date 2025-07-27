@@ -1,29 +1,73 @@
 {
-  "name": "simple-todos",
-  "version": "1.0.0",
-  "description": "Cascade is a privacy-first, client-side task management application implementing a Kanban-style workflow with multi-board support. Built with modern web technologies, it provides comprehensive task organization that runs entirely in the user's browser without requiring server infrastructure or user accounts.",
-  "main": "index.js",
+  "name": "cascade-task-management",
+  "version": "2.0.0",
+  "description": "Cascade is a comprehensive, privacy-first task management application implementing a Kanban-style workflow with advanced multi-board support. Built with modern ES6 modules and following Material Design 3 principles, it provides professional-grade task organization with complete accessibility compliance, advanced archive management, and sophisticated state management including undo/redo functionality.",
+  "main": "scripts/app-modular.js",
   "type": "module",
   "scripts": {
+    "start": "python3 -m http.server 8000",
+    "start:node": "npx http-server -p 8000",
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
     "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest tests/integration",
-    "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest tests/unit"
+    "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest tests/unit",
+    "test:accessibility": "NODE_OPTIONS='--experimental-vm-modules' jest tests/unit/accessibility.test.js",
+    "test:performance": "NODE_OPTIONS='--experimental-vm-modules' jest tests/integration/performance.test.js",
+    "test:scalability": "NODE_OPTIONS='--experimental-vm-modules' jest tests/integration/scalabilityStress.test.js",
+    "docker:build": "docker build -t cascade-app .",
+    "docker:run": "docker run -p 8080:8080 cascade-app",
+    "deploy": "./deploy.sh"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vscarpenter/simple-todos.git"
+    "url": "git+https://github.com/vscarpenter/cascade-task-management.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "task-management",
+    "kanban",
+    "productivity",
+    "privacy-first",
+    "accessibility",
+    "material-design",
+    "es6-modules",
+    "offline-first",
+    "multi-board",
+    "drag-and-drop",
+    "keyboard-navigation",
+    "screen-reader",
+    "wcag-compliant",
+    "progressive-web-app"
+  ],
+  "author": "Vinny Carpenter <vinny@vinny.dev> (https://vinny.dev/)",
+  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/vscarpenter/simple-todos/issues"
+    "url": "https://github.com/vscarpenter/cascade-task-management/issues"
   },
-  "homepage": "https://github.com/vscarpenter/simple-todos#readme",
+  "homepage": "https://github.com/vscarpenter/cascade-task-management#readme",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "browserslist": [
+    "Chrome >= 63",
+    "Firefox >= 60",
+    "Safari >= 11.1",
+    "Edge >= 79"
+  ],
   "devDependencies": {
     "jest": "^30.0.4",
     "jest-environment-jsdom": "^30.0.4"
-  }
+  },
+  "files": [
+    "index.html",
+    "scripts/",
+    "styles/",
+    "assets/",
+    "user-guide.html",
+    "privacy.html",
+    "terms.html",
+    "Dockerfile",
+    "nginx.conf",
+    "deploy.sh"
+  ]
 }

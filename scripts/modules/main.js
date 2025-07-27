@@ -6,6 +6,7 @@ import accessibility from './accessibility.js';
 import { settingsManager, debugLog } from './settings.js';
 import { Board, Task, createBoard, createTask } from './models.js';
 import securityManager from './security.js';
+import performanceOptimizer from './performance.js';
 
 // Generate unique ID function (duplicated from models.js to avoid circular imports)
 function generateUniqueId() {
@@ -33,26 +34,33 @@ class CascadeApp {
      */
     async init() {
         try {
+            debugLog.log('Starting Cascade app initialization...');
+            
             // Initialize DOM first
             this.dom.init();
+            debugLog.log('DOM initialized');
             
             // Load data from storage
             await this.loadData();
+            debugLog.log('Data loaded');
             
             // Setup event listeners
             this.setupEventListeners();
+            debugLog.log('Event listeners setup');
             
             // Initialize settings and apply theme
             settingsManager.loadSettings();
             settingsManager.applyTheme();
+            debugLog.log('Settings initialized');
             
-            // Initialize auto-archive
+            // Initialize auto-archive (with safety checks)
             this.initAutoArchive();
-            
+            debugLog.log('Auto-archive initialized');
             
             // Initial render
             this.render();
             this.renderBoardSelector();
+            debugLog.log('Initial render complete');
             
             debugLog.log('Cascade app initialized successfully');
             eventBus.emit('app:ready');
@@ -68,19 +76,25 @@ class CascadeApp {
      */
     async loadData() {
         try {
+            console.log('📂 [LOAD] Loading data from storage...');
             const data = this.storage.load();
+            console.log('📂 [LOAD] Raw storage data:', data);
             
             if (data) {
                 if (data.boards) {
+                    console.log('📂 [LOAD] Processing multi-board format...');
                     // New multi-board format
                     const boards = data.boards.map(boardData => {
                         const tasks = boardData.tasks ? boardData.tasks.map(taskData => new Task(taskData)) : [];
                         return new Board({ ...boardData, tasks: tasks.map(t => t.toJSON()) });
                     });
+                    console.log('📂 [LOAD] Processed boards:', boards.length);
                     
                     // Get tasks for current board
                     const currentBoard = boards.find(b => b.id === data.currentBoardId);
                     const currentTasks = currentBoard ? currentBoard.tasks.map(taskData => new Task(taskData)) : [];
+                    console.log('📂 [LOAD] Current board:', currentBoard ? currentBoard.name : 'none');
+                    console.log('📂 [LOAD] Current tasks:', currentTasks.length);
                     
                     this.state.setState({
                         boards,
@@ -128,6 +142,16 @@ class CascadeApp {
      * Create default board when no data exists
      */
     createDefaultBoard() {
+        // Check if we should show empty state instead of creating default board
+        const shouldShowEmptyState = !localStorage.getItem('cascade_demo_mode') && 
+                                   !localStorage.getItem('cascade-app');
+        
+        if (shouldShowEmptyState) {
+            // Show empty state with demo mode option
+            this.showEmptyState();
+            return;
+        }
+        
         const defaultBoard = createBoard({
             name: 'Main Board',
             description: 'Your default task board',
@@ -142,6 +166,24 @@ class CascadeApp {
         }, { addToHistory: false });
         
         eventBus.emit('data:loaded', { boards: 1, created: true });
+    }
+
+    /**
+     * Show empty state with demo mode option
+     */
+    showEmptyState() {
+        // Set minimal state
+        this.state.setState({
+            boards: [],
+            currentBoardId: null,
+            tasks: [],
+            filter: 'all'
+        }, { addToHistory: false });
+        
+        // Render empty state in the main content area
+        this.dom.showEmptyState();
+        
+        eventBus.emit('empty:state:shown');
     }
 
     /**
@@ -174,6 +216,7 @@ class CascadeApp {
         eventBus.on('task:delete', this.handleDeleteTask.bind(this));
         eventBus.on('task:move', this.handleMoveTask.bind(this));
         eventBus.on('task:drop', this.handleDropTask.bind(this));
+        eventBus.on('task:moved', this.handleDropTask.bind(this));
         eventBus.on('task:archive', this.handleArchiveTask.bind(this));
         eventBus.on('task:complete', this.handleCompleteTask.bind(this));
         eventBus.on('task:start', this.handleStartTask.bind(this));
@@ -197,11 +240,13 @@ class CascadeApp {
         // Settings events
         eventBus.on('settings:show', this.handleShowSettings.bind(this));
         eventBus.on('app:reset', this.handleResetApp.bind(this));
+        eventBus.on('app:reload', this.handleAppReload.bind(this));
         eventBus.on('debug:toggle', this.handleToggleDebug.bind(this));
 
         // Board management events
         eventBus.on('board:create', this.handleCreateBoard.bind(this));
         eventBus.on('board:create:request', this.handleCreateBoardRequest.bind(this));
+        eventBus.on('board:create:default', this.handleCreateDefaultBoard.bind(this));
         eventBus.on('board:switch', this.handleSwitchBoard.bind(this));
         eventBus.on('board:edit', this.handleEditBoard.bind(this));
         eventBus.on('board:delete', this.handleDeleteBoard.bind(this));
@@ -220,6 +265,10 @@ class CascadeApp {
         eventBus.on('boards:clearFilters', this.handleClearBoardFilters.bind(this));
         eventBus.on('boards:getStatistics', this.getBoardStatistics.bind(this));
         eventBus.on('boards:getTrends', this.getBoardTrends.bind(this));
+
+        // Performance and search events
+        eventBus.on('tasks:search', this.handleSearchTasks.bind(this));
+        eventBus.on('performance:stats', this.handleGetPerformanceStats.bind(this));
 
         // Storage events
         eventBus.on('storage:error', this.handleStorageError.bind(this));
@@ -252,12 +301,17 @@ class CascadeApp {
     }
 
     /**
-     * Render the current state
+     * Render the current state with performance optimization
      */
     render() {
+        const startTime = performance.now();
         let tasks = this.state.get('tasks');
         const filter = this.state.get('filter') || 'all';
         
+        // Use optimized filtering for large datasets
+        if (tasks.length > 1000) {
+            tasks = this.optimizedFilter(tasks, filter);
+        }
         
         // Group tasks by status
         const tasksByStatus = {
@@ -266,15 +320,43 @@ class CascadeApp {
             done: tasks.filter(task => task.status === 'done')
         };
         
-        // Sort tasks by creation date (newest first)
+        // Sort tasks by creation date (newest first) - optimized for large datasets
         Object.values(tasksByStatus).forEach(statusTasks => {
-            statusTasks.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
+            if (statusTasks.length > 100) {
+                // Use more efficient sorting for large arrays
+                statusTasks.sort((a, b) => {
+                    const dateA = new Date(a.createdDate).getTime();
+                    const dateB = new Date(b.createdDate).getTime();
+                    return dateB - dateA;
+                });
+            } else {
+                statusTasks.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
+            }
         });
         
         this.dom.renderTasks(tasksByStatus);
         
         // Update board title to indicate filter
         this.updateBoardTitle(filter);
+        
+        const endTime = performance.now();
+        debugLog.log('🎨 Render completed', {
+            taskCount: tasks.length,
+            renderTime: `${(endTime - startTime).toFixed(2)}ms`
+        });
+    }
+
+    /**
+     * Optimized filtering for large datasets
+     * @param {Array} tasks - Tasks to filter
+     * @param {string} filter - Filter criteria
+     * @returns {Array} Filtered tasks
+     */
+    optimizedFilter(tasks, filter) {
+        if (filter === 'all') return tasks;
+        
+        // Use performance optimizer for complex filtering
+        return performanceOptimizer.searchTasks(tasks, { status: filter });
     }
 
     /**
@@ -1479,6 +1561,38 @@ class CascadeApp {
     }
 
     /**
+     * Handle app reload - reload data from storage and re-render
+     */
+    async handleAppReload() {
+        try {
+            console.log('🔄 [RELOAD] Starting app reload...');
+            debugLog.log('Reloading app...');
+            
+            // Reload data from storage
+            console.log('🔄 [RELOAD] Loading data from storage...');
+            await this.loadData();
+            
+            // Check what data was loaded
+            const boards = this.state.get('boards');
+            const currentBoardId = this.state.get('currentBoardId');
+            console.log('🔄 [RELOAD] Loaded boards:', boards ? boards.length + ' boards' : 'null');
+            console.log('🔄 [RELOAD] Current board ID:', currentBoardId);
+            
+            // Re-render everything
+            console.log('🔄 [RELOAD] Re-rendering UI...');
+            this.render();
+            this.renderBoardSelector();
+            
+            debugLog.log('App reloaded successfully');
+            console.log('🔄 [RELOAD] App reload complete!');
+            
+        } catch (error) {
+            console.error('🔄 [RELOAD] Failed to reload app:', error);
+            this.handleError('Failed to reload app', error);
+        }
+    }
+
+    /**
      * Handle toggle debug mode
      */
     async handleToggleDebug() {
@@ -1566,6 +1680,36 @@ class CascadeApp {
         } catch (error) {
             console.error('Failed to handle board creation request:', error);
             this.handleError('Failed to create board', error, 'ui');
+        }
+    }
+
+    /**
+     * Handle create default board - Creates the default "Main Board"
+     */
+    handleCreateDefaultBoard() {
+        try {
+            const defaultBoard = createBoard({
+                name: 'Main Board',
+                description: 'Your default task board',
+                isDefault: true
+            });
+            
+            this.state.setState({
+                boards: [defaultBoard],
+                currentBoardId: defaultBoard.id,
+                tasks: [],
+                filter: 'all'
+            }, { addToHistory: false });
+            
+            // Re-render the app with the new board
+            this.render();
+            this.renderBoardSelector();
+            
+            eventBus.emit('data:loaded', { boards: 1, created: true });
+            
+        } catch (error) {
+            console.error('Failed to create default board:', error);
+            this.handleError('Failed to create default board', error);
         }
     }
 
@@ -2414,8 +2558,18 @@ class CascadeApp {
         // Sanitize error message for user display
         const sanitizedMessage = securityManager.sanitizeErrorMessage(error || message, context);
         
-        if (this.dom && this.dom.showModal) {
-            this.dom.showModal('Error', sanitizedMessage, { showCancel: false });
+        // Try to show modal if DOM is available and initialized
+        if (this.dom && this.dom.showModal && document.getElementById('custom-modal')) {
+            try {
+                this.dom.showModal('Error', sanitizedMessage, { showCancel: false });
+            } catch (modalError) {
+                console.warn('Could not show error modal:', modalError);
+                // Fallback to console error for critical initialization errors
+                console.error('Application Error:', sanitizedMessage);
+            }
+        } else {
+            // Fallback when modal is not available (during initialization)
+            console.error('Application Error:', sanitizedMessage);
         }
         
         // Emit sanitized error for event handlers
@@ -2468,6 +2622,13 @@ class CascadeApp {
         if (!config.enabled) return;
 
         const currentBoard = appState.getCurrentBoard();
+        
+        // Check if we have a current board and it has tasks
+        if (!currentBoard || !currentBoard.tasks) {
+            debugLog.log('No current board or tasks found, skipping auto-archive');
+            return;
+        }
+        
         const tasks = currentBoard.tasks;
         const today = new Date();
         const archiveThreshold = config.days;
@@ -2578,12 +2739,19 @@ class CascadeApp {
      * Initialize auto-archive timer
      */
     initAutoArchive() {
-        // Run auto-archive on app start
-        this.performAutoArchive();
+        // Only run auto-archive if we have boards loaded
+        const boards = this.state.get('boards');
+        if (boards && boards.length > 0) {
+            // Run auto-archive on app start
+            this.performAutoArchive();
+        }
 
         // Set up periodic auto-archive (every 6 hours)
         setInterval(() => {
-            this.performAutoArchive();
+            const currentBoards = this.state.get('boards');
+            if (currentBoards && currentBoards.length > 0) {
+                this.performAutoArchive();
+            }
         }, 6 * 60 * 60 * 1000);
     }
 
@@ -3206,6 +3374,55 @@ class CascadeApp {
         if (recentAvg > earlierAvg * 1.1) return 'increasing';
         if (recentAvg < earlierAvg * 0.9) return 'decreasing';
         return 'stable';
+    }
+    /**
+     * Handle search tasks event
+     * @param {Object} data - Search criteria
+     */
+    handleSearchTasks(data) {
+        try {
+            const { criteria } = data;
+            const tasks = this.state.get('tasks');
+            
+            debugLog.log('🔍 Searching tasks:', criteria);
+            
+            // Use performance optimizer for search
+            const results = performanceOptimizer.searchTasks(tasks, criteria);
+            
+            // Update state with filtered results
+            this.state.setState({
+                tasks: results,
+                filter: 'search'
+            });
+            
+            eventBus.emit('tasks:search:completed', {
+                criteria,
+                resultCount: results.length,
+                totalTasks: tasks.length
+            });
+            
+        } catch (error) {
+            console.error('❌ Failed to search tasks:', error);
+            this.handleError('Failed to search tasks', error, 'search');
+        }
+    }
+
+    /**
+     * Handle get performance stats event
+     */
+    handleGetPerformanceStats() {
+        try {
+            const stats = performanceOptimizer.getPerformanceStats();
+            
+            debugLog.log('📊 Performance stats:', stats);
+            
+            eventBus.emit('performance:stats:retrieved', stats);
+            
+            return stats;
+        } catch (error) {
+            console.error('❌ Failed to get performance stats:', error);
+            return null;
+        }
     }
 }
 

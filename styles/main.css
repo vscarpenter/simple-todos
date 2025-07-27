@@ -49,6 +49,9 @@
 /* Import settings styles */
 @import 'modules/_settings.css';
 
+/* Import demo mode styles */
+@import 'modules/_demo-mode.css';
+
 /* Import utility classes last */
 @import 'modules/_utilities.css';
 

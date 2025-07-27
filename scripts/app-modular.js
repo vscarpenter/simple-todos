@@ -3,6 +3,8 @@ import { Task, Board, createTask, createBoard } from './modules/models.js';
 import { ErrorHandler, ErrorBoundary } from './modules/errorHandler.js';
 import { KeyboardNavigator } from './modules/keyboardNav.js';
 import { settingsManager } from './modules/settings.js';
+import demoModeManager from './modules/demoMode.js';
+import performanceOptimizer from './modules/performance.js';
 import './modules/dropdown.js';
 
 // Initialize the application when DOM is ready
@@ -47,7 +49,26 @@ document.addEventListener('DOMContentLoaded', () => {
             focusInput: () => window.cascadeApp.focusInput(),
             showShortcuts: () => window.cascadeKeyboard.showShortcutHelp(),
             selectTask: (id) => window.cascadeKeyboard.selectTask(id),
-            clearErrors: () => ErrorHandler.clearErrors()
+            clearErrors: () => ErrorHandler.clearErrors(),
+            performance: {
+                getStats: () => performanceOptimizer.getPerformanceStats(),
+                searchTasks: (tasks, criteria) => performanceOptimizer.searchTasks(tasks, criteria),
+                createStressTest: (taskCount = 10000) => {
+                    const tasks = Array.from({ length: taskCount }, (_, i) => ({
+                        id: `stress-task-${i}`,
+                        text: `Stress Test Task ${i}`,
+                        status: i % 3 === 0 ? 'todo' : i % 3 === 1 ? 'doing' : 'done',
+                        createdDate: new Date().toISOString()
+                    }));
+                    console.log(`Created ${taskCount} tasks for stress testing`);
+                    return tasks;
+                }
+            },
+            demo: {
+                enter: () => demoModeManager.enterDemoMode(),
+                exit: () => demoModeManager.exitDemoMode(),
+                getState: () => demoModeManager.getDemoState()
+            }
         };
         
         console.log('✅ Cascade app initialized successfully');
