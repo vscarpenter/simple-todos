@@ -4,7 +4,7 @@
  */
 
 import { jest } from '@jest/globals';
-import { Task, Board, createTask, createBoard } from 'scripts/modules/models.js';
+import { Task, Board, Column, createTask, createBoard, createColumn } from 'scripts/modules/models.js';
 
 describe('Task Model', () => {
   describe('Constructor and Validation', () => {
@@ -235,6 +235,14 @@ describe('Board Model', () => {
       expect(() => new Board({ name: 'Test', color: '#FF0000' })).not.toThrow();
       expect(() => new Board({ name: 'Test', color: '#f00' })).not.toThrow();
     });
+
+    test('should throw error for invalid isArchived type', () => {
+      expect(() => new Board({ name: 'Test', isArchived: 'true' })).toThrow('isArchived must be a boolean');
+    });
+
+    test('should throw error for invalid isDefault type', () => {
+      expect(() => new Board({ name: 'Test', isDefault: 'false' })).toThrow('isDefault must be a boolean');
+    });
   });
 
   describe('Business Logic Methods', () => {
@@ -411,6 +419,163 @@ describe('Factory Functions', () => {
   });
 });
 
+describe('Column Model', () => {
+  describe('Constructor and Validation', () => {
+    test('should create a column with default values', () => {
+      const column = new Column();
+      
+      expect(column.id).toBe('todo');
+      expect(column.name).toBeDefined();
+      expect(column.status).toBe('todo');
+      expect(column.tasks).toEqual([]);
+      expect(column.limit).toBeNull();
+      expect(column.color).toBeDefined();
+    });
+
+    test('should create a column with custom data', () => {
+      const columnData = {
+        id: 'custom-id',
+        name: 'Custom Column',
+        status: 'doing',
+        limit: 5,
+        color: '#ff5722'
+      };
+
+      const column = new Column(columnData);
+      
+      expect(column.id).toBe('custom-id');
+      expect(column.name).toBe('Custom Column');
+      expect(column.status).toBe('doing');
+      expect(column.limit).toBe(5);
+      expect(column.color).toBe('#ff5722');
+    });
+  });
+
+  describe('Business Logic Methods', () => {
+    let column;
+
+    beforeEach(() => {
+      column = new Column({ id: 'todo', name: 'Test Column', status: 'todo' });
+    });
+
+    test('should add task to column', () => {
+      const task = new Task({ text: 'Test task' });
+      column.addTask(task);
+      
+      expect(column.tasks).toHaveLength(1);
+      expect(column.tasks[0]).toBe(task);
+    });
+
+    test('should remove task from column', () => {
+      const task = new Task({ text: 'Test task' });
+      column.addTask(task);
+      column.removeTask(task.id);
+      
+      expect(column.tasks).toHaveLength(0);
+    });
+
+    test('should get task by id', () => {
+      const task = new Task({ text: 'Test task' });
+      column.addTask(task);
+      
+      const foundTask = column.getTask(task.id);
+      expect(foundTask).toBe(task);
+    });
+
+    test('should check if column is full', () => {
+      column.limit = 2;
+      expect(column.getTaskCount()).toBe(0);
+      
+      const task1 = new Task({ text: 'Task 1' });
+      const task2 = new Task({ text: 'Task 2' });
+      column.addTask(task1);
+      column.addTask(task2);
+      
+      expect(column.getTaskCount()).toBe(2);
+    });
+
+    test('should get task count', () => {
+      expect(column.getTaskCount()).toBe(0);
+      
+      const task = new Task({ text: 'Task 1' });
+      column.addTask(task);
+      expect(column.getTaskCount()).toBe(1);
+    });
+
+    test('should throw error when adding non-Task object', () => {
+      expect(() => column.addTask({ id: 'task-1', text: 'Not a Task' })).toThrow('Task must be an instance of Task class');
+    });
+
+    test('should return false when column is full', () => {
+      column.limit = 1;
+      const task1 = new Task({ text: 'Task 1' });
+      const task2 = new Task({ text: 'Task 2' });
+      
+      const result1 = column.addTask(task1);
+      const result2 = column.addTask(task2);
+      
+      expect(result1).toBe(true);
+      expect(result2).toBe(false);
+      expect(column.tasks).toHaveLength(1);
+    });
+
+    test('should handle removing non-existent task', () => {
+      expect(() => column.removeTask('non-existent')).not.toThrow();
+      expect(column.tasks).toHaveLength(0);
+    });
+
+    test('should return null for non-existent task', () => {
+      const foundTask = column.getTask('non-existent');
+      expect(foundTask).toBeNull();
+    });
+  });
+
+  describe('Serialization', () => {
+    test('should serialize to JSON', () => {
+      const column = new Column({ id: 'test', name: 'Test Column' });
+      const json = column.toJSON();
+      
+      expect(json).toHaveProperty('id', 'test');
+      expect(json).toHaveProperty('name', 'Test Column');
+      expect(json).toHaveProperty('taskCount', 0);
+      expect(json).toHaveProperty('status');
+      expect(json).toHaveProperty('limit');
+      expect(json).toHaveProperty('color');
+    });
+
+    test('should create column from JSON', () => {
+      const columnData = {
+        id: 'test-id',
+        name: 'Test Column',
+        status: 'doing',
+        limit: 5,
+        color: '#ff5722'
+      };
+
+      const column = Column.fromJSON(columnData);
+      
+      expect(column).toBeInstanceOf(Column);
+      expect(column.id).toBe('test-id');
+      expect(column.name).toBe('Test Column');
+      expect(column.status).toBe('doing');
+      expect(column.limit).toBe(5);
+      expect(column.color).toBe('#ff5722');
+    });
+  });
+});
+
+describe('Factory Functions', () => {
+  describe('createColumn', () => {
+    test('should create column with data', () => {
+      const column = createColumn({ id: 'test', name: 'Test Column' });
+      
+      expect(column).toBeInstanceOf(Column);
+      expect(column.id).toBe('test');
+      expect(column.name).toBe('Test Column');
+    });
+  });
+});
+
 describe('Edge Cases and Error Handling', () => {
   test('should handle null/undefined inputs gracefully', () => {
     expect(() => new Task()).toThrow();
@@ -448,5 +613,19 @@ describe('Edge Cases and Error Handling', () => {
     expect(task1.id).not.toBe(task2.id);
     expect(board1.id).not.toBe(board2.id);
     expect(task1.id).not.toBe(board1.id);
+  });
+
+  test('should handle crypto.randomUUID fallback', () => {
+    // Mock crypto to be undefined to test fallback
+    const originalCrypto = global.crypto;
+    global.crypto = undefined;
+    
+    const task = new Task({ text: 'Fallback test' });
+    expect(task.id).toBeDefined();
+    expect(typeof task.id).toBe('string');
+    expect(task.id.length).toBeGreaterThan(0);
+    
+    // Restore crypto
+    global.crypto = originalCrypto;
   });
 });

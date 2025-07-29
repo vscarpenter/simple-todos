@@ -125,12 +125,19 @@ expect.extend({
 // Setup console mocks for testing
 beforeAll(() => {
   // Create Jest spy functions for console methods
+  // Only show actual errors, suppress debug/info logs in tests
   global.console = {
     ...console,
-    log: jest.fn((...args) => originalConsole.log(...args)),
-    error: jest.fn((...args) => originalConsole.error(...args)),
-    warn: jest.fn((...args) => originalConsole.warn(...args)),
-    info: jest.fn((...args) => originalConsole.info(...args))
+    log: jest.fn(), // Suppress log output in tests
+    error: jest.fn((...args) => {
+      // Only show actual errors, not debug messages
+      const message = args.join(' ');
+      if (!message.includes('[DEBUG]') && !message.includes('Storage error:')) {
+        originalConsole.error(...args);
+      }
+    }),
+    warn: jest.fn(), // Suppress warnings in tests
+    info: jest.fn()  // Suppress info in tests
   };
 });
 
@@ -259,7 +266,9 @@ function setupBasicDOM() {
 
 // Reset localStorage and console mocks before each test
 beforeEach(() => {
+  // Clear all storage
   localStorage.clear();
+  sessionStorage.clear();
   
   // Setup basic DOM structure
   setupBasicDOM();
@@ -280,4 +289,27 @@ beforeEach(() => {
   if (console.info && console.info.mockClear) {
     console.info.mockClear();
   }
+  
+  // Clear any timers
+  jest.clearAllTimers();
+  
+  // Reset any global state
+  if (global.window) {
+    // Clear any event listeners
+    global.window.removeAllListeners && global.window.removeAllListeners();
+  }
+});
+
+// Clean up after each test
+afterEach(() => {
+  // Clear any remaining timers
+  jest.clearAllTimers();
+  
+  // Clean up DOM
+  document.querySelectorAll('.toast, .modal-overlay, .loading-overlay').forEach(el => {
+    el.remove();
+  });
+  
+  // Reset document title
+  document.title = '';
 });
