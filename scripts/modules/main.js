@@ -26,7 +26,7 @@ class CascadeApp {
         this.dom = domManager;
         this.eventBus = eventBus;
         
-        this.init();
+        this.initPromise = this.init();
     }
 
     /**
@@ -144,9 +144,16 @@ class CascadeApp {
     createDefaultBoard() {
         // Check if we're in a test environment or should always create default board
         const isTestEnvironment = typeof global !== 'undefined' && global.jest;
+        
+        // Check if we should show empty state - only for truly new users
+        // Look for any existing boards or tasks data
+        const existingData = this.storage.load();
+        const hasExistingBoards = existingData && existingData.boards && existingData.boards.length > 0;
+        const isInDemoMode = localStorage.getItem('cascade_demo_mode') === 'true';
+        
         const shouldShowEmptyState = !isTestEnvironment && 
-                                   !localStorage.getItem('cascade_demo_mode') && 
-                                   !localStorage.getItem('cascade-app');
+                                   !isInDemoMode && 
+                                   !hasExistingBoards;
         
         if (shouldShowEmptyState) {
             // Show empty state with demo mode option

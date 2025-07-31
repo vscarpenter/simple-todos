@@ -8,7 +8,7 @@ import performanceOptimizer from './modules/performance.js';
 import './modules/dropdown.js';
 
 // Initialize the application when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     try {
         // Initialize error handling first
         ErrorHandler.init();
@@ -20,8 +20,11 @@ document.addEventListener('DOMContentLoaded', () => {
         window.cascadeModels = { Task, Board, createTask, createBoard };
         
         // Create and initialize the app with error boundary
-        const initApp = ErrorBoundary.wrap(() => {
+        const initApp = ErrorBoundary.wrap(async () => {
             window.cascadeApp = new CascadeApp();
+            
+            // Wait for app initialization to complete
+            await window.cascadeApp.initPromise;
             
             // Initialize keyboard navigation
             window.cascadeKeyboard = new KeyboardNavigator(window.cascadeApp);
@@ -29,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return window.cascadeApp;
         }, 'App Initialization');
         
-        const app = initApp();
+        const app = await initApp();
         
         if (!app) {
             throw new Error('Failed to initialize application');
@@ -50,6 +53,15 @@ document.addEventListener('DOMContentLoaded', () => {
             showShortcuts: () => window.cascadeKeyboard.showShortcutHelp(),
             selectTask: (id) => window.cascadeKeyboard.selectTask(id),
             clearErrors: () => ErrorHandler.clearErrors(),
+            showEmptyState: () => {
+                window.cascadeApp.showEmptyState();
+                console.log('🎯 Empty state shown! The "Create First Task" button should now be visible.');
+            },
+            resetToEmptyState: () => {
+                localStorage.clear();
+                location.reload();
+                console.log('🔄 App reset to empty state. Page will reload...');
+            },
             performance: {
                 getStats: () => performanceOptimizer.getPerformanceStats(),
                 searchTasks: (tasks, criteria) => performanceOptimizer.searchTasks(tasks, criteria),
