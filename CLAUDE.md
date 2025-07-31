@@ -18,14 +18,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Running
 - Open `index.html` directly (no build process required)
-- Local server: `python -m http.server 8000` or `python3 -m http.server 8000`
-- Docker: `docker build -t simple-todos . && docker run -p 8080:80 simple-todos`
+- Local server: `python3 -m http.server 8000` or `npm start`
+- Node.js server: `npm run start:node` (uses npx http-server)
+- Docker: `npm run docker:build && npm run docker:run` or `docker build -t cascade-app . && docker run -p 8080:8080 cascade-app`
 
 ### Testing
 - **Unit & Integration Tests**: `npm test` (Jest with ES6 module support)
 - **Test Coverage**: `npm run test:coverage`
 - **Watch Mode**: `npm run test:watch`
 - **Specific Test Suites**: `npm run test:unit` or `npm run test:integration`
+- **Individual Test Files**: `npm run test:accessibility`, `npm run test:performance`, `npm run test:scalability`
 - **Module Syntax Validation**: `node -c scripts/modules/*.js`
 
 ## Architecture

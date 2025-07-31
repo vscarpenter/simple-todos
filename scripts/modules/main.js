@@ -1756,6 +1756,9 @@ class CascadeApp {
                 filter: 'all'
             }, { addToHistory: false });
             
+            // Save the data to ensure persistence
+            this.saveData();
+            
             // Re-render the app with the new board
             this.render();
             this.renderBoardSelector();
