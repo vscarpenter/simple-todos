@@ -162,6 +162,8 @@ class CascadeApp {
         if (shouldShowEmptyState) {
             // Show empty state with demo mode option
             this.showEmptyState();
+            // Set a flag to prevent regular rendering
+            this._showingEmptyState = true;
             return;
         }
         
@@ -336,6 +338,12 @@ class CascadeApp {
      * Render the current state with performance optimization
      */
     render() {
+        // Don't render if we're showing empty state
+        if (this._showingEmptyState) {
+            debugLog.log('⏸️ Skipping render - empty state is active');
+            return;
+        }
+        
         const startTime = performance.now();
         let tasks = this.state.get('tasks');
         const filter = this.state.get('filter') || 'all';
@@ -1757,6 +1765,11 @@ class CascadeApp {
      */
     handleCreateDefaultBoard() {
         try {
+            console.log('🎯 [CREATE_DEFAULT_BOARD] Creating default board from empty state');
+            
+            // Clear empty state flag
+            this._showingEmptyState = false;
+            
             const defaultBoard = createBoard({
                 name: 'Main Board',
                 description: 'Your default task board',
