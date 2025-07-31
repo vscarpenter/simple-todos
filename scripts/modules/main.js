@@ -417,8 +417,7 @@ class CascadeApp {
                     
                     console.log('🔄 Updating board tasks:', {
                         boardId: currentBoardId,
-                        taskCount: taskData.length,
-                        tasks: taskData.map(t => ({ id: t.id, text: t.text, status: t.status }))
+                        taskCount: taskData.length
                     });
                     
                     return new Board({ 
@@ -430,21 +429,12 @@ class CascadeApp {
                 return board;
             });
             
-            // Update state with proper validation
+            // Update state
             console.log('📊 State update - Current tasks:', updatedTasks.length);
             this.state.setState({
                 boards: updatedBoards,
                 tasks: updatedTasks
             });
-            
-            // Verify state after update
-            setTimeout(() => {
-                const verifyTasks = this.state.get('tasks');
-                console.log('✅ State verification after update:', {
-                    taskCount: verifyTasks.length,
-                    tasks: verifyTasks.map(t => ({ id: t.id, text: t.text, status: t.status }))
-                });
-            }, 0);
         } else {
             // Fallback for legacy mode
             this.state.setState({ tasks: updatedTasks });
