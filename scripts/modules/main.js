@@ -218,7 +218,7 @@ class CascadeApp {
         eventBus.on('task:delete', this.handleDeleteTask.bind(this));
         eventBus.on('task:move', this.handleMoveTask.bind(this));
         eventBus.on('task:drop', this.handleDropTask.bind(this));
-        eventBus.on('task:moved', this.handleDropTask.bind(this));
+        eventBus.on('task:moved', this.handleTaskMoved.bind(this));
         eventBus.on('task:archive', this.handleArchiveTask.bind(this));
         eventBus.on('task:complete', this.handleCompleteTask.bind(this));
         eventBus.on('task:start', this.handleStartTask.bind(this));
@@ -277,6 +277,22 @@ class CascadeApp {
         eventBus.on('storage:imported', this.handleStorageImported.bind(this));
         eventBus.on('storage:migrated', this.handleStorageMigrated.bind(this));
 
+        // DOM event listeners (security: replace inline onclick handlers)
+        this.setupDOMEventListeners();
+    }
+
+    /**
+     * Setup DOM event listeners (replaces inline onclick handlers for security)
+     */
+    setupDOMEventListeners() {
+        // View archived tasks button
+        const viewArchivedBtn = document.getElementById('view-archived-tasks-btn');
+        if (viewArchivedBtn) {
+            viewArchivedBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showArchivedTasksModal();
+            });
+        }
     }
 
     /**
@@ -397,18 +413,38 @@ class CascadeApp {
                 if (board.id === currentBoardId) {
                     // Handle both Board instances and plain objects
                     const boardData = board.toJSON ? board.toJSON() : board;
+                    const taskData = updatedTasks.map(t => t.toJSON ? t.toJSON() : t);
+                    
+                    console.log('🔄 Updating board tasks:', {
+                        boardId: currentBoardId,
+                        taskCount: taskData.length,
+                        tasks: taskData.map(t => ({ id: t.id, text: t.text, status: t.status }))
+                    });
+                    
                     return new Board({ 
                         ...boardData, 
-                        tasks: updatedTasks.map(t => t.toJSON ? t.toJSON() : t)
+                        tasks: taskData,
+                        lastModified: new Date().toISOString()
                     });
                 }
                 return board;
             });
             
+            // Update state with proper validation
+            console.log('📊 State update - Current tasks:', updatedTasks.length);
             this.state.setState({
                 boards: updatedBoards,
                 tasks: updatedTasks
             });
+            
+            // Verify state after update
+            setTimeout(() => {
+                const verifyTasks = this.state.get('tasks');
+                console.log('✅ State verification after update:', {
+                    taskCount: verifyTasks.length,
+                    tasks: verifyTasks.map(t => ({ id: t.id, text: t.text, status: t.status }))
+                });
+            }, 0);
         } else {
             // Fallback for legacy mode
             this.state.setState({ tasks: updatedTasks });
@@ -593,23 +629,44 @@ class CascadeApp {
     }
 
     /**
+     * Handle task moved (from DOM drag/drop)
+     * @param {Object} data - Event data with { taskId, targetStatus }
+     */
+    handleTaskMoved(data) {
+        console.log('🔄 handleTaskMoved called:', data);
+        
+        // This is the proper handler for DOM drag/drop events
+        if (data && data.taskId && data.targetStatus) {
+            this.handleDropTask(data);
+        } else {
+            console.warn('⚠️ handleTaskMoved called with invalid data:', data);
+        }
+    }
+
+    /**
      * Handle drop task (drag and drop or move)
      * @param {Object} data - Event data
      */
     handleDropTask(data) {
         try {
+            // Guard against invalid data to prevent infinite loops
+            if (!data || typeof data !== 'object') {
+                console.error('❌ handleDropTask called with invalid data:', data);
+                return;
+            }
+            
             const { taskId, targetStatus } = data;
             
             console.log('🔄 handleDropTask called:', { taskId, targetStatus });
             
-            // Strict validation of inputs
+            // Strict validation of inputs with immediate return to prevent loops
             if (!taskId || typeof taskId !== 'string') {
-                console.error('❌ Invalid taskId:', taskId);
+                console.error('❌ Invalid taskId:', taskId, 'Data:', data);
                 return;
             }
             
             if (!['todo', 'doing', 'done'].includes(targetStatus)) {
-                console.error('❌ Invalid target status:', targetStatus);
+                console.error('❌ Invalid target status:', targetStatus, 'Data:', data);
                 return;
             }
             
@@ -696,16 +753,22 @@ class CascadeApp {
                 updated: updatedByStatus
             });
             
-            // Verify exactly one task moved
+            // Verify task status change
             const totalChanges = Math.abs(originalByStatus.todo - updatedByStatus.todo) +
                                Math.abs(originalByStatus.doing - updatedByStatus.doing) +
                                Math.abs(originalByStatus.done - updatedByStatus.done);
             
-            if (totalChanges !== 2) { // Should be exactly 2 (one task leaves, one task enters)
-                console.error('🚨 UNEXPECTED: More than one task changed status!', {
+            // Check if task actually moved (totalChanges should be either 0 or 2)
+            if (totalChanges === 0) {
+                console.log('ℹ️ Task was already in target status - no movement needed');
+            } else if (totalChanges === 2) {
+                console.log('✅ Task successfully moved between statuses');
+            } else {
+                console.error('🚨 UNEXPECTED: Invalid task status change!', {
                     totalChanges,
                     originalByStatus,
-                    updatedByStatus
+                    updatedByStatus,
+                    expectedChanges: 'Should be 0 (no change) or 2 (moved between statuses)'
                 });
             }
             

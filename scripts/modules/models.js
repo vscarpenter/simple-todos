@@ -330,11 +330,13 @@ export class Task {
             ...updates
         });
         
-        eventBus.emit('task:moved', {
-            task: updatedTask,
-            oldStatus,
-            newStatus
-        });
+        // Note: Don't emit task:moved here to avoid infinite loops
+        // The main application controller will emit the appropriate events
+        // eventBus.emit('task:moved', {
+        //     task: updatedTask,
+        //     oldStatus,
+        //     newStatus
+        // });
         
         return updatedTask;
     }

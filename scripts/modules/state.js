@@ -283,21 +283,41 @@ class AppState {
         if (boardId === this.state.currentBoardId) {
             const updatedBoard = boards.find(b => b.id === boardId);
             if (updatedBoard) {
+                console.log('🔄 State: Converting board tasks to Task instances:', {
+                    boardId,
+                    taskCount: (updatedBoard.tasks || []).length
+                });
+                
                 // Convert board tasks to Task instances for consistency
                 const { Task } = window.cascadeModels || {};
-                const tasks = (updatedBoard.tasks || []).map(taskData => {
+                const tasks = (updatedBoard.tasks || []).map((taskData, index) => {
                     if (Task && typeof taskData === 'object' && taskData.id) {
                         try {
-                            return new Task(taskData);
+                            const taskInstance = new Task(taskData);
+                            console.log(`  ✅ Task ${index + 1} converted:`, {
+                                id: taskInstance.id,
+                                text: taskInstance.text,
+                                status: taskInstance.status
+                            });
+                            return taskInstance;
                         } catch (e) {
+                            console.warn(`  ❌ Failed to create Task instance ${index + 1}:`, e, taskData);
                             debugLog.warn('Failed to create Task instance:', e);
                             return taskData;
                         }
                     }
+                    console.log(`  ⚠️ Task ${index + 1} returned as-is (no Task class or invalid data):`, taskData);
                     return taskData;
                 });
+                
+                console.log('📊 State: Final tasks array:', {
+                    count: tasks.length,
+                    tasks: tasks.map(t => ({ id: t.id, text: t.text, status: t.status }))
+                });
+                
                 stateUpdates.tasks = tasks;
             } else {
+                console.warn('⚠️ State: Updated board not found, setting empty tasks');
                 stateUpdates.tasks = [];
             }
         }
