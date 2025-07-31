@@ -152,6 +152,13 @@ class CascadeApp {
                                    !isInDemoMode && 
                                    noExistingData;
         
+        console.log('🎯 [CREATE_DEFAULT] Empty state decision:', {
+            isTestEnvironment,
+            isInDemoMode,
+            noExistingData,
+            shouldShowEmptyState
+        });
+        
         if (shouldShowEmptyState) {
             // Show empty state with demo mode option
             this.showEmptyState();
@@ -178,6 +185,8 @@ class CascadeApp {
      * Show empty state with demo mode option
      */
     showEmptyState() {
+        console.log('🎯 [EMPTY_STATE] Showing empty state for new user');
+        
         // Set minimal state
         this.state.setState({
             boards: [],
@@ -189,6 +198,7 @@ class CascadeApp {
         // Render empty state in the main content area
         this.dom.showEmptyState();
         
+        console.log('🎯 [EMPTY_STATE] Empty state rendered');
         eventBus.emit('empty:state:shown');
     }
 
