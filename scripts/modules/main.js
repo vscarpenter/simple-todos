@@ -123,37 +123,34 @@ class CascadeApp {
                     
                     eventBus.emit('data:loaded', { taskCount: tasks.length, migrated: true });
                 } else {
-                    // No data found, create default empty board
-                    this.createDefaultBoard();
+                    // No data found, determine if we should show empty state or create default board
+                    this.createDefaultBoard(true); // true = no existing data
                 }
             } else {
-                // No data found, create default empty board
-                this.createDefaultBoard();
+                // No data found, determine if we should show empty state or create default board  
+                this.createDefaultBoard(true); // true = no existing data
             }
         } catch (error) {
             console.error('Failed to load data:', error);
             this.handleError('Failed to load saved data', error, 'storage');
-            // Fallback to default board
-            this.createDefaultBoard();
+            // Fallback to default board - assume no existing data in error case
+            this.createDefaultBoard(true);
         }
     }
 
     /**
      * Create default board when no data exists
+     * @param {boolean} noExistingData - Whether there is no existing data (determines empty state)
      */
-    createDefaultBoard() {
+    createDefaultBoard(noExistingData = false) {
         // Check if we're in a test environment or should always create default board
         const isTestEnvironment = typeof global !== 'undefined' && global.jest;
-        
-        // Check if we should show empty state - only for truly new users
-        // Look for any existing boards or tasks data
-        const existingData = this.storage.load();
-        const hasExistingBoards = existingData && existingData.boards && existingData.boards.length > 0;
         const isInDemoMode = localStorage.getItem('cascade_demo_mode') === 'true';
         
+        // Show empty state only for new users (no existing data) and not in demo mode
         const shouldShowEmptyState = !isTestEnvironment && 
                                    !isInDemoMode && 
-                                   !hasExistingBoards;
+                                   noExistingData;
         
         if (shouldShowEmptyState) {
             // Show empty state with demo mode option
@@ -2490,7 +2487,7 @@ class CascadeApp {
             
             // Ensure we have at least one board
             if (finalBoards.length === 0) {
-                this.createDefaultBoard();
+                this.createDefaultBoard(false); // false = not a new user, don't show empty state
                 return;
             }
             
