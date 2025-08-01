@@ -582,7 +582,7 @@ Cascade Application v2.0
 - **Module Loading**: Lazy loading for optimal memory usage
 
 ### Scalability Requirements v2.0
-- **Task Limit**: 50,000+ tasks across all boards
+- **Task Limit**: 10,000+ tasks across all boards
 - **Board Limit**: Unlimited boards with efficient management
 - **Archive History**: 5 years of archived task data
 - **File Size Limit**: 10MB for imports with streaming

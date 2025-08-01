@@ -153,7 +153,7 @@ export const TEST_EVENT_SEQUENCES = {
   
   taskCompletion: [
     { event: 'task:complete', data: { taskId: 'task-1' } },
-    { event: 'task:moved', data: { taskId: 'task-1', targetStatus: 'done' } },
+    { event: 'task:drop', data: { taskId: 'task-1', targetStatus: 'done' } },
     { event: 'tasks:changed', data: {} },
     { event: 'storage:saved', data: {} }
   ],

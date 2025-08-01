@@ -393,7 +393,7 @@ describe('DOM Manager', () => {
       const doingList = document.getElementById('doing-list');
       doingList.dispatchEvent(dropEvent);
       
-      expect(mockEventBus.emit).toHaveBeenCalledWith('task:moved', {
+      expect(mockEventBus.emit).toHaveBeenCalledWith('task:drop', {
         taskId: 'task-1',
         targetStatus: 'doing'
       });
@@ -469,7 +469,7 @@ describe('DOM Manager', () => {
       const moveButton = document.querySelector('.task-move-btn[data-target-status="doing"]');
       moveButton.click();
       
-      expect(mockEventBus.emit).toHaveBeenCalledWith('task:moved', {
+      expect(mockEventBus.emit).toHaveBeenCalledWith('task:drop', {
         taskId: 'task-1',
         targetStatus: 'doing'
       });

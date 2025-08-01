@@ -288,7 +288,7 @@ class AccessibilityManager {
             this.updateColumnDescriptions();
         });
 
-        eventBus.on('task:moved', (data) => {
+        eventBus.on('task:drop', (data) => {
             const statusNames = { todo: 'To Do', doing: 'In Progress', done: 'Done' };
             this.announce(`Task moved to ${statusNames[data.targetStatus]}`);
             this.updateColumnDescriptions();

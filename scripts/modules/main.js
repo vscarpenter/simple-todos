@@ -224,7 +224,6 @@ class CascadeApp {
         eventBus.on('task:delete', this.handleDeleteTask.bind(this));
         eventBus.on('task:move', this.handleMoveTask.bind(this));
         eventBus.on('task:drop', this.handleDropTask.bind(this));
-        eventBus.on('task:moved', this.handleTaskMoved.bind(this));
         eventBus.on('task:archive', this.handleArchiveTask.bind(this));
         eventBus.on('task:complete', this.handleCompleteTask.bind(this));
         eventBus.on('task:start', this.handleStartTask.bind(this));
@@ -631,21 +630,6 @@ class CascadeApp {
     }
 
     /**
-     * Handle task moved (from DOM drag/drop)
-     * @param {Object} data - Event data with { taskId, targetStatus }
-     */
-    handleTaskMoved(data) {
-        console.log('🔄 handleTaskMoved called:', data);
-        
-        // This is the proper handler for DOM drag/drop events
-        if (data && data.taskId && data.targetStatus) {
-            this.handleDropTask(data);
-        } else {
-            console.warn('⚠️ handleTaskMoved called with invalid data:', data);
-        }
-    }
-
-    /**
      * Handle drop task (drag and drop or move)
      * @param {Object} data - Event data
      */
@@ -782,12 +766,6 @@ class CascadeApp {
             this.updateCurrentBoardTasks(updatedTasks);
             
             const movedTask = updatedTasks[taskIndex];
-            eventBus.emit('task:moved', { 
-                taskId, 
-                targetStatus,
-                task: movedTask
-            });
-            
             console.log('✅ Task move completed successfully');
             
         } catch (error) {

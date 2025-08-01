@@ -118,7 +118,7 @@ class DOMManager {
                     eventBus.emit('task:delete:requested', { taskId });
                     break;
                 case 'move':
-                    eventBus.emit('task:moved', { taskId, targetStatus });
+                    eventBus.emit('task:drop', { taskId, targetStatus });
                     break;
                 case 'archive':
                     eventBus.emit('task:archive', { taskId });
@@ -521,7 +521,7 @@ class DOMManager {
                 debugLog.log('🎯 Task dropped:', { taskId, targetStatus });
                 
                 if (taskId && targetStatus) {
-                    eventBus.emit('task:moved', { taskId, targetStatus });
+                    eventBus.emit('task:drop', { taskId, targetStatus });
                 }
             });
         });

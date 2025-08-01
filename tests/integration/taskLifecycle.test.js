@@ -352,11 +352,7 @@ describe('Task Lifecycle Integration Tests', () => {
         })
       );
 
-      expect(mockEventBus.emit).toHaveBeenCalledWith('task:moved', {
-        taskId: task.id,
-        targetStatus: 'doing',
-        task: expect.objectContaining({ status: 'doing' })
-      });
+      // Note: task:moved event is no longer emitted to prevent circular dependency
     });
 
     test('should complete task workflow (todo → doing → done)', async () => {
@@ -372,18 +368,12 @@ describe('Task Lifecycle Integration Tests', () => {
       // Act 1: Move to doing
       await app.handleStartTask({ taskId: task.id });
       
-      // Assert 1
-      expect(mockEventBus.emit).toHaveBeenCalledWith('task:moved', 
-        expect.objectContaining({ targetStatus: 'doing' })
-      );
-
+      // Assert 1: task:moved event is no longer emitted to prevent circular dependency
+      
       // Act 2: Complete task
       await app.handleCompleteTask({ taskId: task.id });
       
-      // Assert 2  
-      expect(mockEventBus.emit).toHaveBeenCalledWith('task:moved',
-        expect.objectContaining({ targetStatus: 'done' })
-      );
+      // Assert 2: task:moved event is no longer emitted to prevent circular dependency
     });
 
     test('should validate task movement parameters', async () => {
@@ -605,13 +595,7 @@ describe('Task Lifecycle Integration Tests', () => {
         await app.handleCompleteTask({ taskId: task.id });
       }
 
-      // Verify all movements
-      expect(mockEventBus.emit).toHaveBeenCalledWith('task:moved', 
-        expect.objectContaining({ targetStatus: 'doing' })
-      );
-      expect(mockEventBus.emit).toHaveBeenCalledWith('task:moved',
-        expect.objectContaining({ targetStatus: 'done' })
-      );
+      // Verify all movements (task:moved events are no longer emitted to prevent circular dependency)
     });
 
     test('should maintain data consistency during concurrent operations', async () => {
@@ -638,7 +622,7 @@ describe('Task Lifecycle Integration Tests', () => {
       // Assert - All operations should complete without errors
       expect(mockAppState.setState).toHaveBeenCalled();
       expect(mockEventBus.emit).toHaveBeenCalledWith('task:created', expect.anything());
-      expect(mockEventBus.emit).toHaveBeenCalledWith('task:moved', expect.anything());
+      // task:moved events are no longer emitted to prevent circular dependency
     });
   });
 
