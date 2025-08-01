@@ -3,7 +3,6 @@ import { Task, Board, createTask, createBoard } from './modules/models.js';
 import { ErrorHandler, ErrorBoundary } from './modules/errorHandler.js';
 import { KeyboardNavigator } from './modules/keyboardNav.js';
 import { settingsManager } from './modules/settings.js';
-import demoModeManager from './modules/demoMode.js';
 import performanceOptimizer from './modules/performance.js';
 import './modules/dropdown.js';
 
@@ -15,6 +14,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Force debug mode to false on application start unless explicitly enabled
         settingsManager.setDebugMode(false);
+        
+        // Clean up any orphaned demo mode data from localStorage
+        if (localStorage.getItem('cascade_demo_mode')) {
+            localStorage.removeItem('cascade_demo_mode');
+        }
+        if (localStorage.getItem('cascade_demo_backup')) {
+            localStorage.removeItem('cascade_demo_backup');
+        }
         
         // Expose models globally for cross-module access
         window.cascadeModels = { Task, Board, createTask, createBoard };
@@ -75,11 +82,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     console.log(`Created ${taskCount} tasks for stress testing`);
                     return tasks;
                 }
-            },
-            demo: {
-                enter: () => demoModeManager.enterDemoMode(),
-                exit: () => demoModeManager.exitDemoMode(),
-                getState: () => demoModeManager.getDemoState()
             }
         };
         
@@ -88,19 +90,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log('⌨️  Press ? or Ctrl+/ to see keyboard shortcuts');
         
         // Show loading state briefly to demonstrate the loading system
-        const loadingDemo = document.createElement('div');
-        loadingDemo.className = 'loading-overlay';
-        loadingDemo.innerHTML = `
+        const loadingOverlay = document.createElement('div');
+        loadingOverlay.className = 'loading-overlay';
+        loadingOverlay.innerHTML = `
             <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem; color: var(--color-on-surface);">
                 <div class="loading-spinner loading-spinner--lg"></div>
                 <p>Loading your tasks...</p>
             </div>
         `;
-        document.body.appendChild(loadingDemo);
+        document.body.appendChild(loadingOverlay);
         
         setTimeout(() => {
-            if (loadingDemo.parentNode) {
-                loadingDemo.parentNode.removeChild(loadingDemo);
+            if (loadingOverlay.parentNode) {
+                loadingOverlay.parentNode.removeChild(loadingOverlay);
             }
         }, 1000);
         

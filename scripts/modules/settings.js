@@ -62,6 +62,9 @@ export class Settings {
                 ...savedSettings
             };
             
+            // Always ensure debug mode is disabled on startup
+            this.currentSettings.debugMode = false;
+            
             // Validate settings
             this.validateSettings();
             
@@ -71,6 +74,8 @@ export class Settings {
         } catch (error) {
             console.error('Failed to load settings:', error);
             this.currentSettings = { ...this.defaultSettings };
+            // Ensure debug mode is disabled even on error
+            this.currentSettings.debugMode = false;
             eventBus.emit('settings:error', { 
                 error: new StorageError('Failed to load settings'),
                 context: 'Settings Load'
@@ -92,7 +97,7 @@ export class Settings {
             };
             
             // Validate before saving
-            console.log('About to validate settings:', newSettings);
+            debugLog.log('About to validate settings:', newSettings);
             if (!this.validateSettings(newSettings)) {
                 throw new Error('Invalid settings provided');
             }
@@ -504,7 +509,7 @@ export class Settings {
             const maxImportFileSizeElement = getElement('max-import-file-size');
             const maxImportFileSize = parseInt(maxImportFileSizeElement.value);
             
-            console.log('Parsing maxImportFileSize from form:', {
+            debugLog.log('Parsing maxImportFileSize from form:', {
                 rawValue: maxImportFileSizeElement.value,
                 parsedValue: maxImportFileSize,
                 isNaN: isNaN(maxImportFileSize)

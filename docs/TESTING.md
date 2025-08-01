@@ -11,7 +11,7 @@ This document describes the comprehensive testing strategy for the Cascade Task 
 ```
 tests/
 ├── setup.js                    # Global test configuration
-├── basic.test.js               # Basic Jest validation tests
+├── [basic.test.js removed]    # Basic Jest validation tests (deleted in cleanup)
 ├── fixtures/                   # Test data and utilities
 │   ├── index.js                # Central exports
 │   ├── taskFixtures.js         # Task test data
@@ -96,7 +96,7 @@ export default {
   coverageReporters: ['text', 'lcov', 'html'],
   collectCoverageFrom: [
     'scripts/**/*.js',
-    '!scripts/app.js',
+    '!scripts/app.js', // Legacy file - removed in cleanup
     '!**/node_modules/**',
     '!**/tests/**'
   ],
@@ -182,8 +182,8 @@ npm run test:watch
 # Run tests with coverage
 npm run test:coverage
 
-# Run specific test file
-npx jest tests/basic.test.js
+# Run specific test file (example)
+npx jest tests/unit/models.test.js
 
 # Run tests matching pattern
 npx jest --testPathPattern=integration
@@ -275,7 +275,7 @@ Coverage reports are generated in multiple formats:
 
 ```bash
 # Run tests with Node debugging
-node --inspect-brk node_modules/.bin/jest tests/basic.test.js
+node --inspect-brk node_modules/.bin/jest tests/unit/models.test.js
 
 # Run single test with debug output
 npx jest tests/basic.test.js --verbose --no-cache

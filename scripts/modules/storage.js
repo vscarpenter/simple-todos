@@ -1,5 +1,5 @@
 import eventBus from './eventBus.js';
-import { settingsManager } from './settings.js';
+import { settingsManager, debugLog } from './settings.js';
 
 /**
  * Versioned localStorage API for better persistence control
@@ -119,13 +119,39 @@ class StorageAPI {
             // Clear any archived tasks
             localStorage.removeItem('cascade-archived-tasks');
             
-            // Clear any other cascade-related items
+            // Clear legacy data keys that might still exist
+            localStorage.removeItem('cascade-tasks'); // Legacy task format
+            localStorage.removeItem('todos'); // Very old format
+            localStorage.removeItem('cascade_demo_mode'); // Demo mode flag (cleanup)
+            localStorage.removeItem('cascade_demo_backup'); // Demo mode backup (cleanup)
+            
+            // Clear any other cascade-related items (comprehensive cleanup)
             const keys = Object.keys(localStorage);
             keys.forEach(key => {
-                if (key.startsWith('cascade-')) {
+                if (key.startsWith('cascade-') || key.startsWith('cascade_')) {
                     localStorage.removeItem(key);
                 }
             });
+            
+            // Also clear any potential test or debug keys
+            keys.forEach(key => {
+                if (key.includes('cascade') && key !== 'cascade') {
+                    localStorage.removeItem(key);
+                }
+            });
+            
+            // Clear sessionStorage as well (even though app doesn't use it, for completeness)
+            try {
+                const sessionKeys = Object.keys(sessionStorage);
+                sessionKeys.forEach(key => {
+                    if (key.startsWith('cascade-') || key.startsWith('cascade_') || key.includes('cascade')) {
+                        sessionStorage.removeItem(key);
+                    }
+                });
+            } catch (sessionError) {
+                // sessionStorage might not be available in some environments
+                console.warn('Could not clear sessionStorage:', sessionError);
+            }
             
             eventBus.emit('storage:all-cleared');
             return true;
@@ -142,7 +168,7 @@ class StorageAPI {
      * @param {*} oldData - Old data to migrate
      */
     runMigrations(fromVersion, oldData) {
-        console.log(`Migrating storage from ${fromVersion || 'unknown'} to ${this.version}`);
+        debugLog.log(`Migrating storage from ${fromVersion || 'unknown'} to ${this.version}`);
         
         // Handle legacy data migration
         if (!fromVersion) {
@@ -244,7 +270,7 @@ class StorageAPI {
      * @returns {Object} Migrated data for version 2.0
      */
     migrateFrom1to2(oldData) {
-        console.log('Migrating from v1.0 to v2.0: Converting single board to multi-board structure');
+        debugLog.log('Migrating from v1.0 to v2.0: Converting single board to multi-board structure');
         
         if (!oldData || !oldData.tasks) {
             // No existing data, create empty multi-board structure

@@ -39,7 +39,7 @@
 
 ### Remaining Findings (3/10) - False Positives
 
-#### 1. scripts/app.js:187 - Status Buttons
+#### 1. scripts/modules/dom.js - Status Buttons
 ```javascript
 tempDiv.innerHTML = statusButtons; // getStatusButtons returns sanitized HTML
 ```

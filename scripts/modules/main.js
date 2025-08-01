@@ -145,22 +145,19 @@ class CascadeApp {
     createDefaultBoard(noExistingData = false) {
         // Check if we're in a test environment or should always create default board
         const isTestEnvironment = typeof global !== 'undefined' && global.jest;
-        const isInDemoMode = localStorage.getItem('cascade_demo_mode') === 'true';
         
-        // Show empty state only for new users (no existing data) and not in demo mode
+        // Show empty state only for new users (no existing data)
         const shouldShowEmptyState = !isTestEnvironment && 
-                                   !isInDemoMode && 
                                    noExistingData;
         
         console.log('🎯 [CREATE_DEFAULT] Empty state decision:', {
             isTestEnvironment,
-            isInDemoMode,
             noExistingData,
             shouldShowEmptyState
         });
         
         if (shouldShowEmptyState) {
-            // Show empty state with demo mode option
+            // Show empty state for new users
             this.showEmptyState();
             // Set a flag to prevent regular rendering
             this._showingEmptyState = true;
@@ -184,7 +181,7 @@ class CascadeApp {
     }
 
     /**
-     * Show empty state with demo mode option
+     * Show empty state for new users
      */
     showEmptyState() {
         console.log('🎯 [EMPTY_STATE] Showing empty state for new user');
@@ -1566,7 +1563,7 @@ class CascadeApp {
         try {
             const confirmed = await this.dom.showModal(
                 'Reset App', 
-                'This will permanently delete ALL boards, tasks, and data. You will start with a fresh, empty app. This action cannot be undone.\n\nAre you sure you want to continue?',
+                'This will permanently delete ALL boards, tasks, settings, and data. You will start with a completely fresh app. This action cannot be undone.\n\nAre you sure you want to continue?',
                 {
                     confirmText: 'Reset Everything',
                     cancelText: 'Cancel'
@@ -1580,7 +1577,7 @@ class CascadeApp {
             // Second confirmation for such a destructive action
             const finalConfirmed = await this.dom.showModal(
                 'Final Confirmation', 
-                'This is your FINAL WARNING!\n\nThis will permanently delete ALL your boards, tasks, and data. There is NO way to recover this data once deleted.\n\nAre you absolutely certain you want to continue?',
+                'This is your FINAL WARNING!\n\nThis will permanently delete:\n• ALL boards and tasks\n• ALL settings and preferences\n• ALL archived data\n• ALL application data\n\nThere is NO way to recover this data once deleted.\n\nAre you absolutely certain you want to continue?',
                 {
                     confirmText: 'YES, DELETE EVERYTHING',
                     cancelText: 'Cancel'
@@ -1591,11 +1588,19 @@ class CascadeApp {
                 return;
             }
 
-            // Clear all localStorage data
-            this.storage.clearAll();
+            console.log('🔄 Starting complete app reset...');
+
+            // Clear all localStorage data (including legacy keys)
+            const storageCleared = this.storage.clearAll();
+            if (!storageCleared) {
+                throw new Error('Failed to clear storage data');
+            }
             
-            // Reset settings to defaults
+            // Reset settings to defaults (this will also clear any cached settings)
             settingsManager.resetSettings();
+            
+            // Reset state to initial condition (this clears history too)
+            this.state.reset();
             
             // Create a fresh default board
             const defaultBoard = createBoard({
@@ -1604,7 +1609,7 @@ class CascadeApp {
                 isDefault: true
             });
 
-            // Reset state to initial condition
+            // Set the fresh state with the default board
             this.state.setState({
                 boards: [defaultBoard],
                 currentBoardId: defaultBoard.id,
@@ -1615,21 +1620,28 @@ class CascadeApp {
             // Save the fresh state
             this.saveData();
             
-            // Apply default theme
+            // Apply default theme and settings
             settingsManager.applyTheme();
             
-            // Re-render everything
+            // Re-render everything from scratch
             this.render();
             this.renderBoardSelector();
             
+            console.log('✅ App reset completed successfully');
+            
             // Show success message
             await this.dom.showModal('App Reset Complete', 
-                'The app has been reset successfully. You now have a fresh "Main Board" to start with.',
+                'The app has been completely reset to factory defaults. All data has been cleared and you now have a fresh "Main Board" to start with.\n\nThe page will reload to ensure a clean state.',
                 { 
                     showCancel: false,
                     confirmText: 'OK'
                 }
             );
+            
+            // Force a page reload to ensure completely clean state
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
             
         } catch (error) {
             console.error('Failed to reset app:', error);
@@ -1770,6 +1782,10 @@ class CascadeApp {
             // Clear empty state flag
             this._showingEmptyState = false;
             
+            // **NEW**: Restore the complete app structure first
+            this.dom.restoreAppStructure();
+            console.log('🎯 [CREATE_DEFAULT_BOARD] App structure restored');
+            
             const defaultBoard = createBoard({
                 name: 'Main Board',
                 description: 'Your default task board',
@@ -1789,6 +1805,11 @@ class CascadeApp {
             // Re-render the app with the new board
             this.render();
             this.renderBoardSelector();
+            
+            // Focus input with proper timing after structure is guaranteed to exist
+            setTimeout(() => {
+                this.dom.focusTaskInput();
+            }, 50); // Reduced timeout since structure is now guaranteed to exist
             
             eventBus.emit('data:loaded', { boards: 1, created: true });
             

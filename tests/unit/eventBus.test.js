@@ -12,20 +12,20 @@ describe('EventBus', () => {
   beforeEach(async () => {
     // Import EventBus fresh for each test
     const eventBusModule = await import('scripts/modules/eventBus.js');
-    EventBus = eventBusModule.EventBus;
+    EventBus = eventBusModule.default.constructor; // Get the constructor from the singleton
     eventBus = eventBusModule.default; // Default export is singleton instance
   });
 
   afterEach(() => {
     // Clear all listeners after each test
-    eventBus.listeners.clear();
+    eventBus.events = {};
   });
 
   describe('Initialization', () => {
-    test('should initialize with empty listeners map', () => {
+    test('should initialize with empty events object', () => {
       const newEventBus = new EventBus();
-      expect(newEventBus.listeners).toBeInstanceOf(Map);
-      expect(newEventBus.listeners.size).toBe(0);
+      expect(newEventBus.events).toEqual({});
+      expect(Object.keys(newEventBus.events).length).toBe(0);
     });
 
     test('should provide singleton instance', () => {
@@ -39,8 +39,8 @@ describe('EventBus', () => {
       
       eventBus.on('test:event', callback);
       
-      expect(eventBus.listeners.has('test:event')).toBe(true);
-      expect(eventBus.listeners.get('test:event')).toContain(callback);
+      expect(eventBus.events['test:event']).toBeDefined();
+      expect(eventBus.events['test:event']).toContain(callback);
     });
 
     test('should support multiple subscribers for same event', () => {
@@ -52,7 +52,7 @@ describe('EventBus', () => {
       eventBus.on('test:event', callback2);
       eventBus.on('test:event', callback3);
       
-      const listeners = eventBus.listeners.get('test:event');
+      const listeners = eventBus.events['test:event'];
       expect(listeners).toHaveLength(3);
       expect(listeners).toContain(callback1);
       expect(listeners).toContain(callback2);
@@ -65,7 +65,7 @@ describe('EventBus', () => {
       eventBus.on('test:event', callback);
       eventBus.on('test:event', callback); // Same callback again
       
-      const listeners = eventBus.listeners.get('test:event');
+      const listeners = eventBus.events['test:event'];
       expect(listeners).toHaveLength(1);
     });
 
@@ -76,9 +76,9 @@ describe('EventBus', () => {
       eventBus.on('event:one', callback1);
       eventBus.on('event:two', callback2);
       
-      expect(eventBus.listeners.has('event:one')).toBe(true);
-      expect(eventBus.listeners.has('event:two')).toBe(true);
-      expect(eventBus.listeners.size).toBe(2);
+      expect(eventBus.events['event:one']).toBeDefined();
+      expect(eventBus.events['event:two']).toBeDefined();
+      expect(Object.keys(eventBus.events).length).toBe(2);
     });
   });
 
@@ -170,7 +170,7 @@ describe('EventBus', () => {
       
       eventBus.off('test:event', callback1);
       
-      const listeners = eventBus.listeners.get('test:event');
+      const listeners = eventBus.events['test:event'];
       expect(listeners).toHaveLength(1);
       expect(listeners).toContain(callback2);
       expect(listeners).not.toContain(callback1);
@@ -182,7 +182,7 @@ describe('EventBus', () => {
       eventBus.on('test:event', callback);
       eventBus.off('test:event', callback);
       
-      expect(eventBus.listeners.has('test:event')).toBe(false);
+      expect(eventBus.events['test:event']).toBeUndefined();
     });
 
     test('should handle unsubscribing non-existent callback', () => {
@@ -195,7 +195,7 @@ describe('EventBus', () => {
         eventBus.off('test:event', callback2); // callback2 was never subscribed
       }).not.toThrow();
       
-      expect(eventBus.listeners.get('test:event')).toContain(callback1);
+      expect(eventBus.events['test:event']).toContain(callback1);
     });
 
     test('should handle unsubscribing from non-existent event', () => {
@@ -215,7 +215,7 @@ describe('EventBus', () => {
       
       eventBus.off('test:event'); // No callback specified = remove all
       
-      expect(eventBus.listeners.has('test:event')).toBe(false);
+      expect(eventBus.events['test:event']).toBeUndefined();
     });
   });
 
@@ -383,14 +383,14 @@ describe('EventBus', () => {
         eventBus.on('memory:test', callback);
       }
       
-      expect(eventBus.listeners.get('memory:test')).toHaveLength(100);
+      expect(eventBus.events['memory:test']).toHaveLength(100);
       
       // Unsubscribe all
       callbacks.forEach(callback => {
         eventBus.off('memory:test', callback);
       });
       
-      expect(eventBus.listeners.has('memory:test')).toBe(false);
+      expect(eventBus.events['memory:test']).toBeUndefined();
     });
 
     test('should handle concurrent subscriptions and emissions', () => {
@@ -405,7 +405,7 @@ describe('EventBus', () => {
       
       // Should handle all operations without issues
       expect(results.length).toBeGreaterThan(0);
-      expect(eventBus.listeners.get('concurrent:test')).toBeDefined();
+      expect(eventBus.events['concurrent:test']).toBeDefined();
     });
   });
 

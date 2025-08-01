@@ -3,6 +3,8 @@
  * Provides consistent error handling and user feedback
  */
 
+import { debugLog } from './settings.js';
+
 export class ErrorBoundary {
   /**
    * Wraps a function with error handling
@@ -291,7 +293,7 @@ export class ErrorHandler {
     };
 
     // In a real app, you'd send this to your error reporting service
-    console.log('Error Report:', errorReport);
+            debugLog.log('Error Report:', errorReport);
   }
 
   /**

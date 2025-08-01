@@ -82,7 +82,6 @@ class DOMManager {
             manageBoardsMenuBtn: document.getElementById('manage-boards-menu-btn'),
             preferencesBtn: document.getElementById('preferences-btn'),
             browseArchiveBtn: document.getElementById('browse-archive-btn'),
-            demoModeMenuBtn: document.getElementById('demo-mode-menu-btn'),
             
             // Developer menu buttons
             resetAppMenuBtn: document.getElementById('reset-app-menu-btn'),
@@ -403,13 +402,6 @@ class DOMManager {
         if (this.elements.browseArchiveBtn) {
             this.elements.browseArchiveBtn.addEventListener('click', () => {
                 eventBus.emit('archive:browse');
-                this.hideMenuPanel();
-            });
-        }
-
-        if (this.elements.demoModeMenuBtn) {
-            this.elements.demoModeMenuBtn.addEventListener('click', () => {
-                eventBus.emit('demo:enter');
                 this.hideMenuPanel();
             });
         }
@@ -2258,7 +2250,7 @@ class DOMManager {
     }
 
     /**
-     * Show empty state with demo mode option
+     * Show empty state for new users
      */
     showEmptyState() {
         const mainContent = document.querySelector('#todo-app');
@@ -2268,12 +2260,9 @@ class DOMManager {
             <div class="empty-state">
                 <div class="empty-state-icon">📋</div>
                 <h3>Welcome to Cascade!</h3>
-                <p>Get started by creating your first task or exploring our interactive demo to see how Cascade helps you organize your work.</p>
+                <p>Get started by creating your first task to begin organizing your work with Cascade.</p>
                 <div class="empty-state-actions">
-                    <button class="btn btn-primary" id="load-demo-btn">
-                        🎯 Try Demo Mode
-                    </button>
-                    <button class="btn btn-outline-primary" id="create-first-task-btn">
+                    <button class="btn btn-primary" id="create-first-task-btn">
                         ✨ Create First Task
                     </button>
                 </div>
@@ -2281,14 +2270,7 @@ class DOMManager {
         `;
         
         // Add event listeners for empty state buttons
-        const loadDemoBtn = document.getElementById('load-demo-btn');
         const createTaskBtn = document.getElementById('create-first-task-btn');
-        
-        if (loadDemoBtn) {
-            loadDemoBtn.addEventListener('click', () => {
-                eventBus.emit('demo:enter');
-            });
-        }
         
         if (createTaskBtn) {
             createTaskBtn.addEventListener('click', () => {
@@ -2517,6 +2499,250 @@ class DOMManager {
         setTimeout(() => {
             announcer.textContent = message;
         }, 100);
+    }
+
+    /**
+     * Get the complete HTML structure for the main application
+     * This method returns the HTML template that should be restored after empty state
+     * @returns {string} HTML string for the app structure
+     */
+    getAppStructureHTML() {
+        return `
+            <form
+                id="todo-form"
+                class="d-flex gap-3 mb-4 p-3 shadow-sm rounded bg-white justify-content-center"
+            >
+                <input
+                    type="text"
+                    id="todo-input"
+                    placeholder="Add a new task"
+                    aria-label="New task"
+                    class="form-control rounded-pill"
+                    maxlength="200"
+                    style="max-width: 400px"
+                />
+                <button
+                    type="submit"
+                    class="btn btn-primary rounded-pill px-4"
+                >
+                    Add Task
+                </button>
+            </form>
+
+            <!-- Task Board -->
+            <div class="task-board">
+                <div class="board-column board-column--todo" id="todo-column">
+                    <div class="board-column__header">
+                        <h3 class="board-column__title">To Do</h3>
+                        <span class="board-column__count" id="todo-count">0</span>
+                    </div>
+                    <div
+                        class="board-column__content"
+                        id="todo-list"
+                        data-status="todo"
+                    >
+                        <!-- Tasks will be dynamically added here -->
+                    </div>
+                </div>
+
+                <div class="board-column board-column--doing" id="doing-column">
+                    <div class="board-column__header">
+                        <h3 class="board-column__title">In Progress</h3>
+                        <span class="board-column__count" id="doing-count">0</span>
+                    </div>
+                    <div
+                        class="board-column__content"
+                        id="doing-list"
+                        data-status="doing"
+                    >
+                        <!-- Tasks will be dynamically added here -->
+                    </div>
+                </div>
+
+                <div class="board-column board-column--done" id="done-column">
+                    <div class="board-column__header">
+                        <h3 class="board-column__title">Done</h3>
+                        <div class="board-column__actions d-flex align-items-center gap-2">
+                            <span class="board-column__count" id="done-count">0</span>
+                            <button 
+                                id="archive-button"
+                                class="btn btn-sm btn-outline-primary"
+                                title="Archive all completed tasks in the Done column"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="top"
+                            >
+                                📦
+                            </button>
+                            <button 
+                                class="btn btn-sm btn-outline-secondary"
+                                id="view-archived-tasks-btn"
+                                title="View history of all archived tasks"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="top"
+                            >
+                                📋
+                            </button>
+                        </div>
+                    </div>
+                    <div
+                        class="board-column__content"
+                        id="done-list"
+                        data-status="done"
+                    >
+                        <!-- Tasks will be dynamically added here -->
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Restore the complete application structure after empty state
+     * This method rebuilds the form, task board, and all necessary elements
+     * then re-initializes event listeners and DOM references
+     */
+    restoreAppStructure() {
+        try {
+            console.log('🔄 [DOM_RESTORE] Starting application structure restoration');
+            
+            const mainContent = document.querySelector('#todo-app');
+            if (!mainContent) {
+                throw new Error('Main app container (#todo-app) not found');
+            }
+            
+            // Store the current HTML for debugging
+            const previousHTML = mainContent.innerHTML;
+            console.log('🔄 [DOM_RESTORE] Previous content length:', previousHTML.length);
+            
+            // Restore the complete HTML structure
+            mainContent.innerHTML = this.getAppStructureHTML();
+            console.log('🔄 [DOM_RESTORE] HTML structure restored');
+            
+            // Re-cache DOM elements to update internal references
+            this.cacheElements();
+            console.log('🔄 [DOM_RESTORE] DOM elements re-cached');
+            
+            // Verify critical elements exist after restoration
+            const criticalElements = ['todoForm', 'todoInput', 'todoList', 'doingList', 'doneList'];
+            const missingElements = criticalElements.filter(key => !this.elements[key]);
+            
+            if (missingElements.length > 0) {
+                throw new Error(`Critical elements missing after restoration: ${missingElements.join(', ')}`);
+            }
+            
+            // Re-initialize form event listeners
+            this.setupFormEventListeners();
+            console.log('🔄 [DOM_RESTORE] Form event listeners reinitialized');
+            
+            // Re-initialize drag and drop functionality
+            this.setupDropZones();
+            console.log('🔄 [DOM_RESTORE] Drag and drop zones reinitialized');
+            
+            // Re-initialize tooltips for new elements
+            this.initializeTooltips();
+            console.log('🔄 [DOM_RESTORE] Tooltips reinitialized');
+            
+            // Re-initialize accessibility features
+            accessibility.init();
+            console.log('🔄 [DOM_RESTORE] Accessibility features reinitialized');
+            
+            console.log('✅ [DOM_RESTORE] Application structure restoration completed successfully');
+            
+            // Emit event to notify other modules
+            eventBus.emit('dom:restored');
+            
+        } catch (error) {
+            console.error('❌ [DOM_RESTORE] Failed to restore app structure:', error);
+            
+            // Attempt graceful fallback
+            this.handleRestorationError(error);
+            
+            // Re-throw to allow calling code to handle
+            throw error;
+        }
+    }
+
+    /**
+     * Setup form event listeners after restoration
+     * This is a separate method to ensure form functionality works after DOM restoration
+     */
+    setupFormEventListeners() {
+        // Remove any existing form listeners to prevent duplicates
+        if (this.elements.todoForm) {
+            // Clone the form element to remove all event listeners
+            const oldForm = this.elements.todoForm;
+            const newForm = oldForm.cloneNode(true);
+            oldForm.parentNode.replaceChild(newForm, oldForm);
+            
+            // Update cached reference
+            this.elements.todoForm = newForm;
+            this.elements.todoInput = newForm.querySelector('#todo-input');
+        }
+        
+        // Add form submission listener
+        if (this.elements.todoForm) {
+            this.elements.todoForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const text = this.elements.todoInput?.value?.trim();
+                if (text) {
+                    eventBus.emit('task:create', { text });
+                }
+            });
+        }
+        
+        // Re-add archive button listener
+        const archiveButton = document.getElementById('archive-button');
+        if (archiveButton) {
+            archiveButton.addEventListener('click', () => {
+                eventBus.emit('tasks:archiveCompleted');
+            });
+        }
+        
+        // Re-add view archived tasks button listener
+        const viewArchivedBtn = document.getElementById('view-archived-tasks-btn');
+        if (viewArchivedBtn) {
+            viewArchivedBtn.addEventListener('click', () => {
+                eventBus.emit('archive:browse');
+            });
+        }
+    }
+
+    /**
+     * Handle restoration errors with graceful fallback
+     * @param {Error} error - The restoration error
+     */
+    handleRestorationError(error) {
+        console.error('🚨 [DOM_RESTORE] Attempting graceful fallback after restoration failure');
+        
+        try {
+            // Show user-friendly error message
+            this.showModal('Application Error', 
+                'Failed to initialize the application interface. Please refresh the page to continue.', {
+                showCancel: false,
+                confirmText: 'Refresh Page'
+            }).then((result) => {
+                if (result) {
+                    window.location.reload();
+                }
+            });
+            
+        } catch (fallbackError) {
+            console.error('🚨 [DOM_RESTORE] Fallback also failed:', fallbackError);
+            
+            // Last resort: show basic error message
+            const mainContent = document.querySelector('#todo-app');
+            if (mainContent) {
+                mainContent.innerHTML = `
+                    <div class="alert alert-danger text-center">
+                        <h4>Application Error</h4>
+                        <p>Failed to initialize the application. Please refresh the page.</p>
+                        <button class="btn btn-primary" onclick="window.location.reload()">
+                            Refresh Page
+                        </button>
+                    </div>
+                `;
+            }
+        }
     }
 }
 

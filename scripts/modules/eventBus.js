@@ -16,7 +16,11 @@ class EventBus {
         if (!this.events[event]) {
             this.events[event] = [];
         }
-        this.events[event].push(callback);
+        
+        // Prevent duplicate callbacks
+        if (this.events[event].indexOf(callback) === -1) {
+            this.events[event].push(callback);
+        }
 
         // Return unsubscribe function
         return () => this.off(event, callback);
@@ -25,14 +29,25 @@ class EventBus {
     /**
      * Unsubscribe from an event
      * @param {string} event - Event name
-     * @param {Function} callback - Callback function to remove
+     * @param {Function} callback - Callback function to remove (optional - if not provided, removes all callbacks)
      */
     off(event, callback) {
         if (!this.events[event]) return;
         
-        const index = this.events[event].indexOf(callback);
-        if (index > -1) {
-            this.events[event].splice(index, 1);
+        if (callback) {
+            // Remove specific callback
+            const index = this.events[event].indexOf(callback);
+            if (index > -1) {
+                this.events[event].splice(index, 1);
+            }
+        } else {
+            // Remove all callbacks for this event
+            this.events[event] = [];
+        }
+        
+        // Clean up empty event arrays
+        if (this.events[event].length === 0) {
+            delete this.events[event];
         }
     }
 

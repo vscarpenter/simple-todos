@@ -52,15 +52,6 @@ The Cascade application demonstrates strong security practices with comprehensiv
 **Impact**: Potential CSP violation if CSP becomes stricter
 **Recommendation**: Replace with addEventListener in JavaScript
 
-#### B. Demo Mode External Fetch
-**Location**: `scripts/modules/demoMode.js:77`
-```javascript
-const response = await fetch('./example-export.json');
-```
-**Risk**: Low
-**Impact**: Could fail if CSP restricts same-origin requests
-**Recommendation**: Consider inlining demo data or ensuring CSP allows it
-
 ### 2. Potential Improvements
 
 #### A. localStorage Quota Management
