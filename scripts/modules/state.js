@@ -1,5 +1,6 @@
 import eventBus from './eventBus.js';
 import { debugLog } from './settings.js';
+import { modelFactory } from './utils.js';
 
 /**
  * Centralized application state with reactive updates
@@ -201,17 +202,7 @@ class AppState {
         
         // Convert board tasks to Task instances for the state
         const tasks = board.tasks ? board.tasks.map(taskData => {
-            // Import Task class dynamically since we can't import at top due to circular deps
-            const { Task } = window.cascadeModels || {};
-            if (Task && typeof taskData === 'object' && taskData.id) {
-                try {
-                    return new Task(taskData);
-                } catch (e) {
-                    debugLog.warn('Failed to create Task instance:', e);
-                    return taskData;
-                }
-            }
-            return taskData;
+            return modelFactory.createTask(taskData);
         }) : [];
         
         this.setState({

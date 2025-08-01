@@ -7,14 +7,7 @@ import { settingsManager, debugLog } from './settings.js';
 import { Board, Task, createBoard, createTask } from './models.js';
 import securityManager from './security.js';
 import performanceOptimizer from './performance.js';
-
-// Generate unique ID function (duplicated from models.js to avoid circular imports)
-function generateUniqueId() {
-    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-        return crypto.randomUUID();
-    }
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
-}
+import { generateUniqueId } from './utils.js';
 
 /**
  * Main application controller

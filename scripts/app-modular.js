@@ -4,6 +4,7 @@ import { ErrorHandler, ErrorBoundary } from './modules/errorHandler.js';
 import { KeyboardNavigator } from './modules/keyboardNav.js';
 import { settingsManager } from './modules/settings.js';
 import performanceOptimizer from './modules/performance.js';
+import { modelFactory } from './modules/utils.js';
 import './modules/dropdown.js';
 
 // Initialize the application when DOM is ready
@@ -23,7 +24,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             localStorage.removeItem('cascade_demo_backup');
         }
         
-        // Expose models globally for cross-module access
+        // Register models with the model factory for dependency injection
+        modelFactory.register({ Task, Board, createTask, createBoard });
+        
+        // Maintain backward compatibility by also exposing via window (deprecated)
         window.cascadeModels = { Task, Board, createTask, createBoard };
         
         // Create and initialize the app with error boundary

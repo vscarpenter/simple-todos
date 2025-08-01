@@ -1,20 +1,5 @@
 import eventBus from './eventBus.js';
-
-/**
- * Generate unique ID
- * @returns {string} Unique identifier
- */
-function generateUniqueId() {
-    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-        // In test environment, add timestamp to make IDs unique
-        const uuid = crypto.randomUUID();
-        if (uuid === 'test-uuid-12345') {
-            return uuid + '-' + Date.now() + '-' + Math.random().toString(36).substr(2);
-        }
-        return uuid;
-    }
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
-}
+import { generateUniqueId } from './utils.js';
 
 /**
  * Board model for organizing tasks into projects

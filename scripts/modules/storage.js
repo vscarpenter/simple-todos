@@ -1,5 +1,6 @@
 import eventBus from './eventBus.js';
 import { settingsManager, debugLog } from './settings.js';
+import { generateUniqueId } from './utils.js';
 
 /**
  * Versioned localStorage API for better persistence control
@@ -207,7 +208,7 @@ class StorageAPI {
                 
                 // Create default board with legacy tasks
                 const defaultBoard = {
-                    id: this.generateUniqueId(),
+                    id: generateUniqueId(),
                     name: 'Main Board',
                     description: 'Migrated from previous version',
                     color: '#6750a4',
@@ -230,7 +231,7 @@ class StorageAPI {
             if (oldTodos) {
                 const todos = JSON.parse(oldTodos);
                 const tasks = todos.map(todo => ({
-                    id: this.generateUniqueId(),
+                    id: generateUniqueId(),
                     text: todo.text,
                     status: todo.completed ? 'done' : 'todo',
                     createdDate: todo.createdDate || new Date().toISOString().split('T')[0]
@@ -239,7 +240,7 @@ class StorageAPI {
                 
                 // Create default board with migrated tasks
                 const defaultBoard = {
-                    id: this.generateUniqueId(),
+                    id: generateUniqueId(),
                     name: 'Main Board',
                     description: 'Migrated from legacy todos',
                     color: '#6750a4',
@@ -282,7 +283,7 @@ class StorageAPI {
         
         // Create default board with existing tasks
         const defaultBoard = {
-            id: this.generateUniqueId(),
+            id: generateUniqueId(),
             name: 'Main Board',
             description: 'Default board created from migration',
             color: '#6750a4',
@@ -366,16 +367,6 @@ class StorageAPI {
         }
     }
 
-    /**
-     * Generate unique ID
-     * @returns {string} Unique identifier
-     */
-    generateUniqueId() {
-        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-            return crypto.randomUUID();
-        }
-        return Date.now().toString(36) + Math.random().toString(36).substr(2);
-    }
 
     /**
      * Get storage info
