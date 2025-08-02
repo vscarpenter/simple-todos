@@ -222,63 +222,6 @@
   opacity: 0.6;
 }
 
-/* Focus indicators */
-.task-card--focus {
-  border-color: var(--color-primary);
-  border-width: 2px;
-  background: linear-gradient(135deg, 
-    rgba(99, 102, 241, 0.03) 0%, 
-    rgba(139, 92, 246, 0.02) 100%);
-  position: relative;
-  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.1), var(--shadow-sm);
-}
-
-.task-card--focus:hover {
-  border-color: var(--color-primary-60);
-  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.2), var(--shadow-lg);
-}
-
-.task-card__focus-indicator {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 24px;
-  height: 24px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  color: white;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
-  z-index: 10;
-  animation: focusPulse 2s ease-in-out infinite;
-}
-
-.task-card__focus-badge {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: white;
-  padding: 2px 6px;
-  border-radius: 8px;
-  font-size: 9px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-left: auto;
-  box-shadow: 0 1px 3px rgba(99, 102, 241, 0.3);
-}
-
-@keyframes focusPulse {
-  0%, 100% { 
-    transform: scale(1);
-    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
-  }
-  50% { 
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.5);
-  }
-}
 
 /* Task actions */
 .task-card__actions {

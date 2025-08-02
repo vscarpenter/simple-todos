@@ -123,8 +123,6 @@ class StorageAPI {
             // Clear legacy data keys that might still exist
             localStorage.removeItem('cascade-tasks'); // Legacy task format
             localStorage.removeItem('todos'); // Very old format
-            localStorage.removeItem('cascade_demo_mode'); // Demo mode flag (cleanup)
-            localStorage.removeItem('cascade_demo_backup'); // Demo mode backup (cleanup)
             
             // Clear any other cascade-related items (comprehensive cleanup)
             const keys = Object.keys(localStorage);

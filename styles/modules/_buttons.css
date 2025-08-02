@@ -37,18 +37,6 @@
   outline-offset: 2px;
 }
 
-/* Button sizes */
-.btn--sm {
-  padding: var(--spacing-2) var(--spacing-3);
-  font-size: var(--font-size-xs);
-  min-height: var(--size-button-sm);
-}
-
-.btn--lg {
-  padding: var(--spacing-4) var(--spacing-6);
-  font-size: var(--font-size-base);
-  min-height: var(--size-button-lg);
-}
 
 /* Button variants - Modern Gradients */
 .btn--primary {
@@ -87,29 +75,6 @@
   transform: translateY(0);
 }
 
-.btn--success {
-  background: linear-gradient(135deg, var(--color-success-50) 0%, var(--color-success-40) 100%);
-  color: var(--color-on-success);
-  box-shadow: var(--shadow-md);
-}
-
-.btn--success:hover {
-  background: linear-gradient(135deg, var(--color-success-40) 0%, var(--color-success-10) 100%);
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
-}
-
-.btn--warning {
-  background: linear-gradient(135deg, var(--color-warning-50) 0%, var(--color-warning-40) 100%);
-  color: var(--color-on-warning);
-  box-shadow: var(--shadow-md);
-}
-
-.btn--warning:hover {
-  background: linear-gradient(135deg, var(--color-warning-40) 0%, var(--color-warning-10) 100%);
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
-}
 
 .btn--error {
   background: linear-gradient(135deg, var(--color-error-50) 0%, var(--color-error-40) 100%);
@@ -241,10 +206,6 @@
     font-size: var(--font-size-sm);
   }
   
-  .btn--sm {
-    padding: var(--spacing-2) var(--spacing-3);
-    font-size: var(--font-size-xs);
-  }
   
   .btn-group {
     gap: var(--spacing-1);
@@ -325,8 +286,4 @@
     font-size: var(--font-size-xs);
   }
   
-  .btn--lg {
-    padding: var(--spacing-3) var(--spacing-4);
-    font-size: var(--font-size-sm);
-  }
 }

@@ -16,13 +16,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Force debug mode to false on application start unless explicitly enabled
         settingsManager.setDebugMode(false);
         
-        // Clean up any orphaned demo mode data from localStorage
-        if (localStorage.getItem('cascade_demo_mode')) {
-            localStorage.removeItem('cascade_demo_mode');
-        }
-        if (localStorage.getItem('cascade_demo_backup')) {
-            localStorage.removeItem('cascade_demo_backup');
-        }
         
         // Register models with the model factory for dependency injection
         modelFactory.register({ Task, Board, createTask, createBoard });
