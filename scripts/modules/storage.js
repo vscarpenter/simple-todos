@@ -1,14 +1,18 @@
 import eventBus from './eventBus.js';
 import { settingsManager, debugLog } from './settings.js';
 import { generateUniqueId } from './utils.js';
+import indexedDBStorage from './indexedDBStorage.js';
 
 /**
- * Versioned localStorage API for better persistence control
+ * Hybrid Storage API that uses IndexedDB with localStorage fallback
+ * Maintains same interface for backward compatibility
  */
 class StorageAPI {
     constructor() {
-        this.version = '2.0';
+        this.version = '3.0'; // Updated for IndexedDB
         this.storageKey = 'cascade-app';
+        this.useIndexedDB = false;
+        this.isInitialized = false;
         this.migrations = {
             '1.0': this.migrateFrom1to2.bind(this)
         };
@@ -19,17 +23,44 @@ class StorageAPI {
     /**
      * Initialize storage and run migrations if needed
      */
-    init() {
+    async init() {
+        if (this.isInitialized) {
+            return;
+        }
+
         try {
-            const stored = this.getStoredData();
-            if (!stored || stored.version !== this.version) {
-                this.runMigrations(stored?.version, stored?.data);
+            // Try to initialize IndexedDB first
+            const indexedDBAvailable = await indexedDBStorage.isAvailable();
+            
+            if (indexedDBAvailable) {
+                this.useIndexedDB = true;
+                debugLog.log('🗄️ Using IndexedDB for storage');
+                
+                // Migrate from localStorage if needed
+                await indexedDBStorage.migrateFromLocalStorage();
+            } else {
+                this.useIndexedDB = false;
+                debugLog.log('💾 Falling back to localStorage');
+                
+                // Run localStorage migrations
+                const stored = this.getStoredData();
+                if (!stored || stored.version !== this.version) {
+                    this.runMigrations(stored?.version, stored?.data);
+                }
             }
             
-            eventBus.emit('storage:initialized', { version: this.version });
+            this.isInitialized = true;
+            eventBus.emit('storage:initialized', { 
+                version: this.version,
+                type: this.useIndexedDB ? 'indexedDB' : 'localStorage'
+            });
         } catch (error) {
             console.error('Storage initialization failed:', error);
             eventBus.emit('storage:error', { error, operation: 'init' });
+            
+            // Fallback to localStorage on any error
+            this.useIndexedDB = false;
+            this.isInitialized = true;
         }
     }
 
@@ -50,19 +81,26 @@ class StorageAPI {
     /**
      * Save data with version info
      * @param {*} data - Data to save
-     * @returns {boolean} Success status
+     * @returns {Promise<boolean>} Success status
      */
-    save(data) {
+    async save(data) {
         try {
-            const payload = {
-                version: this.version,
-                timestamp: Date.now(),
-                data
-            };
+            await this.ensureInitialized();
             
-            localStorage.setItem(this.storageKey, JSON.stringify(payload));
-            eventBus.emit('storage:saved', { data });
-            return true;
+            if (this.useIndexedDB) {
+                return await indexedDBStorage.save(data);
+            } else {
+                // Fallback to localStorage
+                const payload = {
+                    version: this.version,
+                    timestamp: Date.now(),
+                    data
+                };
+                
+                localStorage.setItem(this.storageKey, JSON.stringify(payload));
+                eventBus.emit('storage:saved', { data });
+                return true;
+            }
         } catch (error) {
             console.error('Failed to save data:', error);
             eventBus.emit('storage:error', { error, operation: 'save' });
@@ -73,16 +111,23 @@ class StorageAPI {
     /**
      * Load data
      * @param {*} defaultValue - Default value if no data
-     * @returns {*} Loaded data or default value
+     * @returns {Promise<*>} Loaded data or default value
      */
-    load(defaultValue = null) {
+    async load(defaultValue = null) {
         try {
-            const stored = this.getStoredData();
-            if (stored && stored.data !== undefined) {
-                eventBus.emit('storage:loaded', { data: stored.data });
-                return stored.data;
+            await this.ensureInitialized();
+            
+            if (this.useIndexedDB) {
+                return await indexedDBStorage.load(defaultValue);
+            } else {
+                // Fallback to localStorage
+                const stored = this.getStoredData();
+                if (stored && stored.data !== undefined) {
+                    eventBus.emit('storage:loaded', { data: stored.data });
+                    return stored.data;
+                }
+                return defaultValue;
             }
-            return defaultValue;
         } catch (error) {
             console.error('Failed to load data:', error);
             eventBus.emit('storage:error', { error, operation: 'load' });
@@ -92,13 +137,20 @@ class StorageAPI {
 
     /**
      * Clear all stored data
-     * @returns {boolean} Success status
+     * @returns {Promise<boolean>} Success status
      */
-    clear() {
+    async clear() {
         try {
-            localStorage.removeItem(this.storageKey);
-            eventBus.emit('storage:cleared');
-            return true;
+            await this.ensureInitialized();
+            
+            if (this.useIndexedDB) {
+                return await indexedDBStorage.clear();
+            } else {
+                // Fallback to localStorage
+                localStorage.removeItem(this.storageKey);
+                eventBus.emit('storage:cleared');
+                return true;
+            }
         } catch (error) {
             console.error('Failed to clear storage:', error);
             eventBus.emit('storage:error', { error, operation: 'clear' });
@@ -108,8 +160,33 @@ class StorageAPI {
 
     /**
      * Clear all app data including settings
+     * @returns {Promise<boolean>} Success status
      */
-    clearAll() {
+    async clearAll() {
+        try {
+            await this.ensureInitialized();
+            
+            if (this.useIndexedDB) {
+                const result = await indexedDBStorage.clearAll();
+                // Also clear any remaining localStorage data
+                this.clearLocalStorageCompletely();
+                return result;
+            } else {
+                // Clear localStorage completely
+                return this.clearLocalStorageCompletely();
+            }
+        } catch (error) {
+            console.error('Failed to clear all storage:', error);
+            eventBus.emit('storage:error', { error, operation: 'clearAll' });
+            return false;
+        }
+    }
+
+    /**
+     * Clear all localStorage data completely
+     * @returns {boolean} Success status
+     */
+    clearLocalStorageCompletely() {
         try {
             // Clear main app data
             localStorage.removeItem(this.storageKey);
@@ -152,11 +229,10 @@ class StorageAPI {
                 console.warn('Could not clear sessionStorage:', sessionError);
             }
             
-            eventBus.emit('storage:all-cleared');
+            eventBus.emit('storage:cleared:all');
             return true;
         } catch (error) {
-            console.error('Failed to clear all storage:', error);
-            eventBus.emit('storage:error', { error, operation: 'clearAll' });
+            console.error('Failed to clear localStorage completely:', error);
             return false;
         }
     }
@@ -355,13 +431,59 @@ class StorageAPI {
                 }
             }
             
-            this.save(dataToImport);
+            await this.save(dataToImport);
             eventBus.emit('storage:imported', { data: dataToImport });
             return true;
         } catch (error) {
             console.error('Import failed:', error);
             eventBus.emit('storage:error', { error, operation: 'import' });
             return false;
+        }
+    }
+
+    /**
+     * Ensure storage is initialized before operations
+     * @returns {Promise<void>}
+     */
+    async ensureInitialized() {
+        if (!this.isInitialized) {
+            await this.init();
+        }
+    }
+
+    /**
+     * Get storage type being used
+     * @returns {string} Storage type
+     */
+    getStorageType() {
+        return this.useIndexedDB ? 'indexedDB' : 'localStorage';
+    }
+
+    /**
+     * Get storage statistics
+     * @returns {Promise<Object>} Storage statistics
+     */
+    async getStorageStats() {
+        try {
+            await this.ensureInitialized();
+            
+            if (this.useIndexedDB) {
+                return await indexedDBStorage.getStorageStats();
+            } else {
+                // Return localStorage stats
+                const data = this.getStoredData();
+                return {
+                    type: 'localStorage',
+                    hasData: !!data,
+                    version: data?.version || 'unknown',
+                    timestamp: data?.timestamp || null
+                };
+            }
+        } catch (error) {
+            return {
+                type: this.useIndexedDB ? 'indexedDB' : 'localStorage',
+                error: error.message
+            };
         }
     }
 

@@ -69,58 +69,63 @@ describe('StorageAPI', () => {
   });
 
   describe('Basic Storage Operations', () => {
-    test('should save data with version info', () => {
+    test('should save data with version info', async () => {
       const testData = { boards: [], currentBoardId: null };
       
-      const result = storage.save(testData);
+      const result = await storage.save(testData);
       
       expect(result).toBe(true);
       
-      const stored = JSON.parse(localStorage.getItem('cascade-app'));
-      expect(stored.version).toBe('2.0');
-      expect(stored.data).toEqual(testData);
-      expect(stored.timestamp).toBeDefined();
+      // Check if using localStorage fallback
+      if (storage.getStorageType() === 'localStorage') {
+        const stored = JSON.parse(localStorage.getItem('cascade-app'));
+        expect(stored.version).toBe('3.0');
+        expect(stored.data).toEqual(testData);
+        expect(stored.timestamp).toBeDefined();
+      }
     });
 
-    test('should load data successfully', () => {
+    test('should load data successfully', async () => {
       const testData = { boards: [{ id: 'board-1', name: 'Test' }], currentBoardId: 'board-1' };
-      storage.save(testData);
+      await storage.save(testData);
       
-      const loaded = storage.load();
+      const loaded = await storage.load();
       
       expect(loaded).toEqual(testData);
     });
 
-    test('should return default value when no data exists', () => {
+    test('should return default value when no data exists', async () => {
       const defaultValue = { boards: [], currentBoardId: null };
       
-      const loaded = storage.load(defaultValue);
+      const loaded = await storage.load(defaultValue);
       
       expect(loaded).toEqual(defaultValue);
     });
 
-    test('should handle corrupted data gracefully', () => {
+    test('should handle corrupted data gracefully', async () => {
       localStorage.setItem('cascade-app', 'invalid json');
       
-      const loaded = storage.load({ default: 'value' });
+      const loaded = await storage.load({ default: 'value' });
       
       expect(loaded).toEqual({ default: 'value' });
     });
 
-    test('should clear specific data', () => {
-      storage.save({ test: 'data' });
+    test('should clear specific data', async () => {
+      await storage.save({ test: 'data' });
       
-      const result = storage.clear();
+      const result = await storage.clear();
       
       expect(result).toBe(true);
-      expect(localStorage.getItem('cascade-app')).toBeNull();
+      if (storage.getStorageType() === 'localStorage') {
+        expect(localStorage.getItem('cascade-app')).toBeNull();
+      }
     });
 
-    test('should clear all storage data', () => {
+    test('should clear all storage data', async () => {
       localStorage.setItem('other-key', 'other-data');
-      storage.save({ test: 'data' });
+      await storage.save({ test: 'data' });
       
-      const result = storage.clearAll();
+      const result = await storage.clearAll();
       
       expect(result).toBe(true);
       expect(localStorage.length).toBe(0);

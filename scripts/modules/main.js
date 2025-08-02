@@ -70,7 +70,7 @@ class CascadeApp {
     async loadData() {
         try {
             console.log('📂 [LOAD] Loading data from storage...');
-            const data = this.storage.load();
+            const data = await this.storage.load();
             console.log('📂 [LOAD] Raw storage data:', data);
             
             if (data) {
@@ -200,19 +200,31 @@ class CascadeApp {
     setupEventListeners() {
         // State change listeners
         this.state.subscribe('tasks', (data) => {
-            this.saveData();
+            // Handle async saveData operation
+            this.saveData().catch(error => {
+                console.error('Failed to save data on tasks change:', error);
+                this.handleError('Failed to save data', error, 'storage');
+            });
             this.render();
             eventBus.emit('tasks:changed', data);
         });
 
         this.state.subscribe('boards', (data) => {
-            this.saveData();
+            // Handle async saveData operation
+            this.saveData().catch(error => {
+                console.error('Failed to save data on boards change:', error);
+                this.handleError('Failed to save data', error, 'storage');
+            });
             this.renderBoardSelector();
             eventBus.emit('boards:changed', data);
         });
 
         this.state.subscribe('currentBoardId', (data) => {
-            this.saveData();
+            // Handle async saveData operation
+            this.saveData().catch(error => {
+                console.error('Failed to save data on board switch:', error);
+                this.handleError('Failed to save data', error, 'storage');
+            });
             this.render();
             this.renderBoardSelector();
             eventBus.emit('board:switched', data);
@@ -303,7 +315,7 @@ class CascadeApp {
     /**
      * Save current state to storage
      */
-    saveData() {
+    async saveData() {
         try {
             const boards = this.state.get('boards');
             const currentBoardId = this.state.get('currentBoardId');
@@ -316,7 +328,7 @@ class CascadeApp {
                 lastSaved: new Date().toISOString()
             };
             
-            this.storage.save(data);
+            await this.storage.save(data);
         } catch (error) {
             console.error('Failed to save data:', error);
             this.handleError('Failed to save data', error, 'storage');
@@ -1562,7 +1574,7 @@ class CascadeApp {
             console.log('🔄 Starting complete app reset...');
 
             // Clear all localStorage data (including legacy keys)
-            const storageCleared = this.storage.clearAll();
+            const storageCleared = await this.storage.clearAll();
             if (!storageCleared) {
                 throw new Error('Failed to clear storage data');
             }
@@ -1589,7 +1601,7 @@ class CascadeApp {
             }, { addToHistory: false });
 
             // Save the fresh state
-            this.saveData();
+            await this.saveData();
             
             // Apply default theme and settings
             settingsManager.applyTheme();
@@ -1708,7 +1720,7 @@ class CascadeApp {
             
             this.state.addBoard(newBoard);
             this.state.setCurrentBoard(newBoard.id);
-            this.saveData();
+            await this.saveData();
             
             eventBus.emit('board:created', { board: newBoard });
             
@@ -1746,7 +1758,7 @@ class CascadeApp {
     /**
      * Handle create default board - Creates the default "Main Board"
      */
-    handleCreateDefaultBoard() {
+    async handleCreateDefaultBoard() {
         try {
             console.log('🎯 [CREATE_DEFAULT_BOARD] Creating default board from empty state');
             
@@ -1771,7 +1783,7 @@ class CascadeApp {
             }, { addToHistory: false });
             
             // Save the data to ensure persistence
-            this.saveData();
+            await this.saveData();
             
             // Re-render the app with the new board
             this.render();
@@ -1852,7 +1864,7 @@ class CascadeApp {
                     lastModified: new Date().toISOString()
                 });
                 
-                this.saveData();
+                await this.saveData();
                 this.renderBoardSelector();
                 
                 this.dom.showToast(`Board renamed to "${trimmedName}"`, 'success');
@@ -1906,7 +1918,7 @@ class CascadeApp {
             
             if (confirmed) {
                 this.state.removeBoard(boardId);
-                this.saveData();
+                await this.saveData();
                 eventBus.emit('board:deleted', { boardId });
             }
         } catch (error) {
@@ -1937,7 +1949,7 @@ class CascadeApp {
             if (newName && newName.trim().length > 0) {
                 const duplicatedBoard = new Board(board.toJSON()).duplicate(newName.trim());
                 this.state.addBoard(duplicatedBoard);
-                this.saveData();
+                await this.saveData();
                 eventBus.emit('board:duplicated', { 
                     originalBoardId: boardId, 
                     newBoard: duplicatedBoard 
@@ -2017,7 +2029,7 @@ class CascadeApp {
                 // Update board to archived status
                 const updatedBoard = { ...board, isArchived: true, lastModified: new Date().toISOString() };
                 this.state.updateBoard(boardId, updatedBoard);
-                this.saveData();
+                await this.saveData();
                 
                 // Update UI
                 this.updateBoardSelector();
@@ -2119,7 +2131,7 @@ class CascadeApp {
                 // Update board to active status
                 const updatedBoard = { ...board, isArchived: false, lastModified: new Date().toISOString() };
                 this.state.updateBoard(boardId, updatedBoard);
-                this.saveData();
+                await this.saveData();
                 
                 // Update UI
                 this.updateBoardSelector();
@@ -2529,7 +2541,7 @@ class CascadeApp {
             });
             
             // Save and refresh UI
-            this.saveData();
+            await this.saveData();
             this.render();
             this.renderBoardSelector();
             
@@ -2589,7 +2601,7 @@ class CascadeApp {
                 
                 this.state.addBoard(newBoard);
                 this.state.setCurrentBoard(newBoard.id);
-                this.saveData();
+                await this.saveData();
                 
                 this.dom.showModal('Success', 
                     `Successfully created "${boardName}" with ${tasksToImport.length} imported tasks!`,
