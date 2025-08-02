@@ -386,10 +386,10 @@ class StorageAPI {
 
     /**
      * Export data for backup
-     * @returns {Object} Export data with metadata
+     * @returns {Promise<Object>} Export data with metadata
      */
-    exportData() {
-        const data = this.load();
+    async exportData() {
+        const data = await this.load();
         const settings = settingsManager.get();
         
         return {
@@ -404,9 +404,9 @@ class StorageAPI {
     /**
      * Import data from backup
      * @param {Object} importData - Data to import
-     * @returns {boolean} Success status
+     * @returns {Promise<boolean>} Success status
      */
-    importData(importData) {
+    async importData(importData) {
         try {
             if (!importData || typeof importData !== 'object') {
                 throw new Error('Invalid import data format');

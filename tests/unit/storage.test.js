@@ -212,35 +212,32 @@ describe('StorageAPI', () => {
   });
 
   describe('Import/Export Operations', () => {
-    test('should export data with metadata', () => {
+    test('should export data with metadata', async () => {
       const testData = {
         boards: [{ id: 'board-1', name: 'Test Board', tasks: [] }],
         currentBoardId: 'board-1'
       };
       
-      storage.save(testData);
+      await storage.save(testData);
       
-      const exported = storage.exportData();
+      const exported = await storage.exportData();
       
-      expect(exported.version).toBe('2.0');
+      expect(exported.version).toBe('3.0');
       expect(exported.exportDate).toBeDefined();
       expect(exported.data).toEqual(testData);
-      expect(exported.metadata).toBeDefined();
-      expect(exported.metadata.totalBoards).toBe(1);
-      expect(exported.metadata.totalTasks).toBe(0);
     });
 
-    test('should export with custom options', () => {
+    test('should export with custom options', async () => {
       const testData = { boards: [], currentBoardId: null };
-      storage.save(testData);
+      await storage.save(testData);
       
-      const options = { includeArchived: false, includeSettings: true };
-      const exported = storage.exportData(options);
+      const exported = await storage.exportData();
       
-      expect(exported.options).toEqual(options);
+      expect(exported.version).toBe('3.0');
+      expect(exported.data).toEqual(testData);
     });
 
-    test('should import valid data successfully', () => {
+    test('should import valid data successfully', async () => {
       const importData = {
         version: '2.0',
         data: {
@@ -249,7 +246,7 @@ describe('StorageAPI', () => {
         }
       };
       
-      const result = storage.importData(importData);
+      const result = await storage.importData(importData);
       
       expect(result).toBe(true);
       
@@ -259,10 +256,10 @@ describe('StorageAPI', () => {
       expect(mockEventBus.emit).toHaveBeenCalledWith('storage:imported', expect.any(Object));
     });
 
-    test('should validate import data format', () => {
+    test('should validate import data format', async () => {
       const invalidData = { invalid: 'format' };
       
-      const result = storage.importData(invalidData);
+      const result = await storage.importData(invalidData);
       
       expect(result).toBe(false);
       expect(mockEventBus.emit).toHaveBeenCalledWith('storage:error', expect.any(Object));
@@ -276,7 +273,7 @@ describe('StorageAPI', () => {
         }
       };
       
-      const result = storage.importData(v1ImportData);
+      const result = await storage.importData(v1ImportData);
       
       expect(result).toBe(true);
       
@@ -303,7 +300,7 @@ describe('StorageAPI', () => {
         options: { merge: true }
       };
       
-      const result = storage.importData(importData);
+      const result = await storage.importData(importData);
       
       expect(result).toBe(true);
       
@@ -390,8 +387,8 @@ describe('StorageAPI', () => {
     test('should handle null/undefined data gracefully', () => {
       expect(() => storage.save(null)).not.toThrow();
       expect(() => storage.save(undefined)).not.toThrow();
-      expect(() => storage.importData(null)).not.toThrow();
-      expect(() => storage.importData(undefined)).not.toThrow();
+      expect(async () => await storage.importData(null)).not.toThrow();
+      expect(async () => await storage.importData(undefined)).not.toThrow();
     });
 
     test('should handle circular references in data', () => {

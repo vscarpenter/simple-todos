@@ -997,7 +997,7 @@ class CascadeApp {
                     return;
                 }
                 
-                exportData = this.storage.exportData();
+                exportData = await this.storage.exportData();
                 // Override with single board data
                 exportData.data = {
                     boards: [currentBoard.toJSON()],
@@ -1007,7 +1007,7 @@ class CascadeApp {
                 filename = `cascade-board-${currentBoard.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${new Date().toISOString().split('T')[0]}.json`;
             } else {
                 // Export all boards
-                exportData = this.storage.exportData();
+                exportData = await this.storage.exportData();
                 filename = `cascade-all-boards-${new Date().toISOString().split('T')[0]}.json`;
             }
             
