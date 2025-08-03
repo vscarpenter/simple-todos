@@ -89,6 +89,9 @@ class CascadeApp {
                     console.log('📂 [LOAD] Current board:', currentBoard ? currentBoard.name : 'none');
                     console.log('📂 [LOAD] Current tasks:', currentTasks.length);
                     
+                    // Clear empty state flag since we have data
+                    this._showingEmptyState = false;
+                    
                     this.state.setState({
                         boards,
                         currentBoardId: data.currentBoardId,
@@ -97,6 +100,9 @@ class CascadeApp {
                     }, { addToHistory: false });
                     
                     eventBus.emit('data:loaded', { boards: boards.length, currentBoard: data.currentBoardId });
+                    
+                    // Ensure immediate render after data load
+                    this.render();
                 } else if (data.tasks) {
                     // Legacy single board format - create default board
                     const tasks = data.tasks.map(taskData => new Task(taskData));
@@ -107,6 +113,9 @@ class CascadeApp {
                         isDefault: true
                     });
                     
+                    // Clear empty state flag since we have legacy data
+                    this._showingEmptyState = false;
+                    
                     this.state.setState({
                         boards: [defaultBoard],
                         currentBoardId: defaultBoard.id,
@@ -115,6 +124,9 @@ class CascadeApp {
                     }, { addToHistory: false });
                     
                     eventBus.emit('data:loaded', { taskCount: tasks.length, migrated: true });
+                    
+                    // Ensure immediate render after legacy data load
+                    this.render();
                 } else {
                     // No data found, determine if we should show empty state or create default board
                     this.createDefaultBoard(true); // true = no existing data
@@ -260,6 +272,7 @@ class CascadeApp {
         eventBus.on('settings:show', this.handleShowSettings.bind(this));
         eventBus.on('app:reset', this.handleResetApp.bind(this));
         eventBus.on('app:reload', this.handleAppReload.bind(this));
+        eventBus.on('app:forceRefresh', this.handleForceRefresh.bind(this));
         eventBus.on('debug:toggle', this.handleToggleDebug.bind(this));
 
         // Board management events
@@ -1694,6 +1707,44 @@ class CascadeApp {
         } catch (error) {
             console.error('Failed to toggle debug mode:', error);
             this.handleError('Debug toggle failed', error);
+        }
+    }
+
+    /**
+     * Handle force refresh - particularly useful for Safari iPad
+     */
+    async handleForceRefresh() {
+        try {
+            const confirmed = await this.dom.showModal(
+                'Force Refresh Page', 
+                '🔄 This will force-refresh the entire page to ensure you have the latest version of the app.\n\nThis is especially helpful for Safari on iPad to bypass aggressive caching.\n\nAny unsaved changes will be preserved in storage.\n\nContinue with force refresh?',
+                {
+                    confirmText: 'Force Refresh',
+                    cancelText: 'Cancel'
+                }
+            );
+
+            if (!confirmed) {
+                return;
+            }
+
+            // Clear any potential caches
+            if ('caches' in window) {
+                try {
+                    const cacheNames = await caches.keys();
+                    await Promise.all(cacheNames.map(name => caches.delete(name)));
+                    console.log('🗑️ Cleared all caches');
+                } catch (error) {
+                    console.warn('Could not clear caches:', error);
+                }
+            }
+
+            // Force refresh with cache bypass
+            window.location.reload(true);
+            
+        } catch (error) {
+            console.error('Failed to force refresh:', error);
+            this.handleError('Force refresh failed', error);
         }
     }
 
