@@ -83,8 +83,18 @@ class CascadeApp {
                     });
                     console.log('📂 [LOAD] Processed boards:', boards.length);
                     
-                    // Get tasks for current board
-                    const currentBoard = boards.find(b => b.id === data.currentBoardId);
+                    // Get tasks for current board - if no currentBoardId, use default or first board
+                    let currentBoardId = data.currentBoardId;
+                    let currentBoard = boards.find(b => b.id === currentBoardId);
+                    
+                    // If no current board found, select the default board or first available board
+                    if (!currentBoard && boards.length > 0) {
+                        console.log('📂 [LOAD] No current board found, selecting default/first board');
+                        currentBoard = boards.find(b => b.isDefault) || boards[0];
+                        currentBoardId = currentBoard.id;
+                        console.log('📂 [LOAD] Selected board:', currentBoard.name, 'ID:', currentBoardId);
+                    }
+                    
                     const currentTasks = currentBoard ? currentBoard.tasks.map(taskData => new Task(taskData)) : [];
                     console.log('📂 [LOAD] Current board:', currentBoard ? currentBoard.name : 'none');
                     console.log('📂 [LOAD] Current tasks:', currentTasks.length);
@@ -94,12 +104,18 @@ class CascadeApp {
                     
                     this.state.setState({
                         boards,
-                        currentBoardId: data.currentBoardId,
+                        currentBoardId: currentBoardId, // Use the corrected currentBoardId
                         tasks: currentTasks,
                         filter: data.filter || 'all'
                     }, { addToHistory: false });
                     
-                    eventBus.emit('data:loaded', { boards: boards.length, currentBoard: data.currentBoardId });
+                    eventBus.emit('data:loaded', { boards: boards.length, currentBoard: currentBoardId });
+                    
+                    // If we had to select a default board, save the corrected state
+                    if (data.currentBoardId !== currentBoardId) {
+                        console.log('📂 [LOAD] Saving corrected currentBoardId to storage');
+                        await this.saveData();
+                    }
                     
                     // Ensure immediate render after data load
                     this.render();
