@@ -16,6 +16,7 @@ Cascade is a comprehensive, privacy-first task management application implementi
 - **Real-time Updates**: Live task counters and instant UI synchronization
 - **Task Validation**: Input length limits (1-200 characters) with real-time feedback
 - **Completion Tracking**: Automatic completion date recording for analytics
+- **IndexedDB Storage**: Modern browser storage for enhanced capacity and performance
 
 ### **Multi-Board System** 🏗️
 
@@ -37,12 +38,13 @@ Cascade is a comprehensive, privacy-first task management application implementi
 
 ### **Data Management & Privacy** 🔒
 
-- **Versioned Storage**: Automatic data migration between application versions (v1.0 → v2.0)
+- **IndexedDB Storage**: Modern browser storage for enhanced capacity and performance
+- **Versioned Storage**: Automatic data migration between application versions (v1.0 → v2.0 → IndexedDB)
 - **Import/Export**: Comprehensive data portability with metadata preservation
 - **Data Validation**: JSON schema validation and integrity checking
 - **Privacy-First**: 100% client-side operation with no external data transmission
 - **Error Recovery**: Graceful handling of corrupted data with user guidance
-- **Storage Optimization**: Efficient localStorage usage with quota management
+- **Storage Optimization**: Efficient IndexedDB usage with enhanced capacity management
 
 ### **Accessibility & Keyboard Navigation** ♿
 
@@ -114,7 +116,8 @@ cascade-todos/
 │       ├── main.js        # Main application controller (3400+ lines)
 │       ├── models.js      # Data models (Task, Board) with validation
 │       ├── state.js       # Centralized reactive state with undo/redo
-│       ├── storage.js     # Versioned localStorage with migration
+│       ├── storage.js     # IndexedDB storage with migration support
+│       ├── indexedDBStorage.js # Enhanced IndexedDB implementation
 │       ├── dom.js         # DOM manipulation with accessibility
 │       ├── eventBus.js    # Event system for inter-module communication
 │       ├── accessibility.js # WCAG 2.1 AA compliance features
@@ -260,7 +263,8 @@ cascade-todos/
 - **Material Design 3**: Google's latest design system with glassmorphism effects
 - **Inter Font**: Primary typography via Google Fonts with proper weight hierarchy
 - **Native Drag & Drop API**: HTML5 drag-and-drop with iOS Safari compatibility
-- **LocalStorage API**: Versioned client-side persistence with automatic migration
+- **IndexedDB API**: Modern browser storage with enhanced capacity and performance
+- **Legacy Storage Migration**: Automatic migration from localStorage to IndexedDB
 - **Intersection Observer**: Performance optimization for large task lists
 - **ResizeObserver**: Responsive layout optimization
 
@@ -285,11 +289,12 @@ cascade-todos/
 
 ## 📊 Data Formats
 
-### **Storage Format (v2.0)**
+### **Storage Format (IndexedDB)**
 ```json
 {
-  "version": "2.0",
+  "version": "3.0",
   "timestamp": 1640995200000,
+  "storage": "indexeddb",
   "data": {
     "boards": [
       {
@@ -305,6 +310,16 @@ cascade-todos/
             "createdDate": "YYYY-MM-DD",
             "lastModified": "ISO-timestamp",
             "completedDate": "YYYY-MM-DD"
+          }
+        ],
+        "archivedTasks": [
+          {
+            "id": "uuid-string",
+            "text": "Archived task",
+            "status": "done",
+            "createdDate": "YYYY-MM-DD",
+            "completedDate": "YYYY-MM-DD",
+            "archivedDate": "YYYY-MM-DD"
           }
         ],
         "createdDate": "ISO-timestamp",
@@ -323,8 +338,9 @@ cascade-todos/
 ### **Export Format (Enhanced)**
 ```json
 {
-  "exportDate": "2025-01-27T21:50:29.994Z",
-  "version": "2.0",
+  "exportDate": "2025-08-03T21:50:29.994Z",
+  "version": "3.0",
+  "storage": "indexeddb",
   "totalBoards": 3,
   "totalTasks": 15,
   "totalArchivedTasks": 8,
@@ -348,13 +364,15 @@ cascade-todos/
     "theme": "auto",
     "autoArchiveDays": 30,
     "enableAutoArchive": true,
-    "debugMode": false
+    "debugMode": false,
+    "storageType": "indexeddb"
   },
   "metadata": {
-    "appVersion": "2.0",
+    "appVersion": "3.0",
     "exportType": "full",
     "includeArchived": true,
-    "includeSettings": true
+    "includeSettings": true,
+    "storageBackend": "indexeddb"
   }
 }
 ```

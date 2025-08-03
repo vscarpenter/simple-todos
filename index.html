@@ -4,13 +4,27 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Cascade - Task Management</title>
-        <link rel="icon" type="image/x-icon" href="favicon.ico">
-        <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+        
+        <!-- Safari iPad specific meta tags -->
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        <meta name="apple-mobile-web-app-title" content="Cascade">
+        <meta name="format-detection" content="telephone=no">
+        
+        <!-- Cache control for HTML -->
+        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+        <meta http-equiv="Pragma" content="no-cache">
+        <meta http-equiv="Expires" content="0">
+        
+        <!-- Icons with cache-busting -->
+        <link rel="icon" type="image/x-icon" href="favicon.ico?v=3.0.0">
+        <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=3.0.0">
+        <link rel="apple-touch-icon" sizes="180x180" href="assets/cascade-icon.svg?v=3.0.0">
         <link
             href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap"
             rel="stylesheet"
         />
-        <link rel="stylesheet" href="styles/main.css" />
+        <link rel="stylesheet" href="styles/main.css?v=3.0.0" />
     </head>
     <body class="bg-light" style="background-color: #f8f9fa !important">
         <!-- Skip to main content link for screen readers -->
@@ -136,6 +150,7 @@
                     <div class="menu-section">
                         <h3 class="menu-section__title">Developer</h3>
                         <ul class="menu-section__list">
+                            <li><button class="menu-item" id="force-refresh-btn">Force Refresh (Safari)</button></li>
                             <li><button class="menu-item" id="reset-app-menu-btn">Reset App</button></li>
                             <li><button class="menu-item" id="toggle-debug-btn">Turn on Debug</button></li>
                         </ul>
@@ -267,6 +282,6 @@
                 </div>
             </div>
         </div>
-        <script type="module" src="scripts/app-modular.js"></script>
+        <script type="module" src="scripts/app-modular.js?v=3.0.0"></script>
     </body>
 </html>

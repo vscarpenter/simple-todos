@@ -114,7 +114,7 @@
                 <h1 class="display-4 fw-bold mb-3">Product Requirements Document</h1>
                 <h2 class="h4 mb-4">Cascade Task Management App</h2>
                 <p class="lead">Watch your productivity flow with intelligent task management</p>
-                <p class="text-light mb-0">Version 2.0 | Last Updated: January 2025</p>
+                <p class="text-light mb-0">Version 3.0 | Last Updated: August 2025</p>
             </div>
 
             <div class="prd-section">
@@ -142,7 +142,8 @@
                         <ul class="list-unstyled">
                             <li class="mb-2">✅ <strong>Material Design 3:</strong> Modern, accessible design system</li>
                             <li class="mb-2">✅ <strong>Zero Configuration:</strong> Works immediately in any modern browser</li>
-                            <li class="mb-2">✅ <strong>Data Privacy:</strong> All data stored locally in browser storage</li>
+                            <li class="mb-2">✅ <strong>Data Privacy:</strong> All data stored locally in IndexedDB browser storage</li>
+                            <li class="mb-2">✅ <strong>Enhanced Storage:</strong> IndexedDB for improved capacity and performance</li>
                             <li class="mb-2">✅ <strong>Offline Capable:</strong> No internet connection required after initial load</li>
                             <li class="mb-2">✅ <strong>Cross-Platform:</strong> Works on desktop, tablet, and mobile devices</li>
                             <li class="mb-2">✅ <strong>Import/Export:</strong> Full data portability through JSON files</li>
@@ -192,7 +193,8 @@
                     <div class="feature-card priority-high">
                         <h5 class="mb-3" style="color: var(--md-error);">💾 Data Persistence (High Priority)</h5>
                         <ul class="mb-0">
-                            <li>Automatic localStorage saving</li>
+                            <li>IndexedDB storage for enhanced capacity</li>
+                            <li>Automatic migration from localStorage</li>
                             <li>Session recovery on page reload</li>
                             <li>Data migration from legacy formats</li>
                             <li>Unique task ID generation</li>
@@ -244,7 +246,7 @@
                             <span class="tech-badge">CSS3</span>
                             <span class="tech-badge">Vanilla JavaScript</span>
                             <span class="tech-badge">Bootstrap 5.3</span>
-                            <span class="tech-badge">localStorage API</span>
+                            <span class="tech-badge">IndexedDB API</span>
                             <span class="tech-badge">Drag & Drop API</span>
                             <span class="tech-badge">File API</span>
                         </div>
@@ -263,7 +265,7 @@
                 <h4 class="mt-4">System Architecture</h4>
                 <div class="bg-light p-3 rounded">
                     <p class="mb-2"><strong>Frontend:</strong> Single-page application with no backend dependencies</p>
-                    <p class="mb-2"><strong>Storage:</strong> Browser localStorage with JSON serialization</p>
+                    <p class="mb-2"><strong>Storage:</strong> IndexedDB with automatic migration from localStorage</p>
                     <p class="mb-2"><strong>Deployment:</strong> Static file hosting (CDN, GitHub Pages, Docker)</p>
                     <p class="mb-0"><strong>Security:</strong> Client-side input validation and XSS prevention</p>
                 </div>
@@ -355,7 +357,7 @@
 
         <footer class="bg-white text-muted py-4 text-center border-top mt-5">
             <div class="container">
-                <p class="mb-0">&copy; 2025 <a href="https://vinny.dev/" target="_blank" class="text-decoration-none">Vinny Carpenter</a> | PRD Version 2.0</p>
+                <p class="mb-0">&copy; 2025 <a href="https://vinny.dev/" target="_blank" class="text-decoration-none">Vinny Carpenter</a> | PRD Version 3.0</p>
             </div>
         </footer>
     </body>

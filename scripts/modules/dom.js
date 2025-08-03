@@ -84,6 +84,7 @@ class DOMManager {
             browseArchiveBtn: document.getElementById('browse-archive-btn'),
             
             // Developer menu buttons
+            forceRefreshBtn: document.getElementById('force-refresh-btn'),
             resetAppMenuBtn: document.getElementById('reset-app-menu-btn'),
             toggleDebugBtn: document.getElementById('toggle-debug-btn')
         };
@@ -407,6 +408,13 @@ class DOMManager {
         }
 
         // Developer menu items
+        if (this.elements.forceRefreshBtn) {
+            this.elements.forceRefreshBtn.addEventListener('click', () => {
+                eventBus.emit('app:forceRefresh');
+                this.hideMenuPanel();
+            });
+        }
+
         if (this.elements.resetAppMenuBtn) {
             this.elements.resetAppMenuBtn.addEventListener('click', () => {
                 eventBus.emit('app:reset');

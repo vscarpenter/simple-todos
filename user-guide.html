@@ -406,9 +406,11 @@
                 <h2>💾 Data & Backup</h2>
                 
                 <h3>How Your Data is Stored</h3>
-                <p>Cascade stores all your tasks locally in your browser. This means:</p>
+                <p>Cascade stores all your tasks locally in your browser using IndexedDB. This means:</p>
                 <ul>
                     <li>Your data never leaves your device</li>
+                    <li>Enhanced storage capacity compared to older storage methods</li>
+                    <li>Automatic migration from localStorage for existing users</li>
                     <li>No internet connection required after loading</li>
                     <li>Complete privacy - we can't see your tasks</li>
                     <li>Fast performance with instant saves</li>
@@ -438,7 +440,7 @@
                 
                 <div class="tip-box">
                     <h4>⚠️ Important</h4>
-                    <p>Regular backups are recommended! Clearing browser data or reinstalling will remove your tasks.</p>
+                    <p>Regular backups are recommended! Clearing browser data or reinstalling will remove your tasks. IndexedDB provides enhanced storage capacity, but backups are still essential for data safety.</p>
                 </div>
             </div>
             
@@ -447,7 +449,8 @@
                 
                 <h3>Common Issues</h3>
                 <ul>
-                    <li><strong>Tasks not saving:</strong> Check if your browser allows local storage</li>
+                    <li><strong>Tasks not saving:</strong> Check if your browser allows IndexedDB storage</li>
+                    <li><strong>Storage migration:</strong> Existing users will see automatic migration from localStorage to IndexedDB</li>
                     <li><strong>Interface not loading:</strong> Try refreshing the page or clearing browser cache</li>
                     <li><strong>Can't drag tasks:</strong> Ensure JavaScript is enabled in your browser</li>
                     <li><strong>Import not working:</strong> Make sure you're using a valid Cascade export file</li>
@@ -456,7 +459,7 @@
                 <h3>Browser Requirements</h3>
                 <p>Cascade works best with modern browsers that support:</p>
                 <ul>
-                    <li>Local Storage API</li>
+                    <li>IndexedDB API (with localStorage fallback)</li>
                     <li>ES6 JavaScript modules</li>
                     <li>CSS Grid and Flexbox</li>
                     <li>Drag and Drop API</li>

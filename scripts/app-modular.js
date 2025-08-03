@@ -1,11 +1,11 @@
-import CascadeApp from './modules/main.js';
-import { Task, Board, createTask, createBoard } from './modules/models.js';
-import { ErrorHandler, ErrorBoundary } from './modules/errorHandler.js';
-import { KeyboardNavigator } from './modules/keyboardNav.js';
-import { settingsManager } from './modules/settings.js';
-import performanceOptimizer from './modules/performance.js';
-import { modelFactory } from './modules/utils.js';
-import './modules/dropdown.js';
+import CascadeApp from './modules/main.js?v=3.0.0';
+import { Task, Board, createTask, createBoard } from './modules/models.js?v=3.0.0';
+import { ErrorHandler, ErrorBoundary } from './modules/errorHandler.js?v=3.0.0';
+import { KeyboardNavigator } from './modules/keyboardNav.js?v=3.0.0';
+import { settingsManager } from './modules/settings.js?v=3.0.0';
+import performanceOptimizer from './modules/performance.js?v=3.0.0';
+import { modelFactory } from './modules/utils.js?v=3.0.0';
+import './modules/dropdown.js?v=3.0.0';
 
 // Initialize the application when DOM is ready
 document.addEventListener('DOMContentLoaded', async () => {
