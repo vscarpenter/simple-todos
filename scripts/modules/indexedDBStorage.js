@@ -233,7 +233,8 @@ class IndexedDBStorage {
                     const archivedTasks = board.archivedTasks.map(task => ({
                         ...task,
                         boardId: board.id,
-                        id: task.id || generateUniqueId(),
+                        id: `archived_${task.id || generateUniqueId()}`,
+                        originalTaskId: task.id,
                         isArchived: true,
                         createdDate: task.createdDate || new Date().toISOString(),
                         lastModified: new Date().toISOString()
@@ -399,7 +400,11 @@ class IndexedDBStorage {
             
             // Get archived tasks for this board
             const archivedTasks = (data.tasks || [])
-                .filter(task => task.boardId === board.id && task.isArchived);
+                .filter(task => task.boardId === board.id && task.isArchived)
+                .map(task => ({
+                    ...task,
+                    id: task.originalTaskId || task.id.replace(/^archived_/, '')
+                }));
 
             return {
                 ...board,
