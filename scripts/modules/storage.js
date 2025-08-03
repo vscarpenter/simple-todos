@@ -216,14 +216,9 @@ class StorageAPI {
                 }
             });
             
-            // Clear sessionStorage as well (even though app doesn't use it, for completeness)
+            // Clear all sessionStorage for complete privacy (not just cascade keys)
             try {
-                const sessionKeys = Object.keys(sessionStorage);
-                sessionKeys.forEach(key => {
-                    if (key.startsWith('cascade-') || key.startsWith('cascade_') || key.includes('cascade')) {
-                        sessionStorage.removeItem(key);
-                    }
-                });
+                sessionStorage.clear();
             } catch (sessionError) {
                 // sessionStorage might not be available in some environments
                 console.warn('Could not clear sessionStorage:', sessionError);
