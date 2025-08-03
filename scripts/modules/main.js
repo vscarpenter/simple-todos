@@ -260,8 +260,8 @@ class CascadeApp {
 
         // Task management events
         eventBus.on('task:create', this.handleCreateTask.bind(this));
-        eventBus.on('task:edit', this.handleEditTask.bind(this));
-        eventBus.on('task:delete', this.handleDeleteTask.bind(this));
+        eventBus.on('task:edit:requested', this.handleEditTask.bind(this));
+        eventBus.on('task:delete:requested', this.handleDeleteTask.bind(this));
         eventBus.on('task:move', this.handleMoveTask.bind(this));
         eventBus.on('task:drop', this.handleDropTask.bind(this));
         eventBus.on('task:archive', this.handleArchiveTask.bind(this));

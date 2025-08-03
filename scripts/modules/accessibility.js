@@ -361,7 +361,7 @@ class AccessibilityManager {
                 if (currentTask) {
                     event.preventDefault();
                     const taskId = currentTask.dataset.taskId;
-                    eventBus.emit('task:edit', { taskId });
+                    eventBus.emit('task:edit:requested', { taskId });
                 }
                 break;
                 
@@ -370,7 +370,7 @@ class AccessibilityManager {
                 if (currentTask) {
                     event.preventDefault();
                     const taskId = currentTask.dataset.taskId;
-                    eventBus.emit('task:delete', { taskId });
+                    eventBus.emit('task:delete:requested', { taskId });
                 }
                 break;
                 
