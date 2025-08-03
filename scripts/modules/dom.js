@@ -2,6 +2,7 @@ import eventBus from './eventBus.js';
 import accessibility from './accessibility.js';
 import { debugLog } from './settings.js';
 import performanceOptimizer from './performance.js';
+import securityManager from './security.js';
 
 /**
  * DOM manipulation and event delegation module
@@ -2173,9 +2174,9 @@ class DOMManager {
         
         const tasksListDiv = document.createElement('div');
         tasksListDiv.className = 'archive-tasks-list';
-        // Create tasks list safely - tasksList contains pre-sanitized HTML
+        // Create tasks list safely - sanitize HTML to prevent XSS
         const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = tasksList; // tasksList is already sanitized above
+        tempDiv.innerHTML = securityManager.sanitizeHTML(tasksList);
         while (tempDiv.firstChild) {
             tasksListDiv.appendChild(tempDiv.firstChild);
         }
@@ -2385,7 +2386,7 @@ class DOMManager {
         overlay.innerHTML = `
             <div class="global-loading-content">
                 <div class="loading-spinner"></div>
-                <div class="loading-message">${message}</div>
+                <div class="loading-message">${securityManager.sanitizeHTML(message)}</div>
             </div>
         `;
         
@@ -2435,7 +2436,7 @@ class DOMManager {
         toast.innerHTML = `
             <div class="toast__content">
                 <span class="toast__icon">${icons[type] || icons.info}</span>
-                <span class="toast__message">${message}</span>
+                <span class="toast__message">${securityManager.sanitizeHTML(message)}</span>
             </div>
             <button class="toast-close" aria-label="Close notification">×</button>
         `;
