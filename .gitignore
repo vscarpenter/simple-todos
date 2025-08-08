@@ -44,3 +44,9 @@ CLAUDE.md
 
 # Deployment scripts (local use only)
 deploy.sh
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

@@ -8,21 +8,7 @@ import { jest } from '@jest/globals';
 // Enable module mocking
 global.jest = jest;
 
-// Basic mocks without jest functions for now
-const mockStorage = {};
-
-// Mock localStorage
-Object.defineProperty(global, 'localStorage', {
-  value: {
-    getItem: (key) => mockStorage[key] || null,
-    setItem: (key, value) => { mockStorage[key] = value; },
-    removeItem: (key) => { delete mockStorage[key]; },
-    clear: () => { Object.keys(mockStorage).forEach(key => delete mockStorage[key]); },
-    key: (index) => Object.keys(mockStorage)[index] || null,
-    get length() { return Object.keys(mockStorage).length; }
-  },
-  writable: true
-});
+// No localStorage mocking needed - app uses IndexedDB only
 
 // Mock crypto.randomUUID
 Object.defineProperty(global, 'crypto', {
@@ -149,6 +135,43 @@ afterAll(() => {
 // Global mock registry for modules
 global.__MOCK_MODULES__ = new Map();
 
+// Mock IndexedDB for testing
+const mockIndexedDB = {
+  open: jest.fn(() => ({
+    onsuccess: null,
+    onerror: null,
+    onupgradeneeded: null,
+    result: {
+      objectStoreNames: { contains: jest.fn(() => false) },
+      createObjectStore: jest.fn(() => ({
+        createIndex: jest.fn()
+      })),
+      transaction: jest.fn(() => ({
+        objectStore: jest.fn(() => ({
+          put: jest.fn(() => ({ onsuccess: null, onerror: null })),
+          get: jest.fn(() => ({ onsuccess: null, onerror: null })),
+          getAll: jest.fn(() => ({ onsuccess: null, onerror: null })),
+          clear: jest.fn(() => ({ onsuccess: null, onerror: null }))
+        })),
+        oncomplete: null,
+        onerror: null
+      }))
+    }
+  }))
+};
+
+Object.defineProperty(global, 'indexedDB', {
+  value: mockIndexedDB,
+  writable: true
+});
+
+global.IDBKeyRange = {
+  bound: jest.fn(),
+  only: jest.fn(),
+  lowerBound: jest.fn(),
+  upperBound: jest.fn()
+};
+
 // Helper to create module mocks
 global.createModuleMock = (modulePath, mockImplementation) => {
   global.__MOCK_MODULES__.set(modulePath, mockImplementation);
@@ -266,8 +289,7 @@ function setupBasicDOM() {
 
 // Reset localStorage and console mocks before each test
 beforeEach(() => {
-  // Clear all storage
-  localStorage.clear();
+  // Clear sessionStorage only (no localStorage in app)
   sessionStorage.clear();
   
   // Setup basic DOM structure

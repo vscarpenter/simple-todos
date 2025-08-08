@@ -12,11 +12,14 @@ const mockEventBus = {
   off: jest.fn()
 };
 
-// Create module mock
+// Mock appContext and container
+const { mockAppContext } = await import('../mocks/containerMock.js');
+
+// Create module mocks
 global.createModuleMock('scripts/modules/eventBus.js', mockEventBus);
+global.createModuleMock('scripts/modules/container.js', { appContext: mockAppContext });
 
 describe('AppState', () => {
-  let AppState;
   let state;
 
   beforeEach(async () => {
@@ -25,10 +28,12 @@ describe('AppState', () => {
     mockEventBus.on.mockClear();
     mockEventBus.off.mockClear();
     
-    // Import AppState after mocking
+    // Import state singleton after mocking
     const stateModule = await import('scripts/modules/state.js');
-    AppState = stateModule.default;
-    state = new AppState();
+    state = stateModule.default;
+    
+    // Reset state to initial values for each test
+    state.reset();
   });
 
   describe('Initialization', () => {

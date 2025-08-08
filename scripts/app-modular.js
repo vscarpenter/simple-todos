@@ -4,7 +4,9 @@ import { ErrorHandler, ErrorBoundary } from './modules/errorHandler.js?v=3.0.0';
 import { KeyboardNavigator } from './modules/keyboardNav.js?v=3.0.0';
 import { settingsManager } from './modules/settings.js?v=3.0.0';
 import performanceOptimizer from './modules/performance.js?v=3.0.0';
-import { modelFactory } from './modules/utils.js?v=3.0.0';
+import { container, appContext } from './modules/container.js?v=3.0.0';
+import { debugAPI } from './modules/debug.js?v=3.0.0';
+import storage from './modules/storageIndexedDBOnly.js?v=3.0.0';
 import './modules/dropdown.js?v=3.0.0';
 
 // Initialize the application when DOM is ready
@@ -17,23 +19,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         settingsManager.setDebugMode(false);
         
         
-        // Register models with the model factory for dependency injection
-        modelFactory.register({ Task, Board, createTask, createBoard });
-        
-        // Maintain backward compatibility by also exposing via window (deprecated)
-        window.cascadeModels = { Task, Board, createTask, createBoard };
+        // Register services in dependency injection container
+        container.registerServices({
+            'Task': Task,
+            'Board': Board,
+            'createTask': createTask,
+            'createBoard': createBoard,
+            'ErrorHandler': ErrorHandler,
+            'settingsManager': { factory: settingsManager, options: { singleton: true } },
+            'performanceOptimizer': { factory: performanceOptimizer, options: { singleton: true } },
+            'storage': { factory: storage, options: { singleton: true } }
+        });
         
         // Create and initialize the app with error boundary
         const initApp = ErrorBoundary.wrap(async () => {
-            window.cascadeApp = new CascadeApp();
+            const app = new CascadeApp();
+            appContext.setApp(app);
             
             // Wait for app initialization to complete
-            await window.cascadeApp.initPromise;
+            await app.initPromise;
             
             // Initialize keyboard navigation
-            window.cascadeKeyboard = new KeyboardNavigator(window.cascadeApp);
+            const keyboardNav = new KeyboardNavigator(app);
+            appContext.setKeyboardNav(keyboardNav);
             
-            return window.cascadeApp;
+            return app;
         }, 'App Initialization');
         
         const app = await initApp();
@@ -42,45 +52,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             throw new Error('Failed to initialize application');
         }
         
-        // Make some functions globally available for backward compatibility
-        // This allows any existing onclick handlers in HTML to continue working
-        window.showArchivedTasks = ErrorBoundary.wrap(() => {
-            window.cascadeApp.showArchivedTasksModal();
-        }, 'Show Archived Tasks');
+        // All functions now use proper event delegation - no global exposure needed
         
-        // Expose some useful methods globally for debugging and console access
-        window.cascadeDebug = {
-            getState: () => window.cascadeApp.getState(),
-            getTasks: () => window.cascadeApp.getTasks(),
-            createTask: (text) => window.cascadeApp.createTask(text),
-            focusInput: () => window.cascadeApp.focusInput(),
-            showShortcuts: () => window.cascadeKeyboard.showShortcutHelp(),
-            selectTask: (id) => window.cascadeKeyboard.selectTask(id),
-            clearErrors: () => ErrorHandler.clearErrors(),
-            showEmptyState: () => {
-                window.cascadeApp.showEmptyState();
-                console.log('🎯 Empty state shown! The "Create First Task" button should now be visible.');
-            },
-            resetToEmptyState: () => {
-                localStorage.clear();
-                location.reload();
-                console.log('🔄 App reset to empty state. Page will reload...');
-            },
-            performance: {
-                getStats: () => performanceOptimizer.getPerformanceStats(),
-                searchTasks: (tasks, criteria) => performanceOptimizer.searchTasks(tasks, criteria),
-                createStressTest: (taskCount = 10000) => {
-                    const tasks = Array.from({ length: taskCount }, (_, i) => ({
-                        id: `stress-task-${i}`,
-                        text: `Stress Test Task ${i}`,
-                        status: i % 3 === 0 ? 'todo' : i % 3 === 1 ? 'doing' : 'done',
-                        createdDate: new Date().toISOString()
-                    }));
-                    console.log(`Created ${taskCount} tasks for stress testing`);
-                    return tasks;
-                }
-            }
-        };
+        // Expose debug API globally for console access
+        window.cascadeDebug = debugAPI;
         
         console.log('✅ Cascade app initialized successfully');
         console.log('🔧 Debug methods available at window.cascadeDebug');
@@ -142,43 +117,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// Global debug utilities (available in browser console)
+// Initialize debug system and show commands if debug mode is active
 if (typeof window !== 'undefined') {
-    window.cascadeDebug = {
-        enableDebug() {
-            settingsManager.setDebugMode(true);
-            console.log('🔧 Debug mode enabled! Use cascadeDebug.disableDebug() to turn off.');
-        },
-        disableDebug() {
-            settingsManager.setDebugMode(false);
-            console.log('🔇 Debug mode disabled.');
-        },
-        getSettings() {
-            return settingsManager.get();
-        },
-        version: '3.0.0',
-        help() {
-            console.log(`
-🎯 Cascade Debug Utilities
-
-Available commands:
-• cascadeDebug.enableDebug() - Turn on verbose logging
-• cascadeDebug.disableDebug() - Turn off verbose logging  
-• cascadeDebug.getSettings() - View current settings
-• cascadeDebug.version - Show app version
-• cascadeDebug.help() - Show this help
-
-Debug mode is currently: ${settingsManager.get('debugMode') ? 'ON' : 'OFF'}
-            `);
+    setTimeout(() => {
+        // Ensure debug mode is explicitly disabled on fresh start
+        const currentDebugMode = settingsManager.get('debugMode');
+        if (currentDebugMode) {
+            console.log('🔧 Debug mode is active! Type cascadeDebug.help() for available commands.');
         }
-    };
-    
-    // // Show available debug commands on first load (only in debug mode)
-     setTimeout(() => {
-         // Ensure debug mode is explicitly disabled on fresh start
-         const currentDebugMode = settingsManager.get('debugMode');
-         if (currentDebugMode) {
-             console.log('🔧 Debug mode is active! Type cascadeDebug.help() for available commands.');
-         }
-     }, 500);
+    }, 500);
 }

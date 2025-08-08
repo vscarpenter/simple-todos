@@ -95,21 +95,16 @@ export function getUserScenarios(APP_STATE_FIXTURES) {
     },
 
     // Data migration scenario
-    legacyUser: {
-      description: 'User upgrading from legacy version',
-      legacyData: {
-        todos: [
-          { text: 'Legacy task 1', completed: false },
-          { text: 'Legacy task 2', completed: true }
-        ]
-      },
-      expectedMigration: {
+    // Legacy migration removed - app uses IndexedDB only
+    indexedDBUser: {
+      description: 'User with existing IndexedDB data',
+      existingData: {
         boards: [
           {
             name: 'Main Board',
             tasks: [
-              { text: 'Legacy task 1', status: 'todo' },
-              { text: 'Legacy task 2', status: 'done' }
+              { text: 'Existing task 1', status: 'todo' },
+              { text: 'Existing task 2', status: 'done' }
             ]
           }
         ]
@@ -127,15 +122,15 @@ export const USER_SCENARIOS = getUserScenarios({
 // Error scenarios for testing error handling
 export const ERROR_SCENARIOS = {
   storageFailure: {
-    description: 'localStorage fails to save/load',
+    description: 'IndexedDB fails to save/load',
     mockBehavior: () => {
-      throw new Error('Storage quota exceeded');
+      throw new Error('IndexedDB operation failed');
     }
   },
 
   corruptedData: {
-    description: 'Corrupted data in localStorage',
-    corruptedPayload: '{"invalid": json syntax'
+    description: 'Corrupted data in IndexedDB',
+    corruptedPayload: { invalid: 'data structure' }
   },
 
   networkError: {

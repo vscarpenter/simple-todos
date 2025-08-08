@@ -9,8 +9,8 @@ describe('CascadeApp Simple Tests', () => {
   let app;
   
   beforeEach(async () => {
-    // Clear localStorage before each test
-    localStorage.clear();
+    // Clear any storage before each test
+    localStorage.clear(); // For test mocks only
     
     // Import and create new app instance
     const { default: CascadeApp } = await import('scripts/modules/main.js');

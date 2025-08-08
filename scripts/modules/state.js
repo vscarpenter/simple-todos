@@ -1,6 +1,6 @@
 import eventBus from './eventBus.js';
 import { debugLog } from './settings.js';
-import { modelFactory } from './utils.js';
+import { appContext } from './container.js';
 
 /**
  * Centralized application state with reactive updates
@@ -202,7 +202,13 @@ class AppState {
         
         // Convert board tasks to Task instances for the state
         const tasks = board.tasks ? board.tasks.map(taskData => {
-            return modelFactory.createTask(taskData);
+            try {
+                const createTask = appContext.get('createTask');
+                return createTask(taskData);
+            } catch (e) {
+                debugLog.warn('Failed to create Task instance, using raw data:', e);
+                return taskData;
+            }
         }) : [];
         
         this.setState({
@@ -253,15 +259,11 @@ class AppState {
         const boards = this.state.boards.map(board => {
             if (board.id === boardId) {
                 // Create new Board instance to ensure proper validation
-                const { Board } = window.cascadeModels || {};
-                if (Board) {
-                    try {
-                        return new Board({ ...board.toJSON(), ...updates });
-                    } catch (e) {
-                        debugLog.warn('Failed to create Board instance, using plain object:', e);
-                        return { ...board, ...updates };
-                    }
-                } else {
+                try {
+                    const Board = appContext.get('Board');
+                    return new Board({ ...board.toJSON(), ...updates });
+                } catch (e) {
+                    debugLog.warn('Failed to create Board instance, using plain object:', e);
                     return { ...board, ...updates };
                 }
             }
@@ -275,10 +277,10 @@ class AppState {
             const updatedBoard = boards.find(b => b.id === boardId);
             if (updatedBoard) {
                 // Convert board tasks to Task instances for consistency
-                const { Task } = window.cascadeModels || {};
                 const tasks = (updatedBoard.tasks || []).map(taskData => {
-                    if (Task && typeof taskData === 'object' && taskData.id) {
+                    if (typeof taskData === 'object' && taskData.id) {
                         try {
+                            const Task = appContext.get('Task');
                             return new Task(taskData);
                         } catch (e) {
                             debugLog.warn('Failed to create Task instance:', e);

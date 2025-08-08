@@ -1,6 +1,6 @@
 import eventBus from './eventBus.js';
 import appState from './state.js';
-import storage from './storage.js';
+import storage from './storageIndexedDBOnly.js';
 import domManager from './dom.js';
 import accessibility from './accessibility.js';
 import { settingsManager, debugLog } from './settings.js';
@@ -339,6 +339,27 @@ class CascadeApp {
                 this.showArchivedTasksModal();
             });
         }
+
+        // Event delegation for archived task actions (in modal)
+        document.addEventListener('click', (e) => {
+            // Restore archived task
+            if (e.target.classList.contains('restore-archived-task')) {
+                e.preventDefault();
+                const taskId = e.target.getAttribute('data-task-id');
+                if (taskId) {
+                    this.restoreArchivedTask(taskId);
+                }
+            }
+            
+            // Delete archived task
+            if (e.target.classList.contains('delete-archived-task')) {
+                e.preventDefault();
+                const taskId = e.target.getAttribute('data-task-id');
+                if (taskId) {
+                    this.deleteArchivedTask(taskId);
+                }
+            }
+        });
     }
 
     /**
@@ -1602,7 +1623,7 @@ class CascadeApp {
 
             console.log('🔄 Starting complete app reset...');
 
-            // Clear all localStorage data (including legacy keys)
+            // Clear all storage data
             const storageCleared = await this.storage.clearAll();
             if (!storageCleared) {
                 throw new Error('Failed to clear storage data');
@@ -3015,12 +3036,12 @@ class CascadeApp {
                         </div>
                     </div>
                     <div class="archived-task-actions">
-                        <button class="btn btn-sm btn-outline-primary" 
-                                onclick="window.cascadeApp.restoreArchivedTask('${task.id}')">
+                        <button class="btn btn-sm btn-outline-primary restore-archived-task" 
+                                data-task-id="${task.id}">
                             Restore
                         </button>
-                        <button class="btn btn-sm btn-outline-danger" 
-                                onclick="window.cascadeApp.deleteArchivedTask('${task.id}')">
+                        <button class="btn btn-sm btn-outline-danger delete-archived-task" 
+                                data-task-id="${task.id}">
                             Delete
                         </button>
                     </div>

@@ -18,7 +18,8 @@ tests/
 │   └── boardFixtures.js        # Board test data
 ├── mocks/                      # Mock implementations
 │   ├── domMock.js              # DOM element mocking
-│   ├── storageMock.js          # localStorage mocking
+│   ├── storageIndexedDBMock.js # IndexedDB storage mocking
+│   ├── containerMock.js        # Dependency injection mocking
 │   └── eventBusMock.js         # EventBus mocking
 ├── integration/                # Integration tests
 │   ├── taskLifecycle.test.js   # Task CRUD workflows
@@ -118,7 +119,7 @@ export default {
 ### Global Setup (`tests/setup.js`)
 
 The setup file provides:
-- Mock implementations for browser APIs (localStorage, crypto)
+- Mock implementations for browser APIs (IndexedDB, crypto)
 - Custom Jest matchers for domain-specific assertions
 - Global test utilities and helpers
 - Environment configuration for consistent testing
@@ -135,7 +136,7 @@ Provides comprehensive DOM element mocking with:
 
 ### 2. Storage Mocking (`mocks/storageMock.js`)
 
-Provides localStorage mocking with:
+Provides IndexedDB storage mocking with:
 - Predefined test scenarios (single board, multiple boards, legacy data)
 - Automatic data setup for different test cases
 - Storage quota simulation

@@ -1,60 +1,155 @@
 /**
- * Settings Management Module
- * Handles user preferences and configuration
+ * Settings Management with IndexedDB Storage
+ * Replaces localStorage-based settings with IndexedDB implementation
  */
 
 import eventBus from './eventBus.js';
-import { StorageError } from './errorHandler.js';
+import { generateUniqueId } from './utils.js';
 
-export class Settings {
+// Settings storage using IndexedDB
+class SettingsStorage {
     constructor() {
-        this.storageKey = 'cascade-settings';
+        this.dbName = 'cascade-settings';
+        this.version = 1;
+        this.db = null;
+        this.isInitialized = false;
+    }
+
+    async init() {
+        if (this.isInitialized) return true;
+
+        if (!window.indexedDB) {
+            throw new Error('IndexedDB not supported');
+        }
+
+        try {
+            this.db = await this.openDatabase();
+            this.isInitialized = true;
+            return true;
+        } catch (error) {
+            console.error('Settings storage initialization failed:', error);
+            throw error;
+        }
+    }
+
+    openDatabase() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(this.dbName, this.version);
+
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => resolve(request.result);
+
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains('settings')) {
+                    db.createObjectStore('settings', { keyPath: 'key' });
+                }
+            };
+        });
+    }
+
+    async get(key) {
+        await this.init();
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction(['settings'], 'readonly');
+            const store = transaction.objectStore('settings');
+            const request = store.get(key);
+
+            request.onsuccess = () => {
+                resolve(request.result ? request.result.value : null);
+            };
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async set(key, value) {
+        await this.init();
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction(['settings'], 'readwrite');
+            const store = transaction.objectStore('settings');
+            const request = store.put({ key, value, timestamp: new Date().toISOString() });
+
+            request.onsuccess = () => resolve(true);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async clear() {
+        await this.init();
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction(['settings'], 'readwrite');
+            const store = transaction.objectStore('settings');
+            const request = store.clear();
+
+            request.onsuccess = () => resolve(true);
+            request.onerror = () => reject(request.error);
+        });
+    }
+}
+
+/**
+ * Settings Manager Class
+ */
+class SettingsManager {
+    constructor() {
+        this.storage = new SettingsStorage();
+        this.storageKey = 'app-settings';
+        
         this.defaultSettings = {
-            autoArchiveDays: 30,
-            enableAutoArchive: true,
-            theme: 'auto', // 'light', 'dark', 'auto'
-            animations: true,
-            soundEnabled: false,
-            compactMode: false,
-            defaultBoard: 'main',
+            theme: 'light',
+            debugMode: false,
+            notifications: true,
             autoSave: true,
-            showTaskCounts: true,
-            enableKeyboardShortcuts: true,
-            debugMode: false, // Enable verbose logging
-            maxImportFileSize: 50000 // Maximum import file size in characters
+            taskSorting: 'createdDate',
+            taskDensity: 'comfortable',
+            keyboardShortcuts: true,
+            animationsEnabled: true,
+            backupEnabled: true,
+            maxHistoryEntries: 50,
+            archiveAfterDays: 30,
+            confirmTaskDeletion: true,
+            showCompletedTasks: true,
+            autoArchiveCompleted: false,
+            compactMode: false,
+            showTaskProgress: true,
+            enableDragDrop: true,
+            soundEnabled: false,
+            language: 'en'
         };
         
-        this.currentSettings = null;
+        this.currentSettings = { ...this.defaultSettings };
+        this.isInitialized = false;
+        
+        // Initialize settings
         this.init();
-    }
-
-    /**
-     * Initialize settings
-     */
-    init() {
-        this.loadSettings();
-        this.bindEvents();
-    }
-
-    /**
-     * Bind event listeners
-     */
-    bindEvents() {
-        eventBus.on('settings:load', () => this.loadSettings());
-        eventBus.on('settings:save', (data) => this.saveSettings(data.settings));
+        
+        // Setup event listeners
         eventBus.on('settings:reset', () => this.resetSettings());
         eventBus.on('settings:export', () => this.exportSettings());
         eventBus.on('settings:import', (data) => this.importSettings(data.settings));
     }
 
-    /**
-     * Load settings from localStorage
-     * @returns {Object} Current settings
-     */
-    loadSettings() {
+    async init() {
+        if (this.isInitialized) return;
+
         try {
-            const stored = localStorage.getItem(this.storageKey);
-            const savedSettings = stored ? JSON.parse(stored) : {};
+            await this.loadSettings();
+            this.isInitialized = true;
+        } catch (error) {
+            console.error('Settings initialization failed:', error);
+            this.currentSettings = { ...this.defaultSettings };
+            this.isInitialized = true;
+        }
+    }
+
+    /**
+     * Load settings from IndexedDB
+     * @returns {Promise<Object>} Current settings
+     */
+    async loadSettings() {
+        try {
+            const stored = await this.storage.get(this.storageKey);
+            const savedSettings = stored || {};
             
             // Merge with defaults to ensure all properties exist
             this.currentSettings = {
@@ -72,12 +167,11 @@ export class Settings {
             return this.currentSettings;
             
         } catch (error) {
-            console.error('Failed to load settings:', error);
+            console.error('Failed to load settings from IndexedDB:', error);
             this.currentSettings = { ...this.defaultSettings };
-            // Ensure debug mode is disabled even on error
             this.currentSettings.debugMode = false;
             eventBus.emit('settings:error', { 
-                error: new StorageError('Failed to load settings'),
+                error: new Error('Failed to load settings'),
                 context: 'Settings Load'
             });
             return this.currentSettings;
@@ -85,10 +179,10 @@ export class Settings {
     }
 
     /**
-     * Save settings to localStorage
+     * Save settings to IndexedDB
      * @param {Object} settings - Settings to save
      */
-    saveSettings(settings) {
+    async saveSettings(settings) {
         try {
             // Merge with current settings
             const newSettings = {
@@ -97,518 +191,212 @@ export class Settings {
             };
             
             // Validate before saving
-            debugLog.log('About to validate settings:', newSettings);
             if (!this.validateSettings(newSettings)) {
                 throw new Error('Invalid settings provided');
             }
             
-            localStorage.setItem(this.storageKey, JSON.stringify(newSettings));
+            await this.storage.set(this.storageKey, newSettings);
             this.currentSettings = newSettings;
             
             eventBus.emit('settings:saved', { settings: this.currentSettings });
             
         } catch (error) {
-            console.error('Failed to save settings:', error);
+            console.error('Failed to save settings to IndexedDB:', error);
             eventBus.emit('settings:error', { 
-                error: new StorageError('Failed to save settings'),
+                error: new Error('Failed to save settings'),
                 context: 'Settings Save'
             });
-            throw error;
+        }
+    }
+
+    /**
+     * Get current settings or specific setting
+     * @param {string} [key] - Specific setting key
+     * @returns {*} Settings object or specific value
+     */
+    get(key) {
+        if (!this.isInitialized) {
+            console.warn('Settings not initialized yet, returning defaults');
+            return key ? this.defaultSettings[key] : this.defaultSettings;
+        }
+        
+        if (key) {
+            return this.currentSettings[key] !== undefined ? this.currentSettings[key] : this.defaultSettings[key];
+        }
+        
+        return { ...this.currentSettings };
+    }
+
+    /**
+     * Set a specific setting
+     * @param {string} key - Setting key
+     * @param {*} value - Setting value
+     */
+    async set(key, value) {
+        const updates = { [key]: value };
+        await this.saveSettings(updates);
+    }
+
+    /**
+     * Set debug mode
+     * @param {boolean} enabled - Debug mode state
+     */
+    async setDebugMode(enabled) {
+        await this.set('debugMode', Boolean(enabled));
+    }
+
+    /**
+     * Get theme setting
+     * @returns {string} Current theme
+     */
+    getTheme() {
+        return this.get('theme') || 'light';
+    }
+
+    /**
+     * Set theme
+     * @param {string} theme - Theme name
+     */
+    async setTheme(theme) {
+        const validThemes = ['light', 'dark', 'auto'];
+        if (validThemes.includes(theme)) {
+            await this.set('theme', theme);
+            eventBus.emit('settings:theme-changed', { theme });
         }
     }
 
     /**
      * Validate settings object
-     * @param {Object} settings - Settings to validate
-     * @returns {boolean} True if valid
+     * @param {Object} [settings] - Settings to validate (defaults to current)
+     * @returns {boolean} Validation result
      */
     validateSettings(settings = this.currentSettings) {
-        if (!settings || typeof settings !== 'object') {
-            console.error('Settings validation failed: not an object', settings);
+        try {
+            const validThemes = ['light', 'dark', 'auto'];
+            const validSorting = ['createdDate', 'text', 'status', 'manual'];
+            const validDensity = ['compact', 'comfortable', 'spacious'];
+            const validLanguages = ['en', 'es', 'fr', 'de'];
+
+            // Validate each setting
+            if (!validThemes.includes(settings.theme)) {
+                console.warn('Invalid theme:', settings.theme);
+                return false;
+            }
+
+            if (!validSorting.includes(settings.taskSorting)) {
+                console.warn('Invalid task sorting:', settings.taskSorting);
+                return false;
+            }
+
+            if (!validDensity.includes(settings.taskDensity)) {
+                console.warn('Invalid task density:', settings.taskDensity);
+                return false;
+            }
+
+            if (!validLanguages.includes(settings.language)) {
+                console.warn('Invalid language:', settings.language);
+                return false;
+            }
+
+            // Validate numeric ranges
+            if (settings.maxHistoryEntries < 10 || settings.maxHistoryEntries > 1000) {
+                console.warn('Invalid max history entries:', settings.maxHistoryEntries);
+                return false;
+            }
+
+            if (settings.archiveAfterDays < 1 || settings.archiveAfterDays > 365) {
+                console.warn('Invalid archive after days:', settings.archiveAfterDays);
+                return false;
+            }
+
+            return true;
+
+        } catch (error) {
+            console.error('Settings validation error:', error);
             return false;
         }
-
-        // Validate auto archive days
-        if (settings.autoArchiveDays !== undefined) {
-            const days = parseInt(settings.autoArchiveDays);
-            if (isNaN(days) || days < 1 || days > 365) {
-                console.error('Settings validation failed: invalid autoArchiveDays', settings.autoArchiveDays);
-                return false;
-            }
-        }
-
-        // Validate theme
-        if (settings.theme !== undefined) {
-            const validThemes = ['light', 'dark', 'auto'];
-            if (!validThemes.includes(settings.theme)) {
-                console.error('Settings validation failed: invalid theme', settings.theme);
-                return false;
-            }
-        }
-
-        // Validate max import file size
-        if (settings.maxImportFileSize !== undefined) {
-            const size = parseInt(settings.maxImportFileSize);
-            if (isNaN(size) || size < 1000 || size > 1000000) { // 1KB to 1MB
-                console.error('Settings validation failed: invalid maxImportFileSize', {
-                    original: settings.maxImportFileSize,
-                    parsed: size,
-                    isNaN: isNaN(size),
-                    tooSmall: size < 1000,
-                    tooLarge: size > 1000000
-                });
-                return false;
-            }
-        }
-
-        // Validate boolean settings
-        const booleanSettings = [
-            'enableAutoArchive', 'animations', 'soundEnabled', 
-            'compactMode', 'autoSave', 'showTaskCounts', 'enableKeyboardShortcuts', 'debugMode'
-        ];
-        
-        for (const key of booleanSettings) {
-            if (settings[key] !== undefined && typeof settings[key] !== 'boolean') {
-                console.error('Settings validation failed: invalid boolean setting', {
-                    key: key,
-                    value: settings[key],
-                    type: typeof settings[key]
-                });
-                return false;
-            }
-        }
-
-        return true;
     }
 
     /**
      * Reset settings to defaults
      */
-    resetSettings() {
+    async resetSettings() {
         try {
+            await this.storage.clear();
             this.currentSettings = { ...this.defaultSettings };
-            localStorage.setItem(this.storageKey, JSON.stringify(this.currentSettings));
-            
-            eventBus.emit('settings:reset:complete', { settings: this.currentSettings });
-            eventBus.emit('settings:saved', { settings: this.currentSettings });
-            
+            eventBus.emit('settings:reset', { settings: this.currentSettings });
         } catch (error) {
             console.error('Failed to reset settings:', error);
-            eventBus.emit('settings:error', { 
-                error: new StorageError('Failed to reset settings'),
-                context: 'Settings Reset'
-            });
         }
     }
 
     /**
-     * Get current settings
-     * @returns {Object} Current settings
-     */
-    get() {
-        return { ...this.currentSettings };
-    }
-
-    /**
-     * Get a specific setting value
-     * @param {string} key - Setting key
-     * @returns {*} Setting value
-     */
-    getValue(key) {
-        return this.currentSettings[key];
-    }
-
-    /**
-     * Set a specific setting value
-     * @param {string} key - Setting key
-     * @param {*} value - Setting value
-     */
-    setValue(key, value) {
-        const newSettings = { [key]: value };
-        this.saveSettings(newSettings);
-    }
-
-    /**
      * Export settings for backup
-     * @returns {Object} Settings export object
+     * @returns {Object} Settings export data
      */
     exportSettings() {
         const exportData = {
-            version: '2.0',
-            timestamp: new Date().toISOString(),
-            settings: { ...this.currentSettings }
+            settings: this.get(),
+            exportDate: new Date().toISOString(),
+            version: '3.0.0'
         };
         
-        eventBus.emit('settings:exported', { data: exportData });
+        eventBus.emit('settings:exported', exportData);
         return exportData;
     }
 
     /**
      * Import settings from backup
-     * @param {Object} importData - Settings import object
+     * @param {Object} settingsData - Imported settings data
      */
-    importSettings(importData) {
+    async importSettings(settingsData) {
         try {
-            if (!importData || typeof importData !== 'object') {
-                throw new Error('Invalid import data');
+            if (!settingsData || typeof settingsData !== 'object') {
+                throw new Error('Invalid settings data');
             }
 
-            let settingsToImport;
+            const settingsToImport = settingsData.settings || settingsData;
             
-            // Handle different import formats
-            if (importData.settings) {
-                // New format with metadata
-                settingsToImport = importData.settings;
+            if (this.validateSettings(settingsToImport)) {
+                await this.saveSettings(settingsToImport);
+                eventBus.emit('settings:imported', { settings: this.currentSettings });
             } else {
-                // Direct settings object
-                settingsToImport = importData;
+                throw new Error('Invalid settings format');
             }
 
-            // Validate imported settings
-            if (!this.validateSettings(settingsToImport)) {
-                throw new Error('Invalid settings in import data');
-            }
-
-            // Merge with defaults to ensure all properties exist
-            const mergedSettings = {
-                ...this.defaultSettings,
-                ...settingsToImport
-            };
-
-            this.saveSettings(mergedSettings);
-            
-            eventBus.emit('settings:imported', { settings: this.currentSettings });
-            
         } catch (error) {
             console.error('Failed to import settings:', error);
             eventBus.emit('settings:error', { 
-                error: new StorageError('Failed to import settings'),
+                error: new Error('Failed to import settings'),
                 context: 'Settings Import'
             });
-            throw error;
-        }
-    }
-
-    /**
-     * Apply theme setting
-     */
-    applyTheme() {
-        const theme = this.getValue('theme');
-        const root = document.documentElement;
-        
-        if (theme === 'auto') {
-            // Use system preference
-            if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                root.setAttribute('data-theme', 'dark');
-            } else {
-                root.setAttribute('data-theme', 'light');
-            }
-        } else {
-            root.setAttribute('data-theme', theme);
-        }
-        
-        eventBus.emit('theme:applied', { theme });
-    }
-
-    /**
-     * Check if auto-archive is enabled and get threshold
-     * @returns {Object} Auto-archive configuration
-     */
-    getAutoArchiveConfig() {
-        return {
-            enabled: this.getValue('enableAutoArchive'),
-            days: this.getValue('autoArchiveDays')
-        };
-    }
-
-    /**
-     * Toggle debug mode on/off
-     * @param {boolean} enabled - Whether to enable debug mode
-     */
-    setDebugMode(enabled) {
-        this.setValue('debugMode', enabled);
-        
-        // Log the change (always show this, even when debug is off)
-        if (enabled) {
-            console.log('🔧 [DEBUG MODE ENABLED] Verbose logging is now active');
-            debugLog.log('Debug mode activated - you will see detailed console output');
-        } else {
-            console.log('🔇 [DEBUG MODE DISABLED] Verbose logging is now off');
-        }
-        
-        eventBus.emit('debug:toggled', { enabled });
-    }
-
-    /**
-     * Generate settings UI HTML
-     * @returns {string} Settings form HTML
-     */
-    generateSettingsHTML() {
-        const settings = this.get();
-        
-        return `
-            <div class="settings-form">
-                <!-- Archive Settings -->
-                <div class="settings-section">
-                    <h4 class="settings-section__title">Auto-Archive</h4>
-                    <div class="setting-item">
-                        <label for="auto-archive-days" class="setting-label">
-                            Archive completed tasks after:
-                        </label>
-                        <div class="setting-input-group">
-                            <input type="number" 
-                                   id="auto-archive-days" 
-                                   class="form-control" 
-                                   min="1" 
-                                   max="365" 
-                                   value="${settings.autoArchiveDays}">
-                            <span class="setting-suffix">days</span>
-                        </div>
-                    </div>
-                    <div class="setting-item">
-                        <div class="setting-checkbox">
-                            <input type="checkbox" 
-                                   id="enable-auto-archive" 
-                                   class="form-check-input" 
-                                   ${settings.enableAutoArchive ? 'checked' : ''}>
-                            <label for="enable-auto-archive" class="setting-label">
-                                Enable automatic archiving
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Appearance Settings -->
-                <div class="settings-section">
-                    <h4 class="settings-section__title">Appearance</h4>
-                    <div class="setting-item">
-                        <label for="theme-select" class="setting-label">Theme:</label>
-                        <select id="theme-select" class="form-control">
-                            <option value="auto" ${settings.theme === 'auto' ? 'selected' : ''}>Auto (System)</option>
-                            <option value="light" ${settings.theme === 'light' ? 'selected' : ''}>Light</option>
-                            <option value="dark" ${settings.theme === 'dark' ? 'selected' : ''}>Dark</option>
-                        </select>
-                    </div>
-                    <div class="setting-item">
-                        <div class="setting-checkbox">
-                            <input type="checkbox" 
-                                   id="animations-enabled" 
-                                   class="form-check-input" 
-                                   ${settings.animations ? 'checked' : ''}>
-                            <label for="animations-enabled" class="setting-label">
-                                Enable animations
-                            </label>
-                        </div>
-                    </div>
-                    <div class="setting-item">
-                        <div class="setting-checkbox">
-                            <input type="checkbox" 
-                                   id="compact-mode" 
-                                   class="form-check-input" 
-                                   ${settings.compactMode ? 'checked' : ''}>
-                            <label for="compact-mode" class="setting-label">
-                                Compact mode
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Behavior Settings -->
-                <div class="settings-section">
-                    <h4 class="settings-section__title">Behavior</h4>
-                    <div class="setting-item">
-                        <div class="setting-checkbox">
-                            <input type="checkbox" 
-                                   id="auto-save" 
-                                   class="form-check-input" 
-                                   ${settings.autoSave ? 'checked' : ''}>
-                            <label for="auto-save" class="setting-label">
-                                Auto-save changes
-                            </label>
-                        </div>
-                    </div>
-                    <div class="setting-item">
-                        <div class="setting-checkbox">
-                            <input type="checkbox" 
-                                   id="show-task-counts" 
-                                   class="form-check-input" 
-                                   ${settings.showTaskCounts ? 'checked' : ''}>
-                            <label for="show-task-counts" class="setting-label">
-                                Show task counts
-                            </label>
-                        </div>
-                    </div>
-                    <div class="setting-item">
-                        <div class="setting-checkbox">
-                            <input type="checkbox" 
-                                   id="keyboard-shortcuts" 
-                                   class="form-check-input" 
-                                   ${settings.enableKeyboardShortcuts ? 'checked' : ''}>
-                            <label for="keyboard-shortcuts" class="setting-label">
-                                Enable keyboard shortcuts
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Import/Export Settings -->
-                <div class="settings-section">
-                    <h4 class="settings-section__title">Import/Export</h4>
-                    <div class="setting-item">
-                        <label for="max-import-file-size" class="setting-label">
-                            Maximum import file size:
-                        </label>
-                        <div class="setting-input-group">
-                            <input type="number" 
-                                   id="max-import-file-size" 
-                                   class="form-control" 
-                                   min="1000" 
-                                   max="1000000" 
-                                   step="1000"
-                                   value="${settings.maxImportFileSize}">
-                            <span class="setting-suffix">characters</span>
-                        </div>
-                        <div class="setting-help">
-                            Larger files take more time to process. Recommended: 50,000 characters.
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Actions -->
-                <div class="settings-actions">
-                    <button type="button" class="btn btn-outline-secondary" id="reset-settings-btn">
-                        Reset Settings
-                    </button>
-                </div>
-            </div>
-        `;
-    }
-
-    /**
-     * Parse settings from form
-     * @param {HTMLElement} container - Settings form container element
-     * @returns {Object} Parsed settings
-     */
-    parseSettingsFromForm(container) {
-        try {
-            const getElement = (id) => {
-                const element = container.querySelector(`#${id}`);
-                if (!element) {
-                    throw new Error(`Element with id '${id}' not found`);
-                }
-                return element;
-            };
-
-            const autoArchiveDaysElement = getElement('auto-archive-days');
-            const autoArchiveDays = parseInt(autoArchiveDaysElement.value);
-            
-            if (isNaN(autoArchiveDays)) {
-                throw new Error('Invalid auto-archive days value');
-            }
-
-            const maxImportFileSizeElement = getElement('max-import-file-size');
-            const maxImportFileSize = parseInt(maxImportFileSizeElement.value);
-            
-            debugLog.log('Parsing maxImportFileSize from form:', {
-                rawValue: maxImportFileSizeElement.value,
-                parsedValue: maxImportFileSize,
-                isNaN: isNaN(maxImportFileSize)
-            });
-            
-            if (isNaN(maxImportFileSize)) {
-                throw new Error('Invalid max import file size value');
-            }
-
-            return {
-                autoArchiveDays: autoArchiveDays,
-                enableAutoArchive: getElement('enable-auto-archive').checked,
-                theme: getElement('theme-select').value,
-                animations: getElement('animations-enabled').checked,
-                compactMode: getElement('compact-mode').checked,
-                autoSave: getElement('auto-save').checked,
-                showTaskCounts: getElement('show-task-counts').checked,
-                enableKeyboardShortcuts: getElement('keyboard-shortcuts').checked,
-                maxImportFileSize: maxImportFileSize
-            };
-        } catch (error) {
-            console.error('Error parsing settings from form:', error);
-            throw new Error(`Failed to parse settings: ${error.message}`);
         }
     }
 }
 
-// Create and export singleton instance
-export const settingsManager = new Settings();
-
-// Make settings manager globally available for security manager
-globalThis.settingsManager = settingsManager;
-
 /**
- * Debug logging utility
- * Only logs when debug mode is enabled
+ * Debug Log Utility
  */
 export const debugLog = {
     log: (...args) => {
-        try {
-            if (settingsManager.get('debugMode')) {
-                console.log('[DEBUG]', ...args);
-            }
-        } catch (e) {
-            // Silently fail if settings not available - debug mode off by default
+        if (settingsManager.get('debugMode')) {
+            console.log('[DEBUG]', ...args);
         }
     },
-    info: (...args) => {
-        try {
-            if (settingsManager.get('debugMode')) {
-                console.info('[DEBUG]', ...args);
-            }
-        } catch (e) {
-            // Silently fail if settings not available - debug mode off by default
-        }
-    },
+    
     warn: (...args) => {
-        try {
-            if (settingsManager.get('debugMode')) {
-                console.warn('[DEBUG]', ...args);
-            }
-        } catch (e) {
-            // Silently fail if settings not available - debug mode off by default
+        if (settingsManager.get('debugMode')) {
+            console.warn('[DEBUG]', ...args);
         }
     },
+    
     error: (...args) => {
-        try {
-            if (settingsManager.get('debugMode')) {
-                console.error('[DEBUG]', ...args);
-            }
-        } catch (e) {
-            // Silently fail if settings not available - debug mode off by default
-        }
-    },
-    group: (label) => {
-        try {
-            if (settingsManager.get('debugMode')) {
-                console.group(`[DEBUG] ${label}`);
-            }
-        } catch (e) {
-            // Silently fail if settings not available - debug mode off by default
-        }
-    },
-    groupEnd: () => {
-        try {
-            if (settingsManager.get('debugMode')) {
-                console.groupEnd();
-            }
-        } catch (e) {
-            // Silently fail if settings not available - debug mode off by default
-        }
-    },
-    table: (data) => {
-        try {
-            if (settingsManager.get('debugMode')) {
-                console.table(data);
-            }
-        } catch (e) {
-            // Silently fail if settings not available - debug mode off by default
+        if (settingsManager.get('debugMode')) {
+            console.error('[DEBUG]', ...args);
         }
     }
 };
+
+// Create and export singleton instance
+const settingsManager = new SettingsManager();
+export { settingsManager };
