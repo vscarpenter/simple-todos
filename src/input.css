@@ -1,0 +1,8 @@
+/* Tailwind CSS v4 with Basecoat integration */
+@import "tailwindcss";
+
+/* Import existing CSS custom properties to maintain compatibility */
+@import "../styles/modules/_variables.css";
+
+/* Basecoat UI components */
+@import "basecoat-css";

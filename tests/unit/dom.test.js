@@ -50,6 +50,9 @@ describe('DOM Manager', () => {
 
     jest.clearAllMocks();
     
+    // Clear the eventBus mock
+    mockEventBus.emit.mockClear();
+    
     // Import DOM manager (it's a singleton)
     const domModule = await import('../../scripts/modules/dom.js');
     domManager = domModule.default;
@@ -68,15 +71,24 @@ describe('DOM Manager', () => {
       expect(domManager.elements.doneList).toBeDefined();
     });
 
-    test('should handle drag and drop events', () => { // Renamed test
+    test('should handle drag and drop events', () => {
         const todoList = document.getElementById('todo-list');
         const taskCard = document.querySelector('.task-card');
 
         // Simulate drag start
-        const dragStartEvent = new MockDragEvent('dragstart', { bubbles: true, dataTransfer: new MockDataTransfer() });
+        const dataTransfer = new MockDataTransfer();
+        const dragStartEvent = new MockDragEvent('dragstart', { bubbles: true, dataTransfer });
         taskCard.dispatchEvent(dragStartEvent);
-        expect(dragStartEvent.dataTransfer.getData('text/plain')).toBe('task-1');
+        
+        // Check that data was set in dataTransfer
+        expect(dataTransfer.getData('text/plain')).toBe('task-1');
         expect(taskCard.classList.contains('dragging')).toBe(true);
+        
+        // Check that drag:start event was emitted
+        expect(mockEventBus.emit).toHaveBeenCalledWith('drag:start', { 
+            taskId: 'task-1', 
+            element: taskCard 
+        });
 
         // Simulate drag end
         const dragEndEvent = new MockDragEvent('dragend', { bubbles: true });
@@ -84,10 +96,15 @@ describe('DOM Manager', () => {
         expect(taskCard.classList.contains('dragging')).toBe(false);
 
         // Simulate drop
-        const dropEvent = new MockDragEvent('drop', { bubbles: true, dataTransfer: dragStartEvent.dataTransfer });
+        const dropEvent = new MockDragEvent('drop', { bubbles: true, dataTransfer });
         dropEvent.preventDefault = jest.fn();
         todoList.dispatchEvent(dropEvent);
-        expect(mockEventBus.emit).toHaveBeenCalledWith('task:drop', { taskId: 'task-1', targetStatus: 'todo' });
+        
+        // Check that task:drop event was emitted
+        expect(mockEventBus.emit).toHaveBeenCalledWith('task:drop', { 
+            taskId: 'task-1', 
+            targetStatus: 'todo' 
+        });
     });
   });
 

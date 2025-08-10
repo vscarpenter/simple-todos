@@ -6,14 +6,16 @@
 import { jest } from '@jest/globals';
 import { JSDOM } from 'jsdom';
 
-// Mock dependencies
+// Mock eventBus before any imports using unstable_mockModule
 const mockEventBus = {
   emit: jest.fn(),
   on: jest.fn(),
+  off: jest.fn()
 };
 
-// Mock the eventBus module
-jest.mock('scripts/modules/eventBus.js', () => mockEventBus);
+jest.unstable_mockModule('../../../scripts/modules/eventBus.js', () => ({
+  default: mockEventBus
+}));
 
 // Mock the domManager to avoid its complexities and focus on UIService logic
 const mockDomManager = {
@@ -28,8 +30,8 @@ const mockDomManager = {
     }),
 };
 
-// Import the service to be tested
-const { UIService } = await import('../../scripts/modules/services/uiService.js');
+// Import the service to be tested after mocking
+const { UIService } = await import('../../../scripts/modules/services/uiService.js');
 const { createTask } = await import('../../../scripts/modules/models.js');
 
 const setupDOM = () => {
@@ -59,6 +61,10 @@ describe('UIService', () => {
   beforeEach(() => {
     setupDOM();
     jest.clearAllMocks();
+    
+    // Clear the eventBus mock
+    mockEventBus.emit.mockClear();
+    mockEventBus.on.mockClear();
 
     // Create a fresh mockState for each test
     mockState = {

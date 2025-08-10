@@ -142,27 +142,64 @@ global.__MOCK_MODULES__ = new Map();
 
 // Mock IndexedDB for testing
 const mockIndexedDB = {
-  open: jest.fn(() => ({
-    onsuccess: null,
-    onerror: null,
-    onupgradeneeded: null,
-    result: {
-      objectStoreNames: { contains: jest.fn(() => false) },
-      createObjectStore: jest.fn(() => ({
-        createIndex: jest.fn()
-      })),
-      transaction: jest.fn(() => ({
-        objectStore: jest.fn(() => ({
-          put: jest.fn(() => ({ onsuccess: null, onerror: null })),
-          get: jest.fn(() => ({ onsuccess: null, onerror: null })),
-          getAll: jest.fn(() => ({ onsuccess: null, onerror: null })),
-          clear: jest.fn(() => ({ onsuccess: null, onerror: null }))
+  open: jest.fn((name, version) => {
+    const request = {
+      onsuccess: null,
+      onerror: null,
+      onupgradeneeded: null,
+      result: {
+        objectStoreNames: { 
+          contains: jest.fn(() => false) 
+        },
+        createObjectStore: jest.fn(() => ({
+          createIndex: jest.fn()
         })),
-        oncomplete: null,
-        onerror: null
-      }))
-    }
-  }))
+        transaction: jest.fn(() => ({
+          objectStore: jest.fn(() => ({
+            put: jest.fn(() => {
+              const putRequest = { onsuccess: null, onerror: null };
+              setTimeout(() => {
+                if (putRequest.onsuccess) putRequest.onsuccess();
+              }, 0);
+              return putRequest;
+            }),
+            get: jest.fn(() => {
+              const getRequest = { onsuccess: null, onerror: null, result: null };
+              setTimeout(() => {
+                if (getRequest.onsuccess) getRequest.onsuccess();
+              }, 0);
+              return getRequest;
+            }),
+            getAll: jest.fn(() => {
+              const getAllRequest = { onsuccess: null, onerror: null, result: [] };
+              setTimeout(() => {
+                if (getAllRequest.onsuccess) getAllRequest.onsuccess();
+              }, 0);
+              return getAllRequest;
+            }),
+            clear: jest.fn(() => {
+              const clearRequest = { onsuccess: null, onerror: null };
+              setTimeout(() => {
+                if (clearRequest.onsuccess) clearRequest.onsuccess();
+              }, 0);
+              return clearRequest;
+            })
+          })),
+          oncomplete: null,
+          onerror: null
+        }))
+      }
+    };
+    
+    // Simulate successful database opening
+    setTimeout(() => {
+      if (request.onsuccess) {
+        request.onsuccess();
+      }
+    }, 0);
+    
+    return request;
+  })
 };
 
 Object.defineProperty(global, 'indexedDB', {

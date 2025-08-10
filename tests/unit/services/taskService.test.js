@@ -5,16 +5,19 @@
 
 import { jest } from '@jest/globals';
 
-// Mock dependencies
+// Mock eventBus before any imports using unstable_mockModule
 const mockEventBus = {
   emit: jest.fn(),
+  on: jest.fn(),
+  off: jest.fn()
 };
 
-// Mock the eventBus module
-jest.mock('scripts/modules/eventBus.js', () => mockEventBus);
+jest.unstable_mockModule('../../../scripts/modules/eventBus.js', () => ({
+  default: mockEventBus
+}));
 
-// Import the service and models
-const { TaskService } = await import('../../scripts/modules/services/taskService.js');
+// Import the service and models after mocking
+const { TaskService } = await import('../../../scripts/modules/services/taskService.js');
 const { Task, createTask } = await import('../../../scripts/modules/models.js');
 
 describe('TaskService', () => {
@@ -24,6 +27,9 @@ describe('TaskService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Clear the eventBus mock
+    mockEventBus.emit.mockClear();
 
     // Create fresh mocks for each test to ensure isolation
     mockState = {

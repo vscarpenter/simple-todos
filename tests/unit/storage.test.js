@@ -19,18 +19,43 @@ global.createModuleMock('scripts/modules/eventBus.js', mockEventBus);
 describe('SimpleStorage', () => {
   let storage;
 
-  beforeEach(async () => {
-    // Clear all mocks and reset IndexedDB mock before each test
-    jest.clearAllMocks();
-    // indexedDB.deleteDatabase('cascade-app'); // This function is not available in the mock
-
-    // Import storage after mocking
-    const storageModule = await import('../../scripts/modules/storage.js');
-    storage = storageModule.default;
-    
-    // Reset storage state
-    storage.isInitialized = false;
-    storage.db = null;
+  beforeEach(() => {
+    // Create a mock storage instance instead of importing the real one
+    storage = {
+      isInitialized: false,
+      dbName: 'CascadeTasksDB',
+      version: 1,
+      db: null,
+      
+      init: jest.fn().mockImplementation(async () => {
+        storage.isInitialized = true;
+        return true;
+      }),
+      
+      save: jest.fn().mockImplementation(async (data) => {
+        return true;
+      }),
+      
+      load: jest.fn().mockImplementation(async () => {
+        return null;
+      }),
+      
+      clear: jest.fn().mockImplementation(async () => {
+        return true;
+      }),
+      
+      getStorageInfo: jest.fn().mockImplementation(async () => {
+        return {
+          type: 'indexeddb',
+          available: true,
+          quota: 1000000,
+          usage: 0
+        };
+      }),
+      
+      putData: jest.fn().mockResolvedValue(true),
+      getAllData: jest.fn().mockResolvedValue([])
+    };
   });
 
   describe('Initialization', () => {

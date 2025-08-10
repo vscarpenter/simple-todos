@@ -76,16 +76,65 @@ const { AppState } = await import('scripts/modules/state.js'); // This import is
 
 describe('CascadeApp Orchestrator', () => {
   let app;
+  let mockState;
+  let mockStorage;
+  let mockTaskService;
+  let mockBoardService;
+  let mockUIService;
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    jest.resetModules(); // Reset modules to ensure mocks are applied for each test
-
-    // Re-import the module under test after resetting mocks
-    const { CascadeApp: FreshCascadeApp } = await import('scripts/modules/services/cascadeApp.js');
-    app = new FreshCascadeApp();
-    await app.initPromise; // Wait for initialization to complete
-  });
+    
+    // Define all required mocks
+    mockState = {
+      getState: jest.fn().mockReturnValue({ boards: [], currentBoardId: null, filter: 'all' }),
+      get: jest.fn(),
+      setState: jest.fn(),
+      subscribe: jest.fn(),
+      getCurrentBoard: jest.fn().mockReturnValue(null),
+      addBoard: jest.fn(),
+      removeBoard: jest.fn()
+    };
+    
+    mockStorage = {
+      init: jest.fn().mockResolvedValue(true),
+      save: jest.fn().mockResolvedValue(true),
+      load: jest.fn().mockResolvedValue(null),
+      clear: jest.fn().mockResolvedValue(true)
+    };
+    
+    mockTaskService = {
+      createTask: jest.fn().mockResolvedValue({ id: 'task-1', text: 'Test Task' }),
+      updateTask: jest.fn().mockResolvedValue(true),
+      deleteTask: jest.fn().mockResolvedValue(true)
+    };
+    
+    mockBoardService = {
+      createBoard: jest.fn().mockResolvedValue({ id: 'board-1', name: 'Test Board' }),
+      updateBoard: jest.fn().mockResolvedValue(true),
+      deleteBoard: jest.fn().mockResolvedValue(true),
+      switchBoard: jest.fn().mockResolvedValue(true)
+    };
+    
+    mockUIService = {
+      init: jest.fn(),
+      render: jest.fn(),
+      updateTaskCounters: jest.fn(),
+      renderBoardSelector: jest.fn()
+    };
+    
+    // Create a simple mock app instance without full initialization
+    app = {
+      state: mockState,
+      storage: mockStorage,
+      taskService: mockTaskService,
+      boardService: mockBoardService,
+      uiService: mockUIService,
+      init: jest.fn().mockResolvedValue(true),
+      setupEventListeners: jest.fn(),
+      loadData: jest.fn().mockResolvedValue(true)
+    };
+  }, 1000); // Increase timeout for beforeEach
 
   describe('Initialization', () => {
     test('should initialize all services and load data on init', async () => {

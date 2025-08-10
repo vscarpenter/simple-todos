@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 
-// Mock eventBus before importing state
+// Mock eventBus before any imports using unstable_mockModule
 const mockEventBus = {
   emit: jest.fn(),
   on: jest.fn((event, callback) => {
@@ -10,8 +10,9 @@ const mockEventBus = {
   off: jest.fn(),
 };
 
-// Mock the eventBus module
-jest.mock('scripts/modules/eventBus.js', () => mockEventBus);
+jest.unstable_mockModule('../../scripts/modules/eventBus.js', () => ({
+  default: mockEventBus
+}));
 
 // Mock models
 const MockTask = class {
@@ -32,22 +33,26 @@ const MockBoard = class {
     toJSON() { return { ...this }; }
 };
 
-// Create module mocks
-global.createModuleMock('scripts/modules/models.js', { 
+jest.unstable_mockModule('../../scripts/modules/models.js', () => ({
     Task: MockTask, 
     Board: MockBoard, 
     createTask: (data) => new MockTask(data)
-});
+}));
 
-// Import the class to be tested, not the singleton
+// Import the AppState class after mocking
 const { AppState } = await import('../../scripts/modules/state.js');
-
 
 describe('AppState', () => {
   let state;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Clear the eventBus mock
+    mockEventBus.emit.mockClear();
+    mockEventBus.on.mockClear();
+    mockEventBus.off.mockClear();
+    
     // Create a new instance for each test
     state = new AppState();
   });

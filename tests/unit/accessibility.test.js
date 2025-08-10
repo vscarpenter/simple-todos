@@ -14,8 +14,8 @@ const mockEventBus = {
 
 global.createModuleMock('scripts/modules/eventBus.js', mockEventBus);
 
-// Import the class to be tested
-const { AccessibilityManager } = await import('../../scripts/modules/accessibility.js');
+// Import the singleton instance to be tested
+const accessibilityManager = await import('../../scripts/modules/accessibility.js');
 
 const setupDOM = () => {
   const dom = new JSDOM(`
@@ -24,7 +24,7 @@ const setupDOM = () => {
       <body>
         <header></header>
         <main>
-            <div class="backlog-board">
+            <div class="task-board">
                 <div id="todo-column" class="board-column">
                     <h3>To Do</h3>
                     <div id="todo-list" class="column-content" data-status="todo"></div>
@@ -43,23 +43,23 @@ const setupDOM = () => {
 
 
 describe('AccessibilityManager', () => {
-  let accessibilityManager;
-
   beforeEach(() => {
     setupDOM();
     jest.clearAllMocks();
-    // Create a new instance for each test to ensure isolation
-    accessibilityManager = new AccessibilityManager();
+    // Reset the singleton instance for each test
+    accessibilityManager.default.isInitialized = false;
   });
 
   describe('Initialization', () => {
     test('should create a screen reader announcer element', () => {
+      accessibilityManager.default.init();
       const announcer = document.getElementById('screen-reader-announcements');
       expect(announcer).not.toBeNull();
       expect(announcer.getAttribute('aria-live')).toBe('polite');
     });
 
     test('should enhance HTML with roles', () => {
+        accessibilityManager.default.init();
         expect(document.querySelector('header').getAttribute('role')).toBe('banner');
         expect(document.querySelector('main').getAttribute('role')).toBe('main');
         expect(document.querySelector('footer').getAttribute('role')).toBe('contentinfo');
@@ -68,8 +68,9 @@ describe('AccessibilityManager', () => {
 
   describe('Announcements', () => {
     test('should announce messages to the screen reader div', (done) => {
+      accessibilityManager.default.init();
       const message = 'This is a test announcement';
-      accessibilityManager.announce(message);
+      accessibilityManager.default.announce(message);
 
       // Announcements have a 100ms delay
       setTimeout(() => {
@@ -82,37 +83,44 @@ describe('AccessibilityManager', () => {
 
   describe('Focus Management', () => {
     test('should restore focus to the previously focused element', () => {
+        accessibilityManager.default.init();
         const button1 = document.createElement('button');
         const button2 = document.createElement('button');
         document.body.appendChild(button1);
         document.body.appendChild(button2);
 
         // Simulate focus changes
-        accessibilityManager.focusManagement.previousFocus = button1;
+        accessibilityManager.default.focusManagement.previousFocus = button1;
         
-        accessibilityManager.restoreFocus();
+        accessibilityManager.default.restoreFocus();
         expect(document.activeElement).toBe(button1);
     });
   });
 
   describe('DOM helpers', () => {
     test('isInTaskBoard should return true for elements inside the board', () => {
-        const taskList = document.getElementById('todo-list');
-        expect(accessibilityManager.isInTaskBoard(taskList)).toBe(true);
+        accessibilityManager.default.init();
+        const taskBoard = document.querySelector('.task-board');
+        const element = document.createElement('div');
+        taskBoard.appendChild(element);
+        
+        expect(accessibilityManager.default.isInTaskBoard(element)).toBe(true);
     });
 
     test('isInTaskBoard should return false for elements outside the board', () => {
+        accessibilityManager.default.init();
         const footer = document.querySelector('footer');
-        expect(accessibilityManager.isInTaskBoard(footer)).toBe(false);
+        expect(accessibilityManager.default.isInTaskBoard(footer)).toBe(false);
     });
 
     test('isInModal should return true for elements inside a visible modal', () => {
+        accessibilityManager.default.init();
         const modal = document.getElementById('custom-modal');
         const button = document.createElement('button');
         modal.appendChild(button);
         modal.style.display = 'block';
 
-        expect(accessibilityManager.isInModal(button)).toBe(true);
+        expect(accessibilityManager.default.isInModal(button)).toBe(true);
     });
   });
 });
