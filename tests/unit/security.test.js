@@ -3,9 +3,23 @@
  */
 
 import securityManager from '../../scripts/modules/security.js';
+import { jest } from '@jest/globals';
 
 describe('SecurityManager', () => {
     
+    // Spy on getMaxStringLength to control it in tests
+    let maxStringLengthSpy;
+
+    beforeEach(() => {
+        // Default spy returns the original default value
+        maxStringLengthSpy = jest.spyOn(securityManager, 'getMaxStringLength').mockReturnValue(50000);
+    });
+
+    afterEach(() => {
+        // Restore original implementation
+        maxStringLengthSpy.mockRestore();
+    });
+
     describe('File Validation', () => {
         
         test('should reject null or undefined file', () => {
@@ -130,11 +144,13 @@ describe('SecurityManager', () => {
         });
         
         test('should reject excessively large strings', () => {
-            const largeString = 'a'.repeat(20000); // Exceeds MAX_STRING_LENGTH
+            // Mock the max length to be smaller for this test
+            maxStringLengthSpy.mockReturnValue(100);
+            const largeString = 'a'.repeat(200);
             
             const result = securityManager.safeJsonParse(largeString);
             expect(result.success).toBe(false);
-            expect(result.error).toBe('Input too large for processing');
+            expect(result.error).toContain('Import file too large');
         });
         
         test('should detect JSON bombs (excessive nesting)', () => {
@@ -208,7 +224,9 @@ describe('SecurityManager', () => {
         });
         
         test('should reject strings that are too long', () => {
-            const longString = 'a'.repeat(15000);
+            // Mock the max length to be smaller for this test
+            maxStringLengthSpy.mockReturnValue(100);
+            const longString = 'a'.repeat(150);
             
             const result = securityManager.validateJsonStructure(longString);
             expect(result.isValid).toBe(false);
@@ -269,7 +287,8 @@ describe('SecurityManager', () => {
         test('should accept valid legacy task format', () => {
             const validData = {
                 tasks: [
-                    { id: "task1", text: "Task 1", status: "todo" }
+                    {
+                        id: "task1", text: "Task 1", status: "todo" }
                 ]
             };
             
@@ -317,10 +336,12 @@ describe('SecurityManager', () => {
         });
         
         test('should truncate excessively long strings', () => {
-            const longString = 'a'.repeat(15000);
+            // Mock the max length to be smaller for this test
+            maxStringLengthSpy.mockReturnValue(10);
+            const longString = 'a'.repeat(15);
             const cleaned = securityManager.sanitizeString(longString);
             
-            expect(cleaned.length).toBeLessThanOrEqual(10000);
+            expect(cleaned.length).toBe(10);
         });
         
         test('should sanitize nested objects recursively', () => {

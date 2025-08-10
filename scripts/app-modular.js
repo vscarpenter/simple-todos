@@ -1,12 +1,6 @@
 import CascadeApp from './modules/main.js?v=3.0.0';
-import { Task, Board, createTask, createBoard } from './modules/models.js?v=3.0.0';
 import { ErrorHandler, ErrorBoundary } from './modules/errorHandler.js?v=3.0.0';
 import { KeyboardNavigator } from './modules/keyboardNav.js?v=3.0.0';
-import { settingsManager } from './modules/settings.js?v=3.0.0';
-import performanceOptimizer from './modules/performance.js?v=3.0.0';
-import { container, appContext } from './modules/container.js?v=3.0.0';
-import { debugAPI } from './modules/debug.js?v=3.0.0';
-import storage from './modules/storageIndexedDBOnly.js?v=3.0.0';
 import './modules/dropdown.js?v=3.0.0';
 
 // Initialize the application when DOM is ready
@@ -15,33 +9,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Initialize error handling first
         ErrorHandler.init();
         
-        // Force debug mode to false on application start unless explicitly enabled
-        settingsManager.setDebugMode(false);
-        
-        
-        // Register services in dependency injection container
-        container.registerServices({
-            'Task': Task,
-            'Board': Board,
-            'createTask': createTask,
-            'createBoard': createBoard,
-            'ErrorHandler': ErrorHandler,
-            'settingsManager': { factory: settingsManager, options: { singleton: true } },
-            'performanceOptimizer': { factory: performanceOptimizer, options: { singleton: true } },
-            'storage': { factory: storage, options: { singleton: true } }
-        });
-        
         // Create and initialize the app with error boundary
         const initApp = ErrorBoundary.wrap(async () => {
             const app = new CascadeApp();
-            appContext.setApp(app);
             
             // Wait for app initialization to complete
             await app.initPromise;
             
             // Initialize keyboard navigation
             const keyboardNav = new KeyboardNavigator(app);
-            appContext.setKeyboardNav(keyboardNav);
             
             return app;
         }, 'App Initialization');
@@ -52,14 +28,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             throw new Error('Failed to initialize application');
         }
         
-        // All functions now use proper event delegation - no global exposure needed
-        
-        // Expose debug API globally for console access
-        window.cascadeDebug = debugAPI;
+        // Expose app globally for testing
+        window.cascadeApp = app;
         
         console.log('✅ Cascade app initialized successfully');
-        console.log('🔧 Debug methods available at window.cascadeDebug');
-        console.log('⌨️  Press ? or Ctrl+/ to see keyboard shortcuts');
         
         // Show loading state briefly to demonstrate the loading system
         const loadingOverlay = document.createElement('div');
@@ -117,13 +89,3 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// Initialize debug system and show commands if debug mode is active
-if (typeof window !== 'undefined') {
-    setTimeout(() => {
-        // Ensure debug mode is explicitly disabled on fresh start
-        const currentDebugMode = settingsManager.get('debugMode');
-        if (currentDebugMode) {
-            console.log('🔧 Debug mode is active! Type cascadeDebug.help() for available commands.');
-        }
-    }, 500);
-}

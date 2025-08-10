@@ -4,7 +4,7 @@
  */
 
 import eventBus from './eventBus.js';
-import { debugLog, settingsManager } from './settings.js';
+import { settingsManager } from './settings.js';
 
 /**
  * Task indexing system for fast filtering and searching
@@ -25,7 +25,6 @@ class TaskIndex {
      * @param {string} boardId - Board ID for board-specific indexing
      */
     buildIndex(tasks, boardId = null) {
-        debugLog.log('🔍 Building task index...', { taskCount: tasks.length, boardId });
         
         // Clear existing indexes
         this.textIndex.clear();
@@ -45,7 +44,6 @@ class TaskIndex {
         });
 
         this.initialized = true;
-        debugLog.log('✅ Task index built successfully');
     }
 
     /**
@@ -144,7 +142,6 @@ class TaskIndex {
      */
     search(criteria) {
         if (!this.initialized) {
-            debugLog.warn('Task index not initialized, falling back to linear search');
             return new Set();
         }
 
@@ -343,7 +340,7 @@ class VirtualScroller {
             this.content.appendChild(element);
         });
 
-        debugLog.log('🔄 Virtual scroll updated', {
+        console.log('📊 Virtual scroll update:', {
             startIndex: this.startIndex,
             endIndex: this.endIndex,
             visibleCount: this.visibleItems.length,
@@ -412,7 +409,6 @@ class MemoryManager {
             this.checkMemoryUsage();
         }, this.checkInterval);
 
-        debugLog.log('🧠 Memory monitoring started');
     }
 
     /**
@@ -427,7 +423,6 @@ class MemoryManager {
             this.monitoringInterval = null;
         }
 
-        debugLog.log('🧠 Memory monitoring stopped');
     }
 
     /**
@@ -442,7 +437,7 @@ class MemoryManager {
             limit: performance.memory.jsHeapSizeLimit
         };
 
-        debugLog.log('🧠 Memory usage:', {
+        console.log('💾 Memory usage:', {
             used: this.formatBytes(memInfo.used),
             total: this.formatBytes(memInfo.total),
             limit: this.formatBytes(memInfo.limit),
@@ -461,14 +456,12 @@ class MemoryManager {
      * Perform memory cleanup
      */
     performCleanup() {
-        debugLog.log('🧹 Performing memory cleanup...');
 
         // Run registered cleanup tasks
         this.cleanupTasks.forEach(task => {
             try {
                 task();
             } catch (error) {
-                debugLog.warn('Cleanup task failed:', error);
             }
         });
 
@@ -564,7 +557,6 @@ class PerformanceOptimizer {
         eventBus.on('tasks:changed', this.handleTasksChanged.bind(this));
         eventBus.on('board:switched', this.handleBoardSwitched.bind(this));
         
-        debugLog.log('⚡ Performance optimizer initialized');
     }
 
     /**
@@ -636,7 +628,7 @@ class PerformanceOptimizer {
         
         this.performanceMetrics.searchTimes.push(searchTime);
         
-        debugLog.log('🔍 Search completed', {
+        console.log('🔍 Search performance:', {
             criteria,
             resultCount: results.length,
             totalTasks: tasks.length,
@@ -714,7 +706,7 @@ class PerformanceOptimizer {
             
             this.performanceMetrics.renderTimes.push(renderTime);
             
-            debugLog.log('🎨 Optimized render completed', {
+            console.log('🎨 Optimized render performance:', {
                 itemCount: items.length,
                 renderTime: `${renderTime.toFixed(2)}ms`
             });

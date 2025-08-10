@@ -131,7 +131,9 @@ describe('Archive Management Integration Tests', () => {
             // Move to done should set completion date
             const completedTask = todoTask.moveTo('done');
             expect(completedTask.completedDate).toBeDefined();
-            expect(completedTask.completedDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+            // Check for ISO string format
+            expect(completedTask.completedDate).toContain('T');
+            expect(completedTask.completedDate).toContain('Z');
             
             // Move away from done should clear completion date
             const resetTask = completedTask.moveTo('todo');

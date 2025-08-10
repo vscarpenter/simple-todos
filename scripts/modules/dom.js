@@ -1,6 +1,5 @@
 import eventBus from './eventBus.js';
 import accessibility from './accessibility.js';
-import { debugLog } from './settings.js';
 import performanceOptimizer from './performance.js';
 import securityManager from './security.js';
 
@@ -30,133 +29,210 @@ class DOMManager {
     }
 
     /**
-     * Cache frequently used DOM elements
+     * Cache frequently used DOM elements with enhanced null checking
      */
     cacheElements() {
-        this.elements = {
+        // Define element mappings with descriptive names for better error reporting
+        const elementMappings = {
             // Form elements
-            todoForm: document.getElementById('todo-form'),
-            todoInput: document.getElementById('todo-input'),
+            todoForm: 'todo-form',
+            todoInput: 'todo-input',
             
             // Column elements
-            todoList: document.getElementById('todo-list'),
-            doingList: document.getElementById('doing-list'),
-            doneList: document.getElementById('done-list'),
+            todoList: 'todo-list',
+            doingList: 'doing-list',
+            doneList: 'done-list',
             
             // Counter elements
-            todoCount: document.getElementById('todo-count'),
-            doingCount: document.getElementById('doing-count'),
-            doneCount: document.getElementById('done-count'),
+            todoCount: 'todo-count',
+            doingCount: 'doing-count',
+            doneCount: 'done-count',
             
             // Action buttons
-            importButton: document.getElementById('import-button'),
-            importFileInput: document.getElementById('import-file'),
-            exportButton: document.getElementById('export-button'),
-            archiveButton: document.getElementById('archive-button'),
-            settingsButton: document.getElementById('settings-button'),
-            newTaskBtn: document.getElementById('new-task-btn'),
+            importButton: 'import-button',
+            importFileInput: 'import-file',
+            exportButton: 'export-button',
+            archiveButton: 'archive-button',
+            settingsButton: 'settings-button',
+            newTaskBtn: 'new-task-btn',
             
             // Modal elements
-            customModal: document.getElementById('custom-modal'),
-            modalTitle: document.getElementById('modal-title'),
-            modalMessage: document.getElementById('modal-message'),
-            modalInput: document.getElementById('modal-input'),
-            modalConfirm: document.getElementById('modal-confirm'),
-            modalCancel: document.getElementById('modal-cancel'),
+            customModal: 'custom-modal',
+            modalTitle: 'modal-title',
+            modalMessage: 'modal-message',
+            modalInput: 'modal-input',
+            modalConfirm: 'modal-confirm',
+            modalCancel: 'modal-cancel',
             
             // Board selector elements
-            boardSelectorBtn: document.getElementById('board-selector-btn'),
-            currentBoardName: document.getElementById('current-board-name'),
-            boardSelectorMenu: document.getElementById('board-selector-menu'),
-            activeBoardsList: document.getElementById('active-boards-list'),
+            boardSelectorBtn: 'board-selector-btn',
+            currentBoardName: 'current-board-name',
+            boardSelectorMenu: 'board-selector-menu',
+            activeBoardsList: 'board-selector-menu',
             
             // Menu panel elements
-            hamburgerMenuBtn: document.getElementById('hamburger-menu-btn'),
-            menuOverlay: document.getElementById('menu-overlay'),
-            menuPanel: document.getElementById('menu-panel'),
-            menuCloseBtn: document.getElementById('menu-close-btn'),
+            hamburgerMenuBtn: 'hamburger-menu-btn',
+            menuOverlay: 'menu-overlay',
+            menuPanel: 'menu-panel',
+            menuCloseBtn: 'menu-close-btn',
             
             // Menu action buttons
-            exportMenuBtn: document.getElementById('export-menu-btn'),
-            importMenuBtn: document.getElementById('import-menu-btn'),
-            newBoardMenuBtn: document.getElementById('new-board-menu-btn'),
-            manageBoardsMenuBtn: document.getElementById('manage-boards-menu-btn'),
-            preferencesBtn: document.getElementById('preferences-btn'),
-            browseArchiveBtn: document.getElementById('browse-archive-btn'),
+            exportMenuBtn: 'export-menu-btn',
+            importMenuBtn: 'import-menu-btn',
+            switchBoardBtn: 'switch-board-btn',
+            newBoardMenuBtn: 'new-board-menu-btn',
+            manageBoardsMenuBtn: 'manage-boards-menu-btn',
+            preferencesBtn: 'preferences-btn',
+            browseArchiveBtn: 'browse-archive-btn',
             
             // Developer menu buttons
-            forceRefreshBtn: document.getElementById('force-refresh-btn'),
-            resetAppMenuBtn: document.getElementById('reset-app-menu-btn'),
-            toggleDebugBtn: document.getElementById('toggle-debug-btn')
+            forceRefreshBtn: 'force-refresh-btn',
+            resetAppMenuBtn: 'reset-app-menu-btn',
         };
-        
-        // Remove null elements
-        Object.keys(this.elements).forEach(key => {
-            if (!this.elements[key]) {
-                delete this.elements[key];
+
+        this.elements = {};
+        const missingElements = [];
+
+        // Cache elements with comprehensive null checking and error reporting
+        Object.entries(elementMappings).forEach(([key, elementId]) => {
+            const element = document.getElementById(elementId);
+            if (element) {
+                this.elements[key] = element;
+            } else {
+                missingElements.push(elementId);
+                console.warn(`⚠️ DOM Element not found: ${elementId} (${key})`);
             }
         });
+
+        // Log summary of missing elements for debugging
+        if (missingElements.length > 0) {
+            console.warn(`⚠️ DOM Manager: ${missingElements.length} elements not found:`, missingElements);
+        }
+
+        console.log(`✅ DOM Manager: Cached ${Object.keys(this.elements).length} elements successfully`);
     }
 
     /**
      * Setup event delegation for better performance
      */
     setupEventDelegation() {
-        // Delegate task actions (edit, delete, move, archive)
+        // Delegate task action clicks with error boundary
         this.delegate('click', '[data-action]', (event, element) => {
-            const action = element.dataset.action;
-            const taskId = element.dataset.taskId;
-            const targetStatus = element.dataset.targetStatus;
-            const priority = element.dataset.priority;
-            
-            event.preventDefault();
-            
-            switch (action) {
-                case 'edit':
-                    const currentText = element.closest('.task-card').querySelector('.task-text')?.textContent;
-                    eventBus.emit('task:edit:requested', { taskId, currentText });
-                    break;
-                case 'delete':
-                    eventBus.emit('task:delete:requested', { taskId });
-                    break;
-                case 'move':
-                    eventBus.emit('task:drop', { taskId, targetStatus });
-                    break;
-                case 'archive':
-                    eventBus.emit('task:archive', { taskId });
-                    break;
-                case 'complete':
-                    eventBus.emit('task:complete', { taskId });
-                    break;
-                case 'start':
-                    eventBus.emit('task:start', { taskId });
-                    break;
-                case 'reset':
-                    eventBus.emit('task:reset', { taskId });
-                    break;
+            try {
+                const action = element.dataset.action;
+                const taskId = element.closest('.task-card')?.dataset.taskId;
+                const targetStatus = element.dataset.targetStatus;
+                
+                if (!taskId) return;
+                
+                switch (action) {
+                    case 'edit':
+                        const currentText = element.closest('.task-card')?.querySelector('.task-card__text')?.textContent?.trim();
+                        eventBus.emit('task:edit:requested', { taskId, currentText });
+                        break;
+                    case 'delete':
+                        eventBus.emit('task:delete:requested', { taskId });
+                        break;
+                    case 'move':
+                        eventBus.emit('task:drop', { taskId, targetStatus });
+                        break;
+                    case 'archive':
+                        eventBus.emit('task:archive', { taskId });
+                        break;
+                    case 'complete':
+                        eventBus.emit('task:complete', { taskId });
+                        break;
+                    case 'start':
+                        eventBus.emit('task:start', { taskId });
+                        break;
+                    case 'reset':
+                        eventBus.emit('task:reset', { taskId });
+                        break;
+                }
+            } catch (error) {
+                console.error('❌ Error in task action handler:', error);
+                eventBus.emit('error:handler', { 
+                    context: 'Task Action', 
+                    error: error.message,
+                    action: element?.dataset?.action,
+                    taskId: element?.closest('.task-card')?.dataset?.taskId,
+                    element: element?.id || 'unknown'
+                });
             }
         });
 
-        // Delegate drag and drop events
+        // Delegate board selection clicks with error boundary
+        this.delegate('click', '.board-option', (event, element) => {
+            try {
+                const boardId = element.dataset.boardId;
+                if (boardId) {
+                    event.preventDefault();
+                    console.log('🔄 Board switch requested:', boardId);
+                    eventBus.emit('board:switch', { boardId });
+                    
+                    // Close dropdown after selection
+                    const dropdown = element.closest('.dropdown-menu');
+                    if (dropdown && dropdown.classList.contains('show')) {
+                        dropdown.classList.remove('show');
+                        dropdown.style.display = 'none';
+                        
+                        const trigger = dropdown.previousElementSibling;
+                        if (trigger) {
+                            trigger.setAttribute('aria-expanded', 'false');
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Error in board selection handler:', error);
+                eventBus.emit('error:handler', { 
+                    context: 'Board Selection', 
+                    error: error.message,
+                    element: element?.id || 'unknown',
+                    boardId: element?.dataset?.boardId
+                });
+            }
+        });
+
+        // Delegate drag and drop events with error boundaries
         this.delegate('dragstart', '.task-card', (event, element) => {
-            const taskId = element.dataset.taskId;
-            debugLog.log('🎯 Drag started:', {
-                taskId,
-                elementId: element.id,
-                taskText: element.querySelector('.task-card__text')?.textContent?.trim()
-            });
-            
-            event.dataTransfer.setData('text/plain', taskId);
-            element.classList.add('dragging');
-            eventBus.emit('drag:start', { taskId, element });
+            try {
+                const taskId = element.dataset.taskId;
+                console.log('🎯 Drag started:', {
+                    taskId,
+                    elementId: element.id,
+                    taskText: element.querySelector('.task-card__text')?.textContent?.trim()
+                });
+                
+                event.dataTransfer.setData('text/plain', taskId);
+                element.classList.add('dragging');
+                eventBus.emit('drag:start', { taskId, element });
+            } catch (error) {
+                console.error('❌ Error in dragstart handler:', error);
+                eventBus.emit('error:handler', { 
+                    context: 'Drag Start', 
+                    error: error.message,
+                    element: element?.id || 'unknown',
+                    taskId: element?.dataset?.taskId
+                });
+            }
         });
 
         this.delegate('dragend', '.task-card', (event, element) => {
-            const taskId = element.dataset.taskId;
-            console.log('🎯 Drag ended:', { taskId });
-            
-            element.classList.remove('dragging');
-            eventBus.emit('drag:end', { element });
+            try {
+                const taskId = element.dataset.taskId;
+                console.log('🎯 Drag ended:', { taskId });
+                
+                element.classList.remove('dragging');
+                eventBus.emit('drag:end', { element });
+            } catch (error) {
+                console.error('❌ Error in dragend handler:', error);
+                eventBus.emit('error:handler', { 
+                    context: 'Drag End', 
+                    error: error.message,
+                    element: element?.id || 'unknown',
+                    taskId: element?.dataset?.taskId
+                });
+            }
         });
 
         // Setup drop zone event listeners for columns
@@ -164,87 +240,154 @@ class DOMManager {
     }
 
     /**
-     * Setup global event listeners
+     * Setup global event listeners with comprehensive error handling
      */
     setupGlobalEventListeners() {
-        // Form submission
+        // Form submission with error boundary
         if (this.elements.todoForm) {
             this.elements.todoForm.addEventListener('submit', (event) => {
-                event.preventDefault();
-                const text = this.elements.todoInput?.value?.trim();
-                if (text) {
-                    eventBus.emit('task:create', { text });
+                try {
+                    event.preventDefault();
+                    const text = this.elements.todoInput?.value?.trim();
+                    if (text) {
+                        eventBus.emit('task:create', { text });
+                    }
+                } catch (error) {
+                    console.error('❌ Error in form submission handler:', error);
+                    eventBus.emit('error:handler', { 
+                        context: 'Form Submission', 
+                        error: error.message,
+                        element: 'todoForm'
+                    });
                 }
             });
         }
 
-        // Import/Export buttons
+        // Import/Export buttons with error boundaries
         if (this.elements.importButton) {
             this.elements.importButton.addEventListener('click', () => {
-                this.elements.importFileInput?.click();
+                try {
+                    this.elements.importFileInput?.click();
+                } catch (error) {
+                    console.error('❌ Error in import button handler:', error);
+                    eventBus.emit('error:handler', { 
+                        context: 'Import Button Click', 
+                        error: error.message,
+                        element: 'importButton'
+                    });
+                }
             });
         }
 
         if (this.elements.importFileInput) {
             this.elements.importFileInput.addEventListener('change', (event) => {
-                const file = event.target.files[0];
-                if (file) {
-                    eventBus.emit('tasks:import', { file });
-                    event.target.value = ''; // Reset file input
+                try {
+                    const file = event.target.files[0];
+                    if (file) {
+                        eventBus.emit('tasks:import', { file });
+                        event.target.value = ''; // Reset file input
+                    }
+                } catch (error) {
+                    console.error('❌ Error in file input change handler:', error);
+                    eventBus.emit('error:handler', { 
+                        context: 'File Input Change', 
+                        error: error.message,
+                        element: 'importFileInput'
+                    });
                 }
             });
         }
 
         if (this.elements.exportButton) {
             this.elements.exportButton.addEventListener('click', () => {
-                eventBus.emit('tasks:export');
+                try {
+                    eventBus.emit('data:export');
+                } catch (error) {
+                    console.error('❌ Error in export button handler:', error);
+                    eventBus.emit('error:handler', { 
+                        context: 'Export Button Click', 
+                        error: error.message,
+                        element: 'exportButton'
+                    });
+                }
             });
         }
 
-        // Archive and settings buttons
+        // Archive and settings buttons with error boundaries
         if (this.elements.archiveButton) {
             this.elements.archiveButton.addEventListener('click', () => {
-                eventBus.emit('tasks:archiveCompleted');
+                try {
+                    eventBus.emit('tasks:archiveCompleted');
+                } catch (error) {
+                    console.error('❌ Error in archive button handler:', error);
+                    eventBus.emit('error:handler', { 
+                        context: 'Archive Button Click', 
+                        error: error.message,
+                        element: 'archiveButton'
+                    });
+                }
             });
         }
 
         if (this.elements.settingsButton) {
             this.elements.settingsButton.addEventListener('click', () => {
-                eventBus.emit('settings:show');
+                try {
+                    eventBus.emit('settings:show');
+                } catch (error) {
+                    console.error('❌ Error in settings button handler:', error);
+                    eventBus.emit('error:handler', { 
+                        context: 'Settings Button Click', 
+                        error: error.message,
+                        element: 'settingsButton'
+                    });
+                }
             });
         }
 
 
-        // New task button
+        // New task button with error boundary
         if (this.elements.newTaskBtn) {
             this.elements.newTaskBtn.addEventListener('click', () => {
-                this.focusTaskInput();
+                try {
+                    this.focusTaskInput();
+                } catch (error) {
+                    console.error('❌ Error in new task button handler:', error);
+                    eventBus.emit('error:handler', { 
+                        context: 'New Task Button Click', 
+                        error: error.message,
+                        element: 'newTaskBtn'
+                    });
+                }
             });
         }
 
-        // Keyboard shortcuts
+        // Keyboard shortcuts with comprehensive error handling
         document.addEventListener('keydown', (event) => {
-            // Ctrl/Cmd + Z: Undo
-            if ((event.ctrlKey || event.metaKey) && event.key === 'z' && !event.shiftKey) {
-                event.preventDefault();
-                eventBus.emit('app:undo');
-            }
-            
-            // Ctrl/Cmd + Shift + Z: Redo
-            if ((event.ctrlKey || event.metaKey) && event.key === 'z' && event.shiftKey) {
-                event.preventDefault();
-                eventBus.emit('app:redo');
-            }
-            
-            // Ctrl/Cmd + N: New task (focus input)
-            if ((event.ctrlKey || event.metaKey) && event.key === 'n') {
-                event.preventDefault();
-                this.focusTaskInput();
-            }
-            
-            // Escape: Close modal
-            if (event.key === 'Escape') {
-                this.hideModal();
+            try {
+                
+                // Ctrl/Cmd + N: New task (focus input)
+                if ((event.ctrlKey || event.metaKey) && event.key === 'n') {
+                    event.preventDefault();
+                    this.focusTaskInput();
+                }
+                
+                // Escape: Close modals
+                if (event.key === 'Escape') {
+                    eventBus.emit('modal:close');
+                }
+            } catch (error) {
+                console.error('❌ Error in keyboard shortcut handler:', error);
+                eventBus.emit('error:handler', { 
+                    context: 'Keyboard Shortcuts', 
+                    error: error.message,
+                    key: event.key,
+                    modifiers: {
+                        ctrl: event.ctrlKey,
+                        meta: event.metaKey,
+                        shift: event.shiftKey,
+                        alt: event.altKey
+                    }
+                });
             }
         });
 
@@ -254,12 +397,13 @@ class DOMManager {
         // Setup drag and drop zones
         this.setupDropZones();
         
-        // Setup event bus listeners for DOM updates
-        eventBus.on('tasks:changed', (data) => {
-            if (data && data.tasksByStatus) {
-                this.renderTasks(data.tasksByStatus);
-            }
-        });
+        // Note: Task rendering is now handled by UIService to avoid duplicate rendering
+        // The DOM module focuses on utility functions and UI interactions
+        // eventBus.on('tasks:changed', (data) => {
+        //     if (data && data.tasksByStatus) {
+        //         this.renderTasks(data.tasksByStatus);
+        //     }
+        // });
         
         eventBus.on('boards:changed', (data) => {
             if (data && data.boards && data.currentBoardId) {
@@ -366,7 +510,7 @@ class DOMManager {
         // Menu action buttons
         if (this.elements.exportMenuBtn) {
             this.elements.exportMenuBtn.addEventListener('click', () => {
-                eventBus.emit('tasks:export');
+                eventBus.emit('data:export');
                 this.hideMenuPanel();
             });
         }
@@ -378,6 +522,14 @@ class DOMManager {
             });
         }
 
+        if (this.elements.switchBoardBtn) {
+            this.elements.switchBoardBtn.addEventListener('click', (event) => {
+                event.preventDefault();
+                this.handleSwitchBoard();
+                this.hideMenuPanel();
+            });
+        }
+        
         if (this.elements.newBoardMenuBtn) {
             this.elements.newBoardMenuBtn.addEventListener('click', (event) => {
                 event.preventDefault();
@@ -423,15 +575,6 @@ class DOMManager {
             });
         }
 
-        if (this.elements.toggleDebugBtn) {
-            this.elements.toggleDebugBtn.addEventListener('click', () => {
-                eventBus.emit('debug:toggle');
-                this.hideMenuPanel();
-            });
-            
-            // Update button text based on current debug mode
-            this.updateDebugButtonText();
-        }
 
         // Escape key to close menu
         document.addEventListener('keydown', (event) => {
@@ -479,26 +622,6 @@ class DOMManager {
         return this.elements.menuOverlay?.classList.contains('menu-overlay--visible');
     }
 
-    /**
-     * Update debug button text based on current debug mode
-     */
-    updateDebugButtonText() {
-        if (!this.elements.toggleDebugBtn) return;
-        
-        try {
-            // Import settingsManager dynamically to avoid circular dependencies
-            import('./settings.js').then(({ settingsManager }) => {
-                const isDebugMode = settingsManager.get('debugMode');
-                this.elements.toggleDebugBtn.textContent = isDebugMode ? 'Turn off Debug' : 'Turn on Debug';
-            }).catch(() => {
-                // Fallback if import fails
-                this.elements.toggleDebugBtn.textContent = 'Toggle Debug';
-            });
-        } catch (error) {
-            // Fallback text if anything fails
-            this.elements.toggleDebugBtn.textContent = 'Toggle Debug';
-        }
-    }
 
     /**
      * Setup drop zones for columns
@@ -527,7 +650,6 @@ class DOMManager {
                 const taskId = event.dataTransfer.getData('text/plain');
                 const targetStatus = column.dataset.status;
                 
-                debugLog.log('🎯 Task dropped:', { taskId, targetStatus });
                 
                 if (taskId && targetStatus) {
                     eventBus.emit('task:drop', { taskId, targetStatus });
@@ -597,7 +719,10 @@ class DOMManager {
         cardContent.className = 'task-card__content';
         
         const cardText = document.createElement('div');
-        cardText.className = 'task-text'; // Use class name that tests expect
+        cardText.className = 'task-card__text'; // Use BEM naming convention
+        if (task.status === 'done') {
+            cardText.classList.add('task-card__text--completed');
+        }
         cardText.textContent = task.text; // Use textContent for safety
         
         const cardMeta = document.createElement('div');
@@ -715,10 +840,15 @@ class DOMManager {
     }
 
     /**
-     * Render tasks in columns with performance optimization
+     * DEPRECATED: Render tasks in columns with performance optimization
+     * NOTE: Task rendering is now handled by UIService to avoid duplicate rendering conflicts
+     * This method is kept for backward compatibility but should not be actively used
      * @param {Object} tasksByStatus - Tasks grouped by status
+     * @deprecated Use UIService.render() instead
      */
     renderTasks(tasksByStatus) {
+        console.warn('⚠️ DEPRECATED: DOM.renderTasks() called. Task rendering should use UIService.render() instead');
+        return; // Early return to prevent duplicate rendering
         const startTime = performance.now();
         
         // Check if we should use virtual scrolling for large datasets
@@ -726,7 +856,6 @@ class DOMManager {
         const useVirtualScrolling = totalTasks > 1000;
         
         if (useVirtualScrolling) {
-            debugLog.log('📊 Using virtual scrolling for large dataset:', { totalTasks });
             this.renderTasksVirtual(tasksByStatus);
             return;
         }
@@ -848,7 +977,7 @@ class DOMManager {
         });
         
         const endTime = performance.now();
-        debugLog.log('✅ Task rendering completed successfully', {
+        console.log('📊 Render performance:', {
             totalTasks: allTaskElements.length,
             renderTime: `${(endTime - startTime).toFixed(2)}ms`,
             useVirtualScrolling: false
@@ -862,7 +991,6 @@ class DOMManager {
     renderTasksVirtual(tasksByStatus) {
         const startTime = performance.now();
         
-        debugLog.log('🔄 Rendering tasks with virtual scrolling...');
         
         // Render each column with virtual scrolling
         Object.entries(tasksByStatus).forEach(([status, tasks]) => {
@@ -885,7 +1013,7 @@ class DOMManager {
                     (task, index) => this.createTaskCard(task)
                 );
                 
-                debugLog.log(`📋 Virtual scroller created for ${status} column:`, {
+                console.log('📊 Virtual scrolling enabled:', {
                     taskCount: tasks.length,
                     scrollerId: scroller.constructor.name
                 });
@@ -903,7 +1031,7 @@ class DOMManager {
         this.updateTaskCounts(tasksByStatus);
 
         const endTime = performance.now();
-        debugLog.log('✅ Virtual scrolling render completed', {
+        console.log('📊 Virtual render performance:', {
             renderTime: `${(endTime - startTime).toFixed(2)}ms`
         });
     }
@@ -1222,6 +1350,20 @@ class DOMManager {
             }
         } catch (error) {
             console.error('Failed to create new board:', error);
+        }
+    }
+
+    /**
+     * Handle switch board - open board selector dropdown
+     */
+    async handleSwitchBoard() {
+        // Find and click the board selector button to open the dropdown
+        const boardSelectorBtn = this.elements.boardSelectorBtn;
+        if (boardSelectorBtn) {
+            boardSelectorBtn.click();
+        } else {
+            // Fallback: emit event to request board switching UI
+            eventBus.emit('board:switch:request');
         }
     }
 
@@ -1706,6 +1848,7 @@ class DOMManager {
                         break;
                     case 'delete':
                         eventBus.emit('board:delete', { boardId });
+                        closeModal(); // Close modal after deletion
                         break;
                 }
             }
@@ -1989,7 +2132,7 @@ class DOMManager {
         
         // Board content with name and description
         const contentDiv = document.createElement('div');
-        contentDiv.className = 'board-content flex-grow-1';
+        contentDiv.className = 'board-content';
         
         const nameDiv = document.createElement('div');
         nameDiv.className = 'board-name fw-medium';
@@ -2062,14 +2205,7 @@ class DOMManager {
             statsContainer.appendChild(totalStats);
         }
         
-        // Active board indicator
-        if (isActive) {
-            const activeIndicator = document.createElement('div');
-            activeIndicator.className = 'active-indicator text-primary ms-2';
-            activeIndicator.textContent = '✓';
-            activeIndicator.setAttribute('title', 'Currently active board');
-            statsContainer.appendChild(activeIndicator);
-        }
+        // Active board styling is handled by CSS .active class
         
         container.appendChild(colorIndicator);
         container.appendChild(contentDiv);
@@ -2118,31 +2254,6 @@ class DOMManager {
             new Date(b.archivedTimestamp || b.archivedDate) - new Date(a.archivedTimestamp || a.archivedDate)
         );
         
-        const tasksList = sortedTasks.map(task => `
-            <div class="archive-task-item" data-task-id="${task.id}">
-                <div class="archive-task-content">
-                    <div class="archive-task-text">${this.sanitizeHTML(task.text)}</div>
-                    <div class="archive-task-meta">
-                        <span class="archive-task-status">Status: ${task.status}</span>
-                        <span class="archive-task-date">Archived: ${this.formatDate(task.archivedDate)}</span>
-                        <span class="archive-task-id">#${task.id.slice(-6)}</span>
-                    </div>
-                </div>
-                <div class="archive-task-actions">
-                    <button class="btn btn-sm btn-outline-primary" 
-                            onclick="restoreArchivedTask('${task.id}')"
-                            title="Restore task">
-                        ↩️ Restore
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger" 
-                            onclick="deleteArchivedTask('${task.id}')"
-                            title="Permanently delete task">
-                        🗑️ Delete
-                    </button>
-                </div>
-            </div>
-        `).join('');
-        
         // Create archive modal safely
         const modalBox = document.createElement('div');
         modalBox.className = 'modal-box archive-modal-box';
@@ -2174,12 +2285,65 @@ class DOMManager {
         
         const tasksListDiv = document.createElement('div');
         tasksListDiv.className = 'archive-tasks-list';
-        // Create tasks list safely - sanitize HTML to prevent XSS
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = securityManager.sanitizeHTML(tasksList);
-        while (tempDiv.firstChild) {
-            tasksListDiv.appendChild(tempDiv.firstChild);
-        }
+        
+        // Create task elements using DOM methods to avoid innerHTML issues
+        sortedTasks.forEach(task => {
+            const taskItem = document.createElement('div');
+            taskItem.className = 'archive-task-item';
+            taskItem.setAttribute('data-task-id', task.id);
+            
+            const taskContent = document.createElement('div');
+            taskContent.className = 'archive-task-content';
+            
+            const taskText = document.createElement('div');
+            taskText.className = 'archive-task-text';
+            taskText.textContent = task.text; // Use textContent to prevent XSS
+            
+            const taskMeta = document.createElement('div');
+            taskMeta.className = 'archive-task-meta';
+            
+            const statusSpan = document.createElement('span');
+            statusSpan.className = 'archive-task-status';
+            statusSpan.textContent = `Status: ${task.status}`;
+            
+            const dateSpan = document.createElement('span');
+            dateSpan.className = 'archive-task-date';
+            dateSpan.textContent = `Archived: ${this.formatDate(task.archivedDate)}`;
+            
+            const idSpan = document.createElement('span');
+            idSpan.className = 'archive-task-id';
+            idSpan.textContent = `#${task.id.slice(-6)}`;
+            
+            taskMeta.appendChild(statusSpan);
+            taskMeta.appendChild(dateSpan);
+            taskMeta.appendChild(idSpan);
+            
+            taskContent.appendChild(taskText);
+            taskContent.appendChild(taskMeta);
+            
+            const taskActions = document.createElement('div');
+            taskActions.className = 'archive-task-actions';
+            
+            const restoreBtn = document.createElement('button');
+            restoreBtn.className = 'btn btn-sm btn-outline-primary';
+            restoreBtn.textContent = '↩️ Restore';
+            restoreBtn.setAttribute('title', 'Restore task');
+            restoreBtn.onclick = () => window.restoreArchivedTask(task.id);
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn btn-sm btn-outline-danger';
+            deleteBtn.textContent = '🗑️ Delete';
+            deleteBtn.setAttribute('title', 'Permanently delete task');
+            deleteBtn.onclick = () => window.deleteArchivedTask(task.id);
+            
+            taskActions.appendChild(restoreBtn);
+            taskActions.appendChild(deleteBtn);
+            
+            taskItem.appendChild(taskContent);
+            taskItem.appendChild(taskActions);
+            
+            tasksListDiv.appendChild(taskItem);
+        });
         
         modalContent.appendChild(archiveStats);
         modalContent.appendChild(tasksListDiv);

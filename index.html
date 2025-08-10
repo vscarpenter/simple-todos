@@ -6,10 +6,9 @@
         <title>Cascade - Task Management</title>
         
         <!-- Safari iPad specific meta tags -->
-        <meta name="apple-mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-status-bar-style" content="default">
-        <meta name="apple-mobile-web-app-title" content="Cascade">
-        <meta name="format-detection" content="telephone=no">
+        <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes"> <!-- for older iOS Safari -->
+<meta name="format-detection" content="telephone=no">
         
         <!-- Cache control for HTML -->
         <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -61,7 +60,7 @@
                         </div>
                         
                         <!-- Board Selector -->
-                        <div class="board-selector">
+                        <div class="board-selector" id="board-selector">
                             <div class="dropdown">
                                 <button 
                                     class="btn btn-outline-secondary dropdown-toggle" 
@@ -75,9 +74,7 @@
                                     <span id="current-board-name">Main Board</span>
                                 </button>
                                 <ul class="dropdown-menu" id="board-selector-menu" aria-labelledby="board-selector-btn">
-                                    <div id="active-boards-list">
-                                        <!-- Active boards will be populated here -->
-                                    </div>
+                                    <!-- Active boards will be populated here -->
                                 </ul>
                             </div>
                         </div>
@@ -152,7 +149,6 @@
                         <ul class="menu-section__list">
                             <li><button class="menu-item" id="force-refresh-btn">Force Refresh (Safari)</button></li>
                             <li><button class="menu-item" id="reset-app-menu-btn">Reset App</button></li>
-                            <li><button class="menu-item" id="toggle-debug-btn">Turn on Debug</button></li>
                         </ul>
                     </div>
                 </div>

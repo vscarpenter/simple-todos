@@ -1,6 +1,6 @@
 # Cascade - Privacy-First Task Management
 
-Cascade is a comprehensive, privacy-first task management application implementing a Kanban-style workflow with advanced multi-board support. Built with modern ES6 modules and following Material Design 3 principles, it provides professional-grade task organization that runs entirely in the user's browser without requiring server infrastructure, user accounts, or external dependencies.
+Cascade is a comprehensive, privacy-first task management application implementing a Kanban-style workflow with advanced multi-board support. Built with modern ES6 modules using a clean service-oriented architecture and following Material Design 3 principles, it provides professional-grade task organization that runs entirely in the user's browser without requiring server infrastructure, user accounts, or external dependencies.
 
 **Watch your productivity flow.**
 
@@ -64,12 +64,13 @@ Cascade is a comprehensive, privacy-first task management application implementi
 - **Settings Persistence**: Automatic settings backup and restoration
 - **Settings Import/Export**: Portable configuration management
 
-### **Advanced Architecture** 🏛️
+### **Clean Architecture** 🏛️
 
-- **ES6 Module System**: 14+ specialized modules with event-driven architecture
-- **Reactive State Management**: Centralized state with undo/redo (50 operations)
+- **Service-Oriented Design**: 4 focused services with single-responsibility principle
+- **Modern ES6 Modules**: Direct imports without dependency injection complexity
+- **Simplified State Management**: Reactive state without undo/redo overhead
 - **Event-Driven Communication**: Decoupled modules with comprehensive event system
-- **Performance Optimization**: Memory management, virtual scrolling, and efficient rendering
+- **Performance Optimization**: Streamlined storage and efficient rendering
 - **Error Boundaries**: Comprehensive error handling with user-friendly feedback
 - **Security Features**: Input sanitization, XSS prevention, and Content Security Policy
 
@@ -111,18 +112,22 @@ Cascade is a comprehensive, privacy-first task management application implementi
 cascade-todos/
 ├── index.html              # Main application entry point with semantic HTML
 ├── scripts/
-│   ├── app-modular.js     # Application entry point with debug utilities
-│   └── modules/           # ES6 modules (14+ specialized modules)
-│       ├── main.js        # Main application controller (3400+ lines)
+│   ├── app-modular.js     # Application entry point (16 lines)
+│   └── modules/           # Clean ES6 module architecture
+│       ├── services/      # Service layer (4 focused services)
+│       │   ├── cascadeApp.js      # Application orchestrator (697 lines)
+│       │   ├── taskService.js     # Task operations (500 lines)
+│       │   ├── boardService.js    # Board management (526 lines)
+│       │   └── uiService.js       # UI rendering (462 lines)
+│       ├── main.js        # Service export wrapper (16 lines)
 │       ├── models.js      # Data models (Task, Board) with validation
-│       ├── state.js       # Centralized reactive state with undo/redo
-│       ├── storage.js     # IndexedDB storage with migration support
-│       ├── indexedDBStorage.js # Enhanced IndexedDB implementation
+│       ├── state.js       # Simplified reactive state (277 lines)
+│       ├── storage.js     # Simple IndexedDB storage (207 lines)
 │       ├── dom.js         # DOM manipulation with accessibility
 │       ├── eventBus.js    # Event system for inter-module communication
 │       ├── accessibility.js # WCAG 2.1 AA compliance features
 │       ├── keyboardNav.js # Complete keyboard navigation system
-│       ├── settings.js    # Settings management with debug logging
+│       ├── settings.js    # Settings management
 │       ├── security.js    # Input sanitization and XSS prevention
 │       ├── performance.js # Memory management and optimization
 │       ├── errorHandler.js # Comprehensive error handling
@@ -470,7 +475,6 @@ npm run test:unit
 - [ ] Create, edit, and delete tasks with validation
 - [ ] Drag tasks between columns (including iOS Safari)
 - [ ] Use keyboard navigation and shortcuts
-- [ ] Test undo/redo functionality (50 operations)
 - [ ] Verify real-time counter updates
 - [ ] Test task completion date tracking
 
@@ -547,9 +551,9 @@ npm run test:unit
 Based on the comprehensive spec implementation, Cascade is **production-ready** with the following completed features:
 
 #### Core Infrastructure ✅
-- **ES6 Module System**: Complete modular architecture with event-driven communication
-- **Reactive State Management**: Centralized state with undo/redo (50 operations)
-- **Versioned Storage**: v2.0 format with automatic migration from legacy versions
+- **Clean Service Architecture**: 4 focused services with single-responsibility design
+- **Simplified State Management**: Efficient reactive state without complexity overhead
+- **Streamlined Storage**: Simple IndexedDB operations (save, load, clear)
 - **Error Handling**: Comprehensive error management with user-friendly feedback
 - **Security**: Input sanitization, XSS prevention, and privacy compliance
 

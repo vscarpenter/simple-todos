@@ -1,20 +1,16 @@
 import eventBus from './eventBus.js';
-import { debugLog } from './settings.js';
-import { appContext } from './container.js';
+import { Task, Board, createTask } from './models.js';
 
 /**
  * Centralized application state with reactive updates
  */
-class AppState {
+export class AppState {
     constructor() {
         this.state = {
             boards: [],
             currentBoardId: null,
             tasks: [], // tasks for current board (computed)
-            filter: 'all', // all, todo, doing, done
-            history: [],
-            historyIndex: -1,
-            maxHistorySize: 50
+            filter: 'all' // all, todo, doing, done
         };
         
         this.listeners = new Map();
@@ -40,15 +36,10 @@ class AppState {
     /**
      * Update state and emit change events
      * @param {Object} updates - State updates
-     * @param {Object} options - Options: { silent: boolean, addToHistory: boolean }
+     * @param {Object} options - Options: { silent: boolean }
      */
     setState(updates, options = {}) {
-        const { silent = false, addToHistory = true } = options;
-        
-        // Save current state to history if needed
-        if (addToHistory && this.historyIndex === this.state.history.length - 1) {
-            this.addToHistory();
-        }
+        const { silent = false } = options;
         
         const previousState = { ...this.state };
         
@@ -74,95 +65,6 @@ class AppState {
         }
     }
 
-    /**
-     * Add current state to history
-     */
-    addToHistory() {
-        // Remove any history after current index (for redo)
-        this.state.history = this.state.history.slice(0, this.historyIndex + 1);
-        
-        // Add current state (excluding history itself)
-        const stateSnapshot = { ...this.state };
-        delete stateSnapshot.history;
-        delete stateSnapshot.historyIndex;
-        
-        this.state.history.push(stateSnapshot);
-        
-        // Limit history size
-        if (this.state.history.length > this.maxHistorySize) {
-            this.state.history.shift();
-        } else {
-            this.historyIndex++;
-        }
-    }
-
-    /**
-     * Undo last state change
-     * @returns {boolean} True if undo was successful
-     */
-    undo() {
-        if (this.historyIndex > 0) {
-            this.historyIndex--;
-            const previousState = this.state.history[this.historyIndex];
-            
-            this.state = {
-                ...previousState,
-                history: this.state.history,
-                historyIndex: this.historyIndex
-            };
-            
-            eventBus.emit('state:undo', this.getState());
-            eventBus.emit('state:changed', {
-                previousState: this.state.history[this.historyIndex + 1] || {},
-                currentState: this.getState(),
-                isUndo: true
-            });
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Redo last undone state change
-     * @returns {boolean} True if redo was successful
-     */
-    redo() {
-        if (this.historyIndex < this.state.history.length - 1) {
-            this.historyIndex++;
-            const nextState = this.state.history[this.historyIndex];
-            
-            this.state = {
-                ...nextState,
-                history: this.state.history,
-                historyIndex: this.historyIndex
-            };
-            
-            eventBus.emit('state:redo', this.getState());
-            eventBus.emit('state:changed', {
-                previousState: this.state.history[this.historyIndex - 1] || {},
-                currentState: this.getState(),
-                isRedo: true
-            });
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Check if undo is available
-     * @returns {boolean}
-     */
-    canUndo() {
-        return this.historyIndex > 0;
-    }
-
-    /**
-     * Check if redo is available
-     * @returns {boolean}
-     */
-    canRedo() {
-        return this.historyIndex < this.state.history.length - 1;
-    }
 
     /**
      * Subscribe to state changes
@@ -203,10 +105,9 @@ class AppState {
         // Convert board tasks to Task instances for the state
         const tasks = board.tasks ? board.tasks.map(taskData => {
             try {
-                const createTask = appContext.get('createTask');
                 return createTask(taskData);
             } catch (e) {
-                debugLog.warn('Failed to create Task instance, using raw data:', e);
+                console.warn('Failed to create Task instance, using raw data:', e);
                 return taskData;
             }
         }) : [];
@@ -260,10 +161,9 @@ class AppState {
             if (board.id === boardId) {
                 // Create new Board instance to ensure proper validation
                 try {
-                    const Board = appContext.get('Board');
                     return new Board({ ...board.toJSON(), ...updates });
                 } catch (e) {
-                    debugLog.warn('Failed to create Board instance, using plain object:', e);
+                    console.warn('Failed to create Board instance, using plain object:', e);
                     return { ...board, ...updates };
                 }
             }
@@ -280,10 +180,9 @@ class AppState {
                 const tasks = (updatedBoard.tasks || []).map(taskData => {
                     if (typeof taskData === 'object' && taskData.id) {
                         try {
-                            const Task = appContext.get('Task');
                             return new Task(taskData);
                         } catch (e) {
-                            debugLog.warn('Failed to create Task instance:', e);
+                            console.warn('Failed to create Task instance:', e);
                             return taskData;
                         }
                     }
@@ -354,12 +253,6 @@ class AppState {
         return this.state.boards.filter(board => board.isArchived);
     }
 
-    /**
-     * Save current state to history
-     */
-    saveState() {
-        this.addToHistory();
-    }
 
     /**
      * Reset state to initial values
@@ -369,10 +262,7 @@ class AppState {
             boards: [],
             currentBoardId: null,
             tasks: [],
-            filter: 'all',
-            history: [],
-            historyIndex: -1,
-            maxHistorySize: 50
+            filter: 'all'
         };
         
         eventBus.emit('state:reset');

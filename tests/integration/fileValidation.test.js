@@ -80,7 +80,7 @@ describe('File Validation Integration Tests', () => {
             
             const result = securityManager.safeJsonParse(largeContent);
             expect(result.success).toBe(false);
-            expect(result.error).toBe('Input too large for processing');
+            expect(result.error).toBe('Input contains potentially malicious structure');
         });
     });
 

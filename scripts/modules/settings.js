@@ -97,7 +97,6 @@ class SettingsManager {
         
         this.defaultSettings = {
             theme: 'light',
-            debugMode: false,
             notifications: true,
             autoSave: true,
             taskSorting: 'createdDate',
@@ -157,8 +156,6 @@ class SettingsManager {
                 ...savedSettings
             };
             
-            // Always ensure debug mode is disabled on startup
-            this.currentSettings.debugMode = false;
             
             // Validate settings
             this.validateSettings();
@@ -169,7 +166,6 @@ class SettingsManager {
         } catch (error) {
             console.error('Failed to load settings from IndexedDB:', error);
             this.currentSettings = { ...this.defaultSettings };
-            this.currentSettings.debugMode = false;
             eventBus.emit('settings:error', { 
                 error: new Error('Failed to load settings'),
                 context: 'Settings Load'
@@ -237,13 +233,6 @@ class SettingsManager {
         await this.saveSettings(updates);
     }
 
-    /**
-     * Set debug mode
-     * @param {boolean} enabled - Debug mode state
-     */
-    async setDebugMode(enabled) {
-        await this.set('debugMode', Boolean(enabled));
-    }
 
     /**
      * Get theme setting
@@ -374,28 +363,6 @@ class SettingsManager {
     }
 }
 
-/**
- * Debug Log Utility
- */
-export const debugLog = {
-    log: (...args) => {
-        if (settingsManager.get('debugMode')) {
-            console.log('[DEBUG]', ...args);
-        }
-    },
-    
-    warn: (...args) => {
-        if (settingsManager.get('debugMode')) {
-            console.warn('[DEBUG]', ...args);
-        }
-    },
-    
-    error: (...args) => {
-        if (settingsManager.get('debugMode')) {
-            console.error('[DEBUG]', ...args);
-        }
-    }
-};
 
 // Create and export singleton instance
 const settingsManager = new SettingsManager();

@@ -37,6 +37,7 @@ class DropdownManager {
 
     toggleDropdown(trigger) {
         const dropdown = trigger.nextElementSibling;
+        
         if (!dropdown || !dropdown.classList.contains('dropdown-menu')) {
             return;
         }

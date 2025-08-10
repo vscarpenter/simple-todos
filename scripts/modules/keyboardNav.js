@@ -97,7 +97,7 @@ export class KeyboardNavigator {
       description: 'Export tasks',
       action: (e) => {
         e.preventDefault();
-        this.app.exportTasks();
+        this.app.handleExportData();
       },
       category: 'Application'
     });
@@ -330,7 +330,7 @@ export class KeyboardNavigator {
     if (!this.selectedTaskId) return;
 
     const taskCard = document.querySelector(`[data-task-id="${this.selectedTaskId}"]`);
-    const moveButton = taskCard?.querySelector(`[data-action="move-${status}"]`);
+    const moveButton = taskCard?.querySelector(`[data-action="move"][data-target-status="${status}"]`);
     
     if (moveButton) {
       moveButton.click();

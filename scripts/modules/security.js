@@ -1,4 +1,3 @@
-import { debugLog } from './settings.js';
 
 /**
  * Security utilities for file validation and safe error handling
@@ -20,7 +19,6 @@ class SecurityManager {
         this.DEFAULT_MAX_STRING_LENGTH = 50000; // Default increased to 50k
         this.MAX_OBJECT_KEYS = 1000;
         
-        debugLog.log('SecurityManager initialized');
     }
 
     /**
@@ -106,7 +104,7 @@ class SecurityManager {
             }
 
             result.isValid = true;
-            debugLog.log('File validation passed:', {
+            console.log('✅ File validation passed:', {
                 name: file.name,
                 size: this.formatBytes(file.size),
                 type: file.type
@@ -114,7 +112,6 @@ class SecurityManager {
 
         } catch (error) {
             result.errors.push('File validation failed due to unexpected error');
-            debugLog.error('File validation error:', error);
         }
 
         return result;
@@ -206,7 +203,6 @@ class SecurityManager {
 
             result.success = true;
             result.data = parsed;
-            debugLog.log('JSON parsing successful');
 
         } catch (error) {
             // Sanitize error message to avoid information disclosure
@@ -215,7 +211,6 @@ class SecurityManager {
             } else {
                 result.error = 'Failed to process file content';
             }
-            debugLog.error('JSON parsing error:', error.message);
         }
 
         return result;
@@ -344,7 +339,6 @@ class SecurityManager {
         } catch (error) {
             result.isValid = false;
             result.error = 'Structure validation failed';
-            debugLog.error('JSON structure validation error:', error);
         }
 
         return result;
@@ -416,11 +410,9 @@ class SecurityManager {
 
             result.isValid = true;
             result.sanitizedData = sanitized;
-            debugLog.log('Import content validation passed');
 
         } catch (error) {
             result.errors.push('Content validation failed');
-            debugLog.error('Import content validation error:', error);
         }
 
         return result;

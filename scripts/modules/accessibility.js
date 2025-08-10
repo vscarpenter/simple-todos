@@ -65,16 +65,22 @@ class AccessibilityManager {
         const header = document.querySelector('header');
         if (header) {
             header.setAttribute('role', 'banner');
+        } else {
+            console.warn('⚠️ Accessibility: Header element not found');
         }
 
         const main = document.querySelector('main');
         if (main) {
             main.setAttribute('role', 'main');
+        } else {
+            console.warn('⚠️ Accessibility: Main element not found');
         }
 
         const footer = document.querySelector('footer');
         if (footer) {
             footer.setAttribute('role', 'contentinfo');
+        } else {
+            console.warn('⚠️ Accessibility: Footer element not found');
         }
 
         // Enhance task form
@@ -82,6 +88,8 @@ class AccessibilityManager {
         if (todoForm) {
             todoForm.setAttribute('role', 'form');
             todoForm.setAttribute('aria-label', 'Add new task');
+        } else {
+            console.warn('⚠️ Accessibility: Todo form element not found: todo-form');
         }
 
         const todoInput = document.getElementById('todo-input');
@@ -299,13 +307,6 @@ class AccessibilityManager {
         });
 
         // App events
-        eventBus.on('app:undo', () => {
-            this.announce('Action undone');
-        });
-
-        eventBus.on('app:redo', () => {
-            this.announce('Action redone');
-        });
 
         eventBus.on('tasks:imported', (data) => {
             this.announce(`${data.count} tasks imported successfully`);
@@ -680,7 +681,14 @@ class AccessibilityManager {
      * @returns {boolean} True if in task board
      */
     isInTaskBoard(element) {
-        return element.closest('.backlog-board') !== null;
+        if (!element || typeof element.matches !== 'function') return false;
+        let el = element;
+        // Traverse up the DOM tree to find a matching ancestor
+        while (el) {
+            if (el.matches('.backlog-board')) return true;
+            el = el.parentElement;
+        }
+        return false;
     }
 
     /**

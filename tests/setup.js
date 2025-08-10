@@ -4,6 +4,11 @@
  */
 
 import { jest } from '@jest/globals';
+import { TextEncoder, TextDecoder } from 'util';
+
+// Polyfill for TextEncoder/TextDecoder in JSDOM
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
 
 // Enable module mocking
 global.jest = jest;
